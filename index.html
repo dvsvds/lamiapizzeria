@@ -345,6 +345,7 @@
   .sum-total{display:flex;justify-content:space-between;border-top:1px solid var(--line);margin-top:.7rem;padding-top:.8rem;font-family:Georgia,serif;font-size:1.15rem;color:var(--cream)}
   .sum-total span{color:var(--gold);font-weight:700}
   .sum-note{font-size:.74rem;color:var(--muted-2);margin-top:.35rem}
+  .min-note{display:none;margin-top:.55rem;font-size:.82rem;font-weight:700;color:var(--gold);background:rgba(230,178,76,.12);border:1px solid rgba(230,178,76,.35);border-radius:8px;padding:.5rem .7rem}
   .type-toggle{display:flex;gap:.5rem;margin:1.1rem 0 .3rem}
   .type-toggle label{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:.55rem;cursor:pointer;font-weight:600;color:var(--muted);transition:border-color .15s,color .15s,background .15s}
   .type-toggle label:has(input:checked){border-color:var(--gold);color:var(--gold);background:rgba(230,178,76,.12)}
@@ -927,7 +928,8 @@
         <h3>Jouw bestelling</h3>
         <div id="summaryLines"><div class="empty">Nog niets gekozen. Voeg pizza's toe met de + knop.</div></div>
         <div class="sum-total">Richtprijs <span id="grandTotal">€ 0</span></div>
-        <p class="sum-note">Totaal per gekozen maat. Extra's, dranken en sauzen bespreek je bij bevestiging.</p>
+        <div id="minNote" class="min-note"></div>
+        <p class="sum-note">Minimum bestelbedrag € 20. Prijzen per gekozen maat; extra's, dranken en sauzen bespreek je bij bevestiging.</p>
         <form class="order-form" id="orderForm">
           <div class="type-toggle">
             <label><input type="radio" name="otype" value="Afhalen" checked><span>🥡 Afhalen</span></label>
@@ -994,6 +996,11 @@
       });
       summary.innerHTML=lines||('<div class="empty">'+(document.documentElement.getAttribute('data-lang')==='en'?'Nothing selected yet. Add items with the + button.':'Nog niets gekozen. Voeg pizza’s toe met de + knop.')+'</div>');
       totalEl.textContent='€ '+fmt(total);
+      var MIN=20, en=document.documentElement.getAttribute('data-lang')==='en', mn=document.getElementById('minNote');
+      if(mn){
+        if(total>0 && total<MIN){ mn.style.display='block'; mn.textContent = en ? ('Add € '+fmt(MIN-total)+' to reach the € 20 minimum order.') : ('Nog € '+fmt(MIN-total)+' tot het minimumbedrag van € 20.'); }
+        else { mn.style.display='none'; }
+      }
     }
     items.forEach(function(oi){
       var q=oi.querySelector('.qty');
@@ -1017,7 +1024,9 @@
         if(qty>0){var sub=qty*priceOf(oi);total+=sub;
           chosen.push('- '+qty+'x '+labelOf(oi)+' - EUR '+fmt(sub));}
       });
-      if(!chosen.length){alert('Voeg eerst minstens één pizza toe aan je bestelling.');return;}
+      var isEn=document.documentElement.getAttribute('data-lang')==='en';
+      if(!chosen.length){alert(isEn?'Please add at least one item to your order.':'Voeg eerst minstens één item toe aan je bestelling.');return;}
+      if(total<20){alert(isEn?('The minimum order amount is € 20. Please add € '+fmt(20-total)+' more.'):('Het minimum bestelbedrag is € 20. Voeg nog € '+fmt(20-total)+' toe.'));return;}
       var f=e.target;
       var type=f.otype.value;
       var body='NIEUWE BESTELLING - La Mia Pizzeria\n\n';
@@ -1129,6 +1138,7 @@
     "bestel online":"Order online","stel je bestelling samen":"Build your order",
     "kies een categorie, stel je bestelling samen en verstuur. we bellen je even om te bevestigen. betalen doe je bij afhaling of levering.":"Pick a category, build your order and send. We'll call to confirm. You pay on pickup or delivery.",
     "jouw bestelling":"Your order","richtprijs":"Est. total",
+    "minimum bestelbedrag € 20. prijzen per gekozen maat; extra's, dranken en sauzen bespreek je bij bevestiging.":"Minimum order € 20. Prices per chosen size; extras, drinks and sauces are arranged at confirmation.",
     "totaal per gekozen maat. extra's, dranken en sauzen bespreek je bij bevestiging.":"Total per chosen size. Extras, drinks and sauces are arranged at confirmation.",
     "verstuur bestelling →":"Send order →","liever via een platform?":"Prefer a platform?","· of bel":"· or call",
     // reviews
