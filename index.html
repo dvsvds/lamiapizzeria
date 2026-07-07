@@ -424,6 +424,22 @@
   .t-rucola{width:16px;height:10px;border-radius:60% 40% 60% 40%/60% 60% 40% 40%;background:linear-gradient(120deg,#5aa845,#3c7a2f)}
   .t-knoflook{width:12px;height:15px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:linear-gradient(180deg,#f4ecd6,#ded2ad)}
   .t-oregano{width:5px;height:5px;border-radius:50%;background:#33591f}
+  .t-spek{width:20px;height:8px;border-radius:4px;background:repeating-linear-gradient(95deg,#e79a9a 0 3px,#f3ddd0 3px 6px)}
+  .t-ball{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#7a4a24,#4a290f)}
+  .t-scampi{width:16px;height:12px;border-radius:60% 40% 60% 40%/70% 60% 40% 30%;background:radial-gradient(circle at 40% 35%,#f2a98a,#d9663f)}
+  .t-fish{width:16px;height:8px;border-radius:50%;background:linear-gradient(95deg,#cdd1d4,#9aa0a4)}
+  .t-ananas{width:12px;height:12px;background:radial-gradient(circle at 40% 35%,#f7db55,#e0a81f);clip-path:polygon(50% 0,100% 100%,0 100%)}
+  .t-jalapeno{width:14px;height:14px;border-radius:50%;background:transparent;border:4px solid #4a9d3f}
+  .t-spinazie{width:15px;height:11px;border-radius:60% 40% 55% 45%/60% 55% 45% 40%;background:linear-gradient(120deg,#2f7d2a,#1f5a1c)}
+  .t-tomaat{width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#ff6b52,#c0281c)}
+  .t-crumb-white{width:11px;height:9px;border-radius:45% 55% 50% 50%/55% 45% 55% 45%;background:#f3ece0}
+  .t-crumb-blue{width:12px;height:10px;border-radius:45% 55% 50% 50%/55% 45% 55% 45%;background:radial-gradient(circle at 40% 40%,#eff0e6,#dfe2d0);box-shadow:inset 2px 1px 0 rgba(60,90,70,.5),inset -2px -1px 0 rgba(60,90,70,.4)}
+  .t-crumb-yellow{width:9px;height:6px;border-radius:3px;background:linear-gradient(95deg,#f0d27a,#e0b64a)}
+  .t-dab-brown{width:11px;height:11px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#8a4a20,#5c2f12)}
+  .t-dab-green{width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#5a8c3a,#3a6524)}
+  .t-dab-cream{width:11px;height:11px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#f2ead0,#d9c79c)}
+  .t-dab-red{width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#e0552f,#a52a18)}
+  .t-honey{width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(240,190,60,.9),rgba(210,150,20,.7))}
   .pb-hint{color:var(--muted-2);font-size:.8rem;margin-top:.9rem}
   .pb-group{margin-bottom:1rem}
   .pb-group h4{font-family:'Anton',sans-serif;text-transform:uppercase;color:var(--coral);font-size:.95rem;letter-spacing:.5px;margin-bottom:.55rem}
@@ -1230,7 +1246,7 @@
       $('#ctDel').textContent=fmt(delFee());
       $('#ctTotal').textContent=fmt(sub+delFee());
       var min=$('#cartMin');
-      if(sub>0 && sub<MIN_ORDER){min.style.display='block';min.textContent='Nog '+fmt(MIN_ORDER-sub)+' tot het minimum van € 20.';toCk.disabled=true;}
+      if(mode==='leveren' && sub>0 && sub<MIN_ORDER){min.style.display='block';min.textContent='Minimum voor levering is € 20 — nog '+fmt(MIN_ORDER-sub)+' te gaan (of kies afhalen).';toCk.disabled=true;}
       else {min.style.display='none';toCk.disabled=cart.length===0;}
       // FAB teller
       var fab=$('.fab'); if(fab){var n=cart.reduce(function(s,l){return s+l.qty;},0); fab.textContent = n?('🛒 '+n+' · '+fmt(sub+delFee())):'🍕 Bestel nu';}
@@ -1257,7 +1273,7 @@
 
     /* ---------- CHECKOUT ---------- */
     var coOv=$('#coOv');
-    toCk.addEventListener('click',function(){ if(!cart.length||subtotal()<MIN_ORDER) return; openCheckout(); });
+    toCk.addEventListener('click',function(){ if(!cart.length || (mode==='leveren' && subtotal()<MIN_ORDER)) return; openCheckout(); });
     function openCheckout(){
       // modus + adres
       [].forEach.call($('#coMode').children,function(b){b.classList.toggle('on',b.getAttribute('data-mode')===mode);});
@@ -1320,28 +1336,71 @@
     (function(){
       // render: 'sauce'|'cheese'|'oil' = volledige laag ; 'scatter' = losse stukjes (bit=CSS-klasse, count=aantal)
       var INGR=[
+        // Basis (volledige lagen)
         {id:'sauce',name:'Tomatensaus',cat:'Basis',price:1.0,render:'sauce'},
         {id:'mozzarella',name:'Mozzarella',cat:'Basis',price:1.0,render:'cheese'},
         {id:'extrakaas',name:'Extra kaas',cat:'Basis',price:1.5,render:'cheese'},
-        {id:'salami',name:'Salami',cat:'Vlees',price:1.0,render:'scatter',bit:'salami',count:7},
-        {id:'ham',name:'Ham',cat:'Vlees',price:1.0,render:'scatter',bit:'ham',count:8},
-        {id:'kip',name:'Kip',cat:'Vlees',price:1.5,render:'scatter',bit:'kip',count:8},
-        {id:'pepperoni',name:'Pepperoni',cat:'Vlees',price:1.0,render:'scatter',bit:'pepperoni',count:7},
+        {id:'pikolie',name:'Pikante olie',cat:'Basis',price:1.0,render:'oil'},
+        // Sauzen (dabs)
+        {id:'bbq',name:'BBQ-saus',cat:'Sauzen',price:1.0,render:'scatter',bit:'dab-brown',count:11},
+        {id:'curry',name:'Kerriesaus',cat:'Sauzen',price:1.0,render:'scatter',bit:'dab-cream',count:11},
+        {id:'looksaus',name:'Knoflook-roomsaus',cat:'Sauzen',price:1.0,render:'scatter',bit:'dab-cream',count:11},
+        {id:'pesto',name:'Basilicumpesto',cat:'Sauzen',price:1.0,render:'scatter',bit:'dab-green',count:11},
+        {id:'pittig',name:'Pittige saus',cat:'Sauzen',price:1.0,render:'scatter',bit:'dab-red',count:11},
+        {id:'honing',name:'Hete honing',cat:'Sauzen',price:1.0,render:'scatter',bit:'honey',count:13},
+        // Vlees & vis
+        {id:'salami',name:'Salami',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'salami',count:7},
+        {id:'pepperoni',name:'Pepperoni',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'pepperoni',count:7},
+        {id:'ham',name:'Ham',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'ham',count:8},
+        {id:'spek',name:'Spek',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'spek',count:10},
+        {id:'kip',name:'Kip',cat:'Vlees & vis',price:1.5,render:'scatter',bit:'kip',count:8},
+        {id:'bbqkip',name:'BBQ-kip',cat:'Vlees & vis',price:1.5,render:'scatter',bit:'kip',count:8},
+        {id:'merguez',name:'Merguez',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'salami',count:8},
+        {id:'shoarma',name:'Shoarma',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'salami',count:11},
+        {id:'kofta',name:'Kofta (gehakt)',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'ball',count:9},
+        {id:'balletjes',name:'Gehaktballetjes',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'ball',count:7},
+        {id:'tonijn',name:'Tonijn',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'fish',count:10},
+        {id:'ansjovis',name:'Ansjovis',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'fish',count:8},
+        {id:'scampi',name:'Scampi',cat:'Vlees & vis',price:1.5,render:'scatter',bit:'scampi',count:8},
+        // Groenten
+        {id:'ui',name:'Rode ui',cat:'Groenten',price:1.0,render:'scatter',bit:'ui',count:8},
         {id:'champignon',name:'Champignons',cat:'Groenten',price:1.0,render:'scatter',bit:'champignon',count:8},
         {id:'paprika',name:'Paprika',cat:'Groenten',price:1.0,render:'scatter',bit:'paprika',count:9},
-        {id:'ui',name:'Ui',cat:'Groenten',price:1.0,render:'scatter',bit:'ui',count:8},
-        {id:'olijven',name:'Olijven',cat:'Groenten',price:1.0,render:'scatter',bit:'olijf',count:10},
+        {id:'olijven',name:'Zwarte olijven',cat:'Groenten',price:1.0,render:'scatter',bit:'olijf',count:10},
+        {id:'ananas',name:'Ananas',cat:'Groenten',price:1.0,render:'scatter',bit:'ananas',count:8},
+        {id:'jalapeno',name:'Jalapeño',cat:'Groenten',price:1.0,render:'scatter',bit:'jalapeno',count:9},
+        {id:'spinazie',name:'Spinazie',cat:'Groenten',price:1.0,render:'scatter',bit:'spinazie',count:10},
         {id:'mais',name:'Maïs',cat:'Groenten',price:1.0,render:'scatter',bit:'mais',count:18},
+        {id:'kerstomaat',name:'Kerstomaten',cat:'Groenten',price:1.0,render:'scatter',bit:'tomaat',count:9},
         {id:'rucola',name:'Rucola',cat:'Groenten',price:1.0,render:'scatter',bit:'rucola',count:9},
-        {id:'olie',name:'Pikante olie',cat:"Extra's",price:1.0,render:'oil'},
+        // Kazen (crumbles)
+        {id:'parmezaan',name:'Parmezaan',cat:'Kazen',price:1.0,render:'scatter',bit:'crumb-yellow',count:16},
+        {id:'ricotta',name:'Ricotta',cat:'Kazen',price:1.0,render:'scatter',bit:'crumb-white',count:8},
+        {id:'gorgonzola',name:'Gorgonzola',cat:'Kazen',price:1.5,render:'scatter',bit:'crumb-blue',count:8},
+        {id:'geitenkaas',name:'Geitenkaas',cat:'Kazen',price:1.5,render:'scatter',bit:'crumb-white',count:8},
+        {id:'feta',name:'Feta',cat:'Kazen',price:1.0,render:'scatter',bit:'crumb-white',count:10},
+        {id:'gouda',name:'Goudse kaas',cat:'Kazen',price:1.0,render:'scatter',bit:'crumb-yellow',count:9},
+        {id:'cheddar',name:'Cheddar',cat:'Kazen',price:1.0,render:'scatter',bit:'crumb-yellow',count:9},
+        // Extra's
         {id:'knoflook',name:'Knoflook',cat:"Extra's",price:1.0,render:'scatter',bit:'knoflook',count:8},
+        {id:'basilicum',name:'Basilicum',cat:"Extra's",price:1.0,render:'scatter',bit:'rucola',count:8},
         {id:'oregano',name:'Oregano',cat:"Extra's",price:1.0,render:'scatter',bit:'oregano',count:22}
       ];
-      var CATS=['Basis','Vlees','Groenten',"Extra's"];
+      var CATS=['Basis','Sauzen','Vlees & vis','Groenten','Kazen',"Extra's"];
       var pizza=$('#pzPizza'), toppings=$('#pzToppings'), panel=$('#pbPanel'), summary=panel.querySelector('.pb-summary');
       if(!pizza) return;
       var sel={};
       function pf(n){return '€ '+n.toFixed(2).replace('.',',');}
+      // Formaat-keuze — basisprijs per maat (pas hier aan)
+      var SIZES=[{k:'Small',p:7},{k:'Medium',p:8},{k:'Large',p:10}];
+      var curSize=SIZES[1];
+      (function(){
+        var g=document.createElement('div'); g.className='pb-group';
+        g.innerHTML='<h4>Formaat</h4>';
+        var w=document.createElement('div'); w.className='opt-seg';
+        SIZES.forEach(function(s,i){var b=document.createElement('button');b.type='button';b.textContent=s.k+' · '+pf(s.p);if(i===1)b.className='on';b.addEventListener('click',function(){[].forEach.call(w.children,function(c){c.classList.remove('on');});b.classList.add('on');curSize=s;upd();});w.appendChild(b);});
+        g.appendChild(w); panel.insertBefore(g,summary);
+      })();
       // bouw chips per categorie
       CATS.forEach(function(cat){
         var g=document.createElement('div'); g.className='pb-group';
@@ -1385,13 +1444,13 @@
       }
       function chosen(){return INGR.filter(function(i){return sel[i.id];});}
       function upd(){
-        var ch=chosen(), total=BASE_PRICE+ch.reduce(function(s,i){return s+i.price;},0);
+        var ch=chosen(), total=curSize.p+ch.reduce(function(s,i){return s+i.price;},0);
         $('#pbPrice').textContent=pf(total);
-        $('#pbChosen').textContent=ch.length?ch.map(function(i){return i.name;}).join(', '):'Nog geen ingrediënten gekozen.';
+        $('#pbChosen').textContent=(curSize.k+' pizza')+(ch.length?' · '+ch.map(function(i){return i.name;}).join(', '):' (nog geen toppings)');
       }
       $('#pbAdd').addEventListener('click',function(){
-        var ch=chosen(), total=BASE_PRICE+ch.reduce(function(s,i){return s+i.price;},0);
-        addToCart('Eigen pizza', ch.map(function(i){return i.name;}), '', total, 1);
+        var ch=chosen(), total=curSize.p+ch.reduce(function(s,i){return s+i.price;},0);
+        addToCart('Eigen pizza', [curSize.k].concat(ch.map(function(i){return i.name;})), '', total, 1);
         // reset builder
         Object.keys(sel).forEach(function(k){sel[k]=false;});
         panel.querySelectorAll('.pb-chip.on').forEach(function(c){c.classList.remove('on');});
