@@ -490,6 +490,11 @@
 
   /* ---- Productkaarten ---- */
   .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:1rem;align-content:start}
+  .pop-grid{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(198px,210px);gap:1rem;overflow-x:auto;padding-bottom:.7rem;margin-bottom:.4rem;scroll-snap-type:x proximity}
+  .pop-grid .prod-card{scroll-snap-align:start}
+  .pop-grid::-webkit-scrollbar{height:8px}
+  .pop-grid::-webkit-scrollbar-track{background:transparent}
+  .pop-grid::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
   .prod-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,transform .15s}
   .prod-card:hover{border-color:var(--coral);transform:translateY(-3px)}
   .pc-img{aspect-ratio:4/3;background-size:cover;background-position:center;position:relative;border-bottom:1px solid var(--line)}
@@ -1035,11 +1040,20 @@
     </div>
 
     <!-- Categoriefilter -->
+    <h3 class="ob-heading">🔥 Meest gekozen</h3>
+    <div class="pop-grid" id="popGrid"></div>
+
     <h3 class="ob-heading">📋 Menu</h3>
     <div class="cat-filter" id="catFilter2">
       <button type="button" class="cf active" data-c="all">Alles</button>
       <button type="button" class="cf" data-c="pizza">🍕 Pizza's</button>
       <button type="button" class="cf" data-c="pasta">🍝 Pasta's</button>
+      <button type="button" class="cf" data-c="burger">🍔 Burgers</button>
+      <button type="button" class="cf" data-c="broodje">🥖 Broodjes</button>
+      <button type="button" class="cf" data-c="kapsalon">🥙 Kapsalon</button>
+      <button type="button" class="cf" data-c="lookbrood">🧄 Lookbrood</button>
+      <button type="button" class="cf" data-c="snack">🍗 Snacks</button>
+      <button type="button" class="cf" data-c="friet">🍟 Frieten</button>
       <button type="button" class="cf" data-c="dessert">🍰 Desserts</button>
       <button type="button" class="cf" data-c="drink">🥤 Drankjes</button>
       <button type="button" class="cf" data-c="promo">🔥 Promoties</button>
@@ -1171,28 +1185,140 @@
     var BASE_PRICE   = 8.00;   // basisprijs 'stel je eigen pizza samen'
 
     // ---- Opties (herbruikbaar) ----
-    var SIZES       = [{k:'Small',d:-1.5},{k:'Medium',d:0},{k:'Large',d:2}];        // maat + prijsverschil
+    var SIZE_LABELS = ['Small','Medium','Large'];
     var PIZZA_EXTRAS= [{k:'Extra kaas',p:1.5},{k:'Champignons',p:1},{k:'Pepperoni',p:1},{k:'Rode ui',p:1},{k:'Olijven',p:1},{k:'Jalapeño',p:1}];
-    var PASTA_SAUCE = [{k:'Bolognese',p:0},{k:'Rosé',p:0},{k:'Arrabbiata',p:0}];
+    var PASTA_SAUCE = [{k:'Zoals op de kaart',p:0},{k:'Extra pittig',p:0},{k:'Extra romig',p:0}];
     var DRINK_SIZES = [{k:'Blik 33cl',d:0},{k:'Fles 50cl',d:0.5},{k:'Fles 1,5L',d:1.5}];
+    var STD=[11,12.5,13.5]; // standaard pizza S/M/L
 
-    // ---- Voorbeeldproducten (makkelijk uit te breiden) ----
+    // ---- Volledige kaart (pas hier producten, prijzen en foto's aan) ----
     var PRODUCTS=[
-      {id:'pz1',c:'pizza',t:'pizza',name:'Margherita',desc:'Tomaat, mozzarella, basilicum',price:8,img:'slice-card',tag:'Populair'},
-      {id:'pz2',c:'pizza',t:'pizza',name:'Soprano',desc:'Pepperoni, salami, hete honing',price:11,img:'pizza-card',tag:'Aanrader'},
-      {id:'pz3',c:'pizza',t:'pizza',name:'BBQ Kip',desc:'Rode ui, paprika, BBQ-saus',price:11,img:'slice-card'},
-      {id:'pz4',c:'pizza',t:'pizza',name:'Quattro Formaggi',desc:'Mozzarella, ricotta, gorgonzola, gouda',price:12,img:'pizza-card'},
-      {id:'pz5',c:'pizza',t:'pizza',name:'Veggie',desc:'Rode ui, champignons, paprika, olijven',price:11,img:'slice-card'},
-      {id:'pa1',c:'pasta',t:'pasta',name:'Spaghetti Bolognese',desc:'Rundsragù, parmezaan',price:13,img:'pasta',tag:'Populair'},
-      {id:'pa2',c:'pasta',t:'pasta',name:'Penne Arrabbiata',desc:'Pittige tomatensaus, knoflook',price:12,img:'pasta'},
-      {id:'pa3',c:'pasta',t:'pasta',name:'Scampi Roomsaus',desc:'Scampi, champignons, tagliatelle',price:14,img:'pasta'},
-      {id:'de1',c:'dessert',t:'simple',name:'Tiramisù',desc:'Huisgemaakt met mascarpone',price:5,img:'dessert',tag:'Aanrader'},
-      {id:'de2',c:'dessert',t:'simple',name:'Brownie',desc:'Warme chocoladebrownie',price:5,img:'dessert'},
-      {id:'dr1',c:'drink',t:'drink',name:'Cola',desc:'Frisdrank',price:2.5,img:'drinks'},
-      {id:'dr2',c:'drink',t:'drink',name:'Fanta',desc:'Frisdrank',price:2.5,img:'drinks'},
-      {id:'dr3',c:'drink',t:'drink',name:'Water',desc:'Plat of bruisend',price:2,img:'drinks'},
-      {id:'pr1',c:'promo',t:'simple',name:'Familie Weekend Deal',desc:'3 pizza’s + lookbrood + 1,5L drank',price:45,img:'promo-card',tag:'Deal'},
-      {id:'pr2',c:'promo',t:'simple',name:'Deal voor twee',desc:'2 large pizza’s + lookbrood + 1,5L',price:35,img:'promo-card',tag:'Deal'}
+      // PIZZA'S (t:'pizza' met sz = [Small,Medium,Large])
+      {id:'pz01',c:'pizza',t:'pizza',name:'Margherita',desc:'Tomaat, mozzarella, basilicum',sz:[8,9,10],price:9,img:'slice-card',tag:'Populair'},
+      {id:'pz02',c:'pizza',t:'pizza',name:'Pepperoni',desc:'Tomatensaus, mozzarella',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz03',c:'pizza',t:'pizza',name:'Soprano',desc:'Pepperoni, salami, hete honing',sz:STD,price:12.5,img:'slice-card',tag:'Aanrader'},
+      {id:'pz04',c:'pizza',t:'pizza',name:'Godfather',desc:'Pepperoni, ham, spek',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz05',c:'pizza',t:'pizza',name:'Hawaiian',desc:'Ham, ananas, rode ui',sz:STD,price:12.5,img:'slice-card'},
+      {id:'pz06',c:'pizza',t:'pizza',name:'Aloha Bay',desc:'Kip, ananas, hete honing',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz07',c:'pizza',t:'pizza',name:'Spicy Penne Pizza',desc:'Pittige rosa, mozzarella, parmezaan',sz:[15,17,19],price:17,img:'slice-card'},
+      {id:'pz08',c:'pizza',t:'pizza',name:'Bolognese',desc:'Kaas, vleessaus, paprika',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz09',c:'pizza',t:'pizza',name:'Luna',desc:'Kip, paprika, zwarte olijven, geitenkaas',sz:STD,price:12.5,img:'slice-card'},
+      {id:'pz10',c:'pizza',t:'pizza',name:'Mexican',desc:'Kip, jalapeño, paprika, corn',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz11',c:'pizza',t:'pizza',name:'Bronx',desc:'Merguez, pepperoni, meatballs',sz:STD,price:12.5,img:'slice-card'},
+      {id:'pz12',c:'pizza',t:'pizza',name:'Pollo',desc:'Kip, basilicumpesto, tomaten',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz13',c:'pizza',t:'pizza',name:'Veggie',desc:'Rode ui, champignons, paprika, olijven',sz:STD,price:12.5,img:'slice-card'},
+      {id:'pz14',c:'pizza',t:'pizza',name:'Kofta',desc:'Kofta (gehakt), spek, paprika',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz15',c:'pizza',t:'pizza',name:'Italiano',desc:'Verse tomaat, ricotta, spinazie',sz:STD,price:12.5,img:'slice-card'},
+      {id:'pz16',c:'pizza',t:'pizza',name:'Tuna',desc:'Tonijn, zwarte olijven, rode ui',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz17',c:'pizza',t:'pizza',name:'Curry Kip',desc:'Kip, champignons, kerriesaus',sz:STD,price:12.5,img:'slice-card'},
+      {id:'pz18',c:'pizza',t:'pizza',name:'Al Capone',desc:'Kip, pepperoni, jalapeños, BBQ-saus',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz19',c:'pizza',t:'pizza',name:'Gotti Tuna',desc:'Tonijn, jalapeños, ananas',sz:STD,price:12.5,img:'slice-card'},
+      {id:'pz20',c:'pizza',t:'pizza',name:'Taxi Driver',desc:'Ham, ananas, corn',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz21',c:'pizza',t:'pizza',name:'Funghi',desc:'Champignons, parmezaan',sz:STD,price:12.5,img:'slice-card'},
+      {id:'pz22',c:'pizza',t:'pizza',name:'RT 66',desc:'Kip, ananas, BBQ-saus',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz23',c:'pizza',t:'pizza',name:'Marakesh',desc:'Merguez, paprika, champignons',sz:STD,price:12.5,img:'slice-card'},
+      {id:'pz24',c:'pizza',t:'pizza',name:'Hot Kip',desc:'Gorgonzola, kip, rode ui, pittige saus',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz25',c:'pizza',t:'pizza',name:'BBQ Kip',desc:'Rode ui, paprika, BBQ-saus',sz:STD,price:12.5,img:'slice-card',tag:'Populair'},
+      {id:'pz26',c:'pizza',t:'pizza',name:"Kip'n Bacon",desc:'BBQ-kip, spek, ananas',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz27',c:'pizza',t:'pizza',name:'La Mia Garlic',desc:'Kip, spinazie, ricotta, knoflook-roomsaus',sz:STD,price:12.5,img:'slice-card'},
+      {id:'pz28',c:'pizza',t:'pizza',name:'Shawarma',desc:'Paprika, rode ui, verse knoflook',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz29',c:'pizza',t:'pizza',name:'Greeko',desc:'Kip, feta, zwarte olijven, oregano',sz:STD,price:12.5,img:'slice-card'},
+      {id:'pz30',c:'pizza',t:'pizza',name:'C & B Burger',desc:'Cheddar, spek, kofta (gehakt)',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz31',c:'pizza',t:'pizza',name:'Salami',desc:'Salami, jalapeño',sz:STD,price:12.5,img:'slice-card'},
+      {id:'pz32',c:'pizza',t:'pizza',name:'California',desc:'Kip, spinazie, paprika',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz33',c:'pizza',t:'pizza',name:'Quattro Formaggi',desc:'Mozzarella, ricotta, gorgonzola, goudse kaas',sz:[12,12.5,13.5],price:12.5,img:'slice-card'},
+      {id:'pz34',c:'pizza',t:'pizza',name:'Carbonara',desc:'Spek, champignons, parmezaan, roomsaus',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz35',c:'pizza',t:'pizza',name:'Anchovies',desc:'Ansjovis, rode ui, zwarte olijven',sz:STD,price:12.5,img:'slice-card'},
+      {id:'pz36',c:'pizza',t:'pizza',name:'4 Season',desc:'Salami, ham, paprika, champignons',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz37',c:'pizza',t:'pizza',name:'Rucola',desc:'Kerstomaten, parmezaan, rucola',sz:STD,price:12.5,img:'slice-card'},
+      {id:'pz38',c:'pizza',t:'pizza',name:'BBQ Meatball & Bacon',desc:'Paprika, rode ui, kaas, BBQ-saus',sz:STD,price:12.5,img:'pizza-card'},
+      {id:'pz39',c:'pizza',t:'pizza',name:'Scampi',desc:'Mozzarella, rode ui',sz:[11,12.5,14],price:12.5,img:'slice-card'},
+      {id:'pz40',c:'pizza',t:'pizza',name:'Frutti di Mare',desc:'Rode ui, zwarte olijven, zeevruchten',sz:[11,12.5,14],price:12.5,img:'pizza-card'},
+      {id:'pz41',c:'pizza',t:'simple',name:'Stromboli',desc:'Dubbelgevouwen deeg, mozzarella, provolone',price:8,img:'slice-card'},
+      {id:'pz42',c:'pizza',t:'simple',name:'Calzone',desc:'Met ricotta, uit de steenoven',price:9,img:'pizza-card'},
+      // PASTA'S (t:'pasta' met saus + extra kaas)
+      {id:'pa01',c:'pasta',t:'pasta',name:'Scampi Roomsaus',desc:'Champignons, tagliatelle',price:14,img:'pasta',tag:'Populair'},
+      {id:'pa02',c:'pasta',t:'pasta',name:'Pasta Bolognese',desc:'Parmezaan, penne',price:13,img:'pasta'},
+      {id:'pa03',c:'pasta',t:'pasta',name:'Kip Roomsaus',desc:'Champignons, penne',price:13,img:'pasta'},
+      {id:'pa04',c:'pasta',t:'pasta',name:'Kip Curry Pasta',desc:'Champignons, penne',price:13,img:'pasta'},
+      {id:'pa05',c:'pasta',t:'pasta',name:'Scampi Basilicumroomsaus',desc:'Spinazie, tagliatelle',price:14,img:'pasta'},
+      {id:'pa06',c:'pasta',t:'pasta',name:"Scampi All'Arrabbiata",desc:'Pittige tomatensaus, knoflook',price:14,img:'pasta'},
+      {id:'pa07',c:'pasta',t:'pasta',name:'Tagliatelle Meatballs',desc:'Tomatensaus, parmezaan',price:13,img:'pasta'},
+      {id:'pa08',c:'pasta',t:'pasta',name:'Pasta Funghi',desc:'Champignons, mozzarella, alfredosaus',price:13,img:'pasta'},
+      {id:'pa09',c:'pasta',t:'pasta',name:'Creamy Veggie',desc:'Groenten, creamy saus',price:13,img:'pasta'},
+      {id:'pa10',c:'pasta',t:'pasta',name:'Kass & Ham',desc:'Kaassaus, ham',price:14,img:'pasta'},
+      {id:'pa11',c:'pasta',t:'pasta',name:'BBQ Kip Pasta',desc:'Maïs, paprika, kaas, bbq saus',price:15,img:'pasta'},
+      {id:'pa12',c:'pasta',t:'pasta',name:'Fruits de Mer Diavolo',desc:'Champignons, diavolosaus',price:14,img:'pasta'},
+      {id:'pa13',c:'pasta',t:'pasta',name:'Ravioli Ricotta & Spinazie',desc:'Ricotta, spinazie, roomsaus',price:14,img:'pasta'},
+      // BURGERS met friet
+      {id:'bu01',c:'burger',t:'simple',name:'Bickey Burger',desc:'Met salade, komkommer, tomaat & saus',price:6,img:'burger',tag:'Populair'},
+      {id:'bu02',c:'burger',t:'simple',name:'Crispy Kipburger',desc:'Met salade, komkommer, tomaat & saus',price:7.5,img:'burger'},
+      {id:'bu03',c:'burger',t:'simple',name:'Crispyburger',desc:'Met salade, komkommer, tomaat & saus',price:7.5,img:'burger'},
+      {id:'bu04',c:'burger',t:'simple',name:'Fishburger',desc:'Met salade, komkommer, tomaat & saus',price:8,img:'burger'},
+      {id:'bu05',c:'burger',t:'simple',name:'Keftaburger',desc:'Met salade, komkommer, tomaat & saus',price:8,img:'burger'},
+      {id:'bu06',c:'burger',t:'simple',name:'Mexicano Burger',desc:'Met salade, komkommer, tomaat & saus',price:4.5,img:'burger'},
+      // BROODJES met friet
+      {id:'br01',c:'broodje',t:'simple',name:'Broodje Kip',desc:'Met salade, komkommer, tomaat & saus',price:8,img:'burger'},
+      {id:'br02',c:'broodje',t:'simple',name:'Broodje Kafta',desc:'Met salade, komkommer, tomaat & saus',price:8,img:'burger'},
+      {id:'br03',c:'broodje',t:'simple',name:'Broodje Calamari',desc:'Met salade, komkommer, tomaat & saus',price:9,img:'burger'},
+      {id:'br04',c:'broodje',t:'simple',name:'Broodje Shoarma',desc:'Met salade, komkommer, tomaat & saus',price:8,img:'burger'},
+      {id:'br05',c:'broodje',t:'simple',name:'Broodje Visfilet',desc:'Met salade, komkommer, tomaat & saus',price:9,img:'burger'},
+      {id:'br06',c:'broodje',t:'simple',name:'Broodje Merguez',desc:'Met salade, komkommer, tomaat & saus',price:8,img:'burger'},
+      {id:'br07',c:'broodje',t:'simple',name:'Broodje Mexicano',desc:'Met salade, komkommer, tomaat & saus',price:6,img:'burger'},
+      {id:'br08',c:'broodje',t:'simple',name:'Broodje Falafel',desc:'Met salade, komkommer, tomaat & saus',price:7,img:'burger'},
+      // KAPSALON
+      {id:'ka01',c:'kapsalon',t:'simple',name:'Kapsalon Kip',desc:'Friet, kaas, salade & saus',price:8,img:'snacks'},
+      {id:'ka02',c:'kapsalon',t:'simple',name:'Kapsalon Vlees',desc:'Friet, kaas, salade & saus',price:8.5,img:'snacks'},
+      {id:'ka03',c:'kapsalon',t:'simple',name:'Kapsalon Shawarma',desc:'Friet, kaas, salade & saus',price:8,img:'snacks'},
+      {id:'ka04',c:'kapsalon',t:'simple',name:'Kapsalon Falafel',desc:'Friet, kaas, salade & saus',price:7,img:'snacks'},
+      {id:'ka05',c:'kapsalon',t:'simple',name:'Kapsalon Calamari',desc:'Friet, kaas, salade & saus',price:9,img:'snacks'},
+      {id:'ka06',c:'kapsalon',t:'simple',name:'Kapsalon Scampi',desc:'Friet, kaas, salade & saus',price:9,img:'snacks'},
+      {id:'ka07',c:'kapsalon',t:'simple',name:'Kapsalon Visfilet',desc:'Friet, kaas, salade & saus',price:9,img:'snacks'},
+      // NEW LOOKBROOD
+      {id:'lb01',c:'lookbrood',t:'simple',name:'Lookbrood Kaas',desc:'Vers gebakken',price:5,img:'snacks'},
+      {id:'lb02',c:'lookbrood',t:'simple',name:'Knoflookbrood & Kaas',desc:'Vers gebakken',price:6,img:'snacks'},
+      {id:'lb03',c:'lookbrood',t:'simple',name:'Lookbrood Pepperoni & Kaas',desc:'Vers gebakken',price:6,img:'snacks'},
+      {id:'lb04',c:'lookbrood',t:'simple',name:'Lookbrood Ham & Kaas',desc:'Vers gebakken',price:6,img:'snacks'},
+      {id:'lb05',c:'lookbrood',t:'simple',name:'Lookbrood Pesto & Kaas',desc:'Vers gebakken',price:6,img:'snacks'},
+      {id:'lb06',c:'lookbrood',t:'simple',name:'Lookbrood Cream Spinazie & Kaas',desc:'Vers gebakken',price:7,img:'snacks'},
+      // SNACKS
+      {id:'sn01',c:'snack',t:'simple',name:'Kiptenders (3 st.)',desc:'Krokante kipfilet',price:5,img:'snacks'},
+      {id:'sn02',c:'snack',t:'simple',name:'Chicken Wings',desc:'Pikant of BBQ',price:6,img:'snacks',tag:'Populair'},
+      {id:'sn03',c:'snack',t:'simple',name:'Mozzarellastokjes (5 st.)',desc:'Met dip',price:4,img:'snacks'},
+      {id:'sn04',c:'snack',t:'simple',name:'Jalapeño Kaas (5 st.)',desc:'Pittig',price:5,img:'snacks'},
+      {id:'sn05',c:'snack',t:'simple',name:'Kip Nuggets (5 st.)',desc:'Met dip',price:4,img:'snacks'},
+      {id:'sn06',c:'snack',t:'simple',name:'Calamari (7 st.)',desc:'Gefrituurd',price:6,img:'snacks'},
+      {id:'sn07',c:'snack',t:'simple',name:'Chicken Taquito (2 st.)',desc:'Mexicaans',price:4,img:'snacks'},
+      {id:'sn08',c:'snack',t:'simple',name:'Kaaskroket (2 st.)',desc:'Klassieker',price:3,img:'snacks'},
+      {id:'sn09',c:'snack',t:'simple',name:'Falafel (4 st.)',desc:'Vegetarisch',price:5,img:'snacks'},
+      {id:'sn10',c:'snack',t:'simple',name:'Moroccan Harira (soep)',desc:'Kruidige soep',price:4,img:'snacks'},
+      {id:'sn11',c:'snack',t:'simple',name:'Cervela',desc:'Gefrituurd',price:3,img:'snacks'},
+      {id:'sn12',c:'snack',t:'simple',name:'Boulet',desc:'Gefrituurd',price:3,img:'snacks'},
+      {id:'sn13',c:'snack',t:'simple',name:'Bami',desc:'Gefrituurd',price:4,img:'snacks'},
+      {id:'sn14',c:'snack',t:'simple',name:'Mexicano',desc:'Pikante worst',price:4,img:'snacks'},
+      // FRIETEN
+      {id:'fr01',c:'friet',t:'simple',name:'Frieten Klein',desc:'Vers gebakken',price:3,img:'snacks'},
+      {id:'fr02',c:'friet',t:'simple',name:'Frieten Groot',desc:'Vers gebakken',price:5,img:'snacks'},
+      // DESSERTS
+      {id:'de01',c:'dessert',t:'simple',name:'Tiramisù',desc:'Huisgemaakt met mascarpone',price:5,img:'dessert',tag:'Aanrader'},
+      {id:'de02',c:'dessert',t:'simple',name:'Cheesecake',desc:'Romig',price:5,img:'dessert'},
+      {id:'de03',c:'dessert',t:'simple',name:'Brownie',desc:'Warme chocoladebrownie',price:5,img:'dessert'},
+      {id:'de04',c:'dessert',t:'simple',name:"IJsje (Ben & Jerry's)",desc:'Diverse smaken',price:3.5,img:'dessert'},
+      {id:'de05',c:'dessert',t:'simple',name:'Chocolate Cake',desc:'Rijk aan chocolade',price:5,img:'dessert'},
+      {id:'de06',c:'dessert',t:'simple',name:'Red Velvet Cake',desc:'Klassieker',price:5,img:'dessert'},
+      // DRANKJES (t:'drink' met formaat)
+      {id:'dr01',c:'drink',t:'drink',name:'Cola',desc:'Frisdrank',price:2.5,img:'drinks'},
+      {id:'dr02',c:'drink',t:'drink',name:'Cola Zero',desc:'Frisdrank',price:2.5,img:'drinks'},
+      {id:'dr03',c:'drink',t:'drink',name:'Fanta',desc:'Frisdrank',price:2.5,img:'drinks'},
+      {id:'dr04',c:'drink',t:'drink',name:'Sprite',desc:'Frisdrank',price:2.5,img:'drinks'},
+      {id:'dr05',c:'drink',t:'drink',name:'Ice Tea',desc:'Frisdrank',price:2.5,img:'drinks'},
+      {id:'dr06',c:'drink',t:'drink',name:'Water',desc:'Plat',price:2,img:'drinks'},
+      {id:'dr07',c:'drink',t:'drink',name:'Bruiswater',desc:'Sprankelend',price:2,img:'drinks'},
+      // PROMOTIES
+      {id:'pr01',c:'promo',t:'simple',name:'Familie Weekend Deal',desc:'3 pizza’s + lookbrood + 1,5L drank',price:45,img:'promo-card',tag:'Deal'},
+      {id:'pr02',c:'promo',t:'simple',name:'Deal voor twee',desc:'2 large pizza’s + lookbrood + 1,5L',price:35,img:'promo-card',tag:'Deal'},
+      {id:'pr03',c:'promo',t:'simple',name:'Deal voor drie',desc:'3 large pizza’s + mozzarella sticks + 1,5L',price:40,img:'promo-card'},
+      {id:'pr04',c:'promo',t:'simple',name:'Single Deal',desc:'1 large pizza + mozzarella sticks + drankje',price:22,img:'promo-card'}
     ];
 
     // foto-url: op de echte site = bestand in /images ; in de self-contained preview = ingebakken data-URI (window.__IMGMAP)
@@ -1200,6 +1326,7 @@
     var $=function(s,r){return (r||document).querySelector(s);};
     function fmt(n){return '€ '+(Math.round(n*100)/100).toFixed(2).replace('.',',');}
     function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+    function re(){ if(window.__i18nApply) window.__i18nApply(); }  // hervertaal na dynamische render
 
     // ---- Winkelmandje-status ----
     var cart=[];            // {name, opts:[..], note, unit, qty}
@@ -1217,6 +1344,7 @@
           '<button type="button" class="btn btn-primary pc-add" data-id="'+p.id+'">Toevoegen</button></div></div>';
         grid.appendChild(el);
       });
+      re();
     }
     cards('all');
     grid.addEventListener('click',function(e){
@@ -1225,6 +1353,16 @@
       if(p.t==='simple'){ addToCart(p.name, [], '', p.price, 1); toast(); }
       else openOptions(p);
     });
+    // Meest gekozen — toont producten met een 'tag'
+    var popGrid=$('#popGrid');
+    if(popGrid){
+      PRODUCTS.filter(function(p){return p.tag;}).forEach(function(p){
+        var el=document.createElement('div'); el.className='prod-card';
+        el.innerHTML='<div class="pc-img" style="background-image:url('+imgUrl(p.img)+')"><span class="pc-tag">'+p.tag+'</span></div><div class="pc-body"><div class="pc-name">'+esc(p.name)+'</div><div class="pc-desc">'+esc(p.desc)+'</div><div class="pc-foot"><span class="pc-price">'+fmt(p.price)+'</span><button type="button" class="btn btn-primary pc-add" data-id="'+p.id+'">Toevoegen</button></div></div>';
+        popGrid.appendChild(el);
+      });
+      popGrid.addEventListener('click',function(e){var b=e.target.closest('.pc-add');if(!b)return;var p=PRODUCTS.filter(function(x){return x.id===b.getAttribute('data-id');})[0];if(p.t==='simple'){addToCart(p.name,[],'',p.price,1);toast();}else openOptions(p);});
+    }
 
     /* ---------- FILTER ---------- */
     var filter=$('#catFilter2');
@@ -1245,7 +1383,7 @@
       var body=$('#optBody'), h='';
       if(p.t==='pizza'){
         h+='<div class="opt-grp"><h4>Formaat</h4><div class="opt-seg" data-role="size">'+
-           SIZES.map(function(s,i){return '<button type="button" data-i="'+i+'" class="'+(s.k==='Medium'?'on':'')+'">'+s.k+(s.d?' ('+(s.d>0?'+':'')+fmt(s.d).replace('€ ','€')+')':'')+'</button>';}).join('')+'</div></div>';
+           p.sz.map(function(pr,i){return '<button type="button" data-i="'+i+'" class="'+(i===1?'on':'')+'">'+SIZE_LABELS[i]+' · '+fmt(pr)+'</button>';}).join('')+'</div></div>';
         h+='<div class="opt-grp"><h4>Extra toppings</h4><div class="opt-chips" data-role="extra">'+
            PIZZA_EXTRAS.map(function(x,i){return '<label class="opt-chip"><input type="checkbox" data-i="'+i+'"> '+x.k+' <b>+'+fmt(x.p).replace('€ ','€')+'</b></label>';}).join('')+'</div></div>';
       } else if(p.t==='pasta'){
@@ -1261,14 +1399,14 @@
         seg.addEventListener('click',function(e){var t=e.target.closest('button');if(!t)return;[].forEach.call(seg.children,function(c){c.classList.remove('on');});t.classList.add('on');optPrice();});
       });
       ov.querySelectorAll('.opt-chips input').forEach(function(c){c.addEventListener('change',optPrice);});
-      optPrice(); ov.classList.add('open'); ov.setAttribute('aria-hidden','false');
+      optPrice(); re(); ov.classList.add('open'); ov.setAttribute('aria-hidden','false');
     }
     function readOpts(){
       var p=optState.p, opts=[], price=p.price;
       var sizeSeg=ov.querySelector('[data-role="size"]');
-      if(sizeSeg){var s=SIZES[+sizeSeg.querySelector('.on').getAttribute('data-i')];price+=s.d;opts.push(s.k);}
+      if(sizeSeg){var si=+sizeSeg.querySelector('.on').getAttribute('data-i');price=p.sz[si];opts.push(SIZE_LABELS[si]);}
       var dsizeSeg=ov.querySelector('[data-role="dsize"]');
-      if(dsizeSeg){var d=DRINK_SIZES[+dsizeSeg.querySelector('.on').getAttribute('data-i')];price+=d.d;opts.push(d.k);}
+      if(dsizeSeg){var d=DRINK_SIZES[+dsizeSeg.querySelector('.on').getAttribute('data-i')];price=p.price+d.d;opts.push(d.k);}
       var sauceSeg=ov.querySelector('[data-role="sauce"]');
       if(sauceSeg){opts.push(PASTA_SAUCE[+sauceSeg.querySelector('.on').getAttribute('data-i')].k);}
       var extraWrap=ov.querySelector('[data-role="extra"]');
@@ -1316,6 +1454,7 @@
       else {min.style.display='none';toCk.disabled=cart.length===0;}
       // FAB teller
       var fab=$('.fab'); if(fab){var n=cart.reduce(function(s,l){return s+l.qty;},0); fab.textContent = n?('🛒 '+n+' · '+fmt(sub+delFee())):'🍕 Bestel nu';}
+      re();
     }
     cartLines.addEventListener('click',function(e){
       var b=e.target.closest('[data-a]'); if(!b) return;
@@ -1353,6 +1492,7 @@
         '<div class="cr cr-sub"><span>Subtotaal</span><span>'+fmt(sub)+'</span></div>'+
         (mode==='leveren'?'<div class="cr"><span>Leveringskosten</span><span>'+fmt(delFee())+'</span></div>':'')+
         '<div class="cr cr-tot"><span>Totaal</span><span>'+fmt(sub+delFee())+'</span></div>';
+      re();
     }
     $('#coMode').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;setMode(b.getAttribute('data-mode'));[].forEach.call(this.children,function(c){c.classList.toggle('on',c===b);});$('#coAddr').style.display=mode==='leveren'?'grid':'none';renderReview();});
     $('#coTime').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;[].forEach.call(this.children,function(c){c.classList.toggle('on',c===b);});$('#coTimeField').style.display=b.getAttribute('data-t')==='uur'?'block':'none';});
@@ -1374,7 +1514,7 @@
         '<div class="cr cr-tot"><span>Totaal ('+(mode==='leveren'?'levering':'afhaling')+')</span><span>'+fmt(sub+delFee())+'</span></div>';
       /* Hier kun je later koppelen aan WhatsApp / e-mail / betaalprovider.
          Voorbeeld (WhatsApp):  window.open('https://wa.me/32XXXXXXXXX?text='+encodeURIComponent(bericht)); */
-      closeOv(coOv); confOv.classList.add('open'); confOv.setAttribute('aria-hidden','false');
+      closeOv(coOv); re(); confOv.classList.add('open'); confOv.setAttribute('aria-hidden','false');
       cart=[]; renderCart();
     });
 
@@ -1628,6 +1768,22 @@
     "wat klanten zeggen":"What customers say","geliefd in de buurt":"A neighbourhood favourite",
     "beoordelingen samengebracht van google en uber eats.":"Ratings collected from Google and Uber Eats.",
     "lees alle reviews op google →":"Read all reviews on Google →","google-review":"Google review",
+    "online bestellen":"Order online","🔥 meest gekozen":"🔥 Most popular","📋 menu":"📋 Menu","🥤 drankjes":"🥤 Drinks","🔥 promoties":"🔥 Deals",
+    "stel je pizza samen of kies uit het menu, personaliseer en reken af. betalen kan bij afhaling/levering.":"Build your own pizza or pick from the menu, customise and check out. Pay on pickup/delivery.",
+    "kies ingrediënten — ze verschijnen live op je pizza.":"Pick ingredients — they appear live on your pizza.","jouw pizza":"Your pizza","nog geen ingrediënten gekozen.":"No ingredients selected yet.","➕ voeg toe aan mandje":"➕ Add to cart",
+    "toevoegen":"Add","toevoegen ·":"Add ·","🛒 winkelmandje":"🛒 Cart","je mandje is leeg. voeg iets toe uit het menu.":"Your cart is empty. Add something from the menu.",
+    "🛵 leveren":"🛵 Delivery","leveren":"Delivery","subtotaal":"Subtotal","leveringskosten":"Delivery fee","totaal":"Total","bestelling afronden →":"Checkout →",
+    "formaat":"Size","extra toppings":"Extra toppings","saus":"Sauce","opmerking voor de keuken":"Note for the kitchen","extra kaas":"Extra cheese",
+    "zoals op de kaart":"As on the menu","extra pittig":"Extra spicy","extra romig":"Extra creamy",
+    "afrekenen":"Checkout","naam *":"Name *","telefoon *":"Phone *","e-mail":"Email","adres *":"Address *","postcode *":"Postcode *","gemeente *":"City *",
+    "zo snel mogelijk":"As soon as possible","specifiek uur":"Specific time","gewenst uur":"Preferred time","betalen bij afhaling / levering":"Pay on pickup / delivery","online betalen":"Pay online","(binnenkort)":"(soon)","bestelling plaatsen →":"Place order →",
+    "demo — nog geen echte betaling. klaar om te koppelen aan whatsapp, e-mail of een betaalprovider.":"Demo — no real payment yet. Ready to connect to WhatsApp, email or a payment provider.",
+    "bedankt voor je bestelling!":"Thank you for your order!","bestelnummer":"Order number","sluiten":"Close","we bellen je zo dadelijk om te bevestigen. buon appetito! 🍕":"We'll call you shortly to confirm. Buon appetito! 🍕",
+    "geschatte levertijd":"Estimated delivery time","klaar om af te halen over":"Ready for pickup in","totaal (levering)":"Total (delivery)","totaal (afhaling)":"Total (pickup)",
+    "populair":"Popular","aanrader":"Recommended","deal":"Deal",
+    "met salade, komkommer, tomaat & saus":"With salad, cucumber, tomato & sauce","friet, kaas, salade & saus":"Fries, cheese, salad & sauce","vers gebakken":"Freshly baked",
+    "krokante kipfilet":"Crispy chicken fillet","met dip":"With dip","pittig":"Spicy","gefrituurd":"Fried","vegetarisch":"Vegetarian","pikante worst":"Spicy sausage","kruidige soep":"Spicy soup","klassieker":"Classic","mexicaans":"Mexican","pikant of bbq":"Spicy or BBQ","diverse smaken":"Various flavours","romig":"Creamy","rijk aan chocolade":"Rich in chocolate","warme chocoladebrownie":"Warm chocolate brownie","huisgemaakt met mascarpone":"Homemade with mascarpone","frisdrank":"Soft drink","plat":"Still","sprankelend":"Sparkling",
+    "3 pizza’s + lookbrood + 1,5l drank":"3 pizzas + garlic bread + 1.5L drink","2 large pizza’s + lookbrood + 1,5l":"2 large pizzas + garlic bread + 1.5L","3 large pizza’s + mozzarella sticks + 1,5l":"3 large pizzas + mozzarella sticks + 1.5L","1 large pizza + mozzarella sticks + drankje":"1 large pizza + mozzarella sticks + drink",
     // visit
     "kom langs":"Visit us","bezoek & openingsuren":"Visit & opening hours",
     "je vindt ons in de abdijstraat in antwerpen-zuid (2020).":"Find us on Abdijstraat in Antwerp-South (2020).",
@@ -1674,30 +1830,24 @@
     "Naam":"Name","Telefoonnummer":"Phone number","Leveradres (straat, nr, postcode)":"Delivery address (street, no, postcode)",
     "Gewenst uur (bv. 19:30)":"Preferred time (e.g. 7:30pm)","Opmerkingen (maten, extra's, allergieën...)":"Notes (sizes, extras, allergies...)"
   };
-  var collected=null;
-  function collect(){
-    collected=[];
-    var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null);
-    var n;
+  // Vertaalt alle tekst-nodes; onthoudt het origineel (node.__nl) zodat dynamische inhoud (mandje/opties) mee vertaalt.
+  function apply(){
+    var lang=document.documentElement.getAttribute('data-lang')==='en'?'en':'nl';
+    var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null),n;
     while(n=w.nextNode()){
-      var raw=n.nodeValue, t=raw.trim();
-      if(!t) continue;
-      var en=DICT[t.toLowerCase()];
-      if(en!==undefined) collected.push({node:n, nl:raw, en:raw.replace(t,en)});
+      var cur=n.nodeValue, t=cur.trim(); if(!t) continue;
+      if(lang==='en'){
+        if(n.__nl===undefined){ var en=DICT[t.toLowerCase()]; if(en!==undefined){ n.__nl=cur; n.nodeValue=cur.replace(t,en); } }
+      } else if(n.__nl!==undefined){ n.nodeValue=n.__nl; n.__nl=undefined; }
     }
-    var ph=document.querySelectorAll('input[placeholder],textarea[placeholder]');
-    ph.forEach(function(el){ if(!el.hasAttribute('data-ph')) el.setAttribute('data-ph', el.getAttribute('placeholder')); });
-  }
-  function setLang(lang){
-    if(!collected) collect();
-    collected.forEach(function(o){ o.node.nodeValue = (lang==='en'? o.en : o.nl); });
     document.querySelectorAll('input[placeholder],textarea[placeholder]').forEach(function(el){
-      var nl=el.getAttribute('data-ph'); el.setAttribute('placeholder', (lang==='en' && PLACE[nl])? PLACE[nl] : nl);
+      if(!el.hasAttribute('data-ph')) el.setAttribute('data-ph', el.getAttribute('placeholder'));
+      var nl=el.getAttribute('data-ph'); el.setAttribute('placeholder',(lang==='en'&&PLACE[nl])?PLACE[nl]:nl);
     });
-    document.documentElement.setAttribute('lang', lang);
-    document.documentElement.setAttribute('data-lang', lang);
-    var b=document.getElementById('langToggle'); if(b) b.textContent = (lang==='en'?'NL':'EN');
+    var b=document.getElementById('langToggle'); if(b) b.textContent=(lang==='en'?'NL':'EN');
   }
+  window.__i18nApply=apply;
+  function setLang(lang){ document.documentElement.setAttribute('lang',lang); document.documentElement.setAttribute('data-lang',lang); apply(); }
   var btn=document.getElementById('langToggle');
   if(btn){ btn.addEventListener('click',function(){ setLang(document.documentElement.getAttribute('data-lang')==='en'?'nl':'en'); }); }
 })();
