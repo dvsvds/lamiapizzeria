@@ -558,6 +558,9 @@
   .opt-chip input{accent-color:var(--red)}
   .ov-notelbl{display:block;font-size:.8rem;color:var(--muted);margin:.4rem 0}
   #optNote,.co-f input,.co-f textarea{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:.6rem .7rem;color:var(--cream);font-family:inherit;font-size:.92rem;margin-top:.3rem}
+  .opt-sel{width:100%;background:var(--ink);border:1px solid var(--line);color:var(--cream);border-radius:9px;padding:.55rem .6rem;font-family:inherit;font-size:.9rem;margin-bottom:.5rem;cursor:pointer}
+  .opt-sel:focus{outline:none;border-color:var(--gold)}
+  .opt-side{font-size:.82rem;color:var(--muted);margin-top:.2rem}
   #optNote:focus,.co-f input:focus{outline:none;border-color:var(--gold)}
   .ov-foot{display:flex;align-items:center;gap:.8rem;margin-top:1.1rem}
   .ov-qty{display:inline-flex;align-items:center;gap:.6rem;border:1px solid var(--line);border-radius:10px;padding:.3rem}
@@ -1071,10 +1074,10 @@
       {id:'dr06',c:'drink',t:'drink',name:'Water',desc:'Plat',price:2,img:'drinks'},
       {id:'dr07',c:'drink',t:'drink',name:'Bruiswater',desc:'Sprankelend',price:2,img:'drinks'},
       // PROMOTIES
-      {id:'pr01',c:'promo',t:'simple',name:'Familie Weekend Deal',desc:'3 pizza’s + lookbrood + 1,5L drank',price:45,img:'promo-card',tag:'Deal'},
-      {id:'pr02',c:'promo',t:'simple',name:'Deal voor twee',desc:'2 large pizza’s + lookbrood + 1,5L',price:35,img:'promo-card',tag:'Deal'},
-      {id:'pr03',c:'promo',t:'simple',name:'Deal voor drie',desc:'3 large pizza’s + mozzarella sticks + 1,5L',price:40,img:'promo-card'},
-      {id:'pr04',c:'promo',t:'simple',name:'Single Deal',desc:'1 large pizza + mozzarella sticks + drankje',price:22,img:'promo-card'}
+      {id:'pr01',c:'promo',t:'promo',name:'Familie Weekend Deal',desc:'3 pizza’s + lookbrood + 1,5L drank',price:45,img:'promo-card',tag:'Deal',pizzas:3,drink:true,side:'Lookbrood'},
+      {id:'pr02',c:'promo',t:'promo',name:'Deal voor twee',desc:'2 large pizza’s + lookbrood + 1,5L',price:35,img:'promo-card',tag:'Deal',pizzas:2,drink:true,side:'Lookbrood'},
+      {id:'pr03',c:'promo',t:'promo',name:'Deal voor drie',desc:'3 large pizza’s + mozzarella sticks + 1,5L',price:40,img:'promo-card',pizzas:3,drink:true,side:'Mozzarella sticks'},
+      {id:'pr04',c:'promo',t:'promo',name:'Single Deal',desc:'1 large pizza + mozzarella sticks + drankje',price:22,img:'promo-card',pizzas:1,drink:true,side:'Mozzarella sticks'}
     ];
 
     // foto-url: op de echte site = bestand in /images ; in de self-contained preview = ingebakken data-URI (window.__IMGMAP)
@@ -1149,6 +1152,14 @@
       } else if(p.t==='drink'){
         h+='<div class="opt-grp"><h4>Formaat</h4><div class="opt-seg" data-role="dsize">'+
            DRINK_SIZES.map(function(s,i){return '<button type="button" data-i="'+i+'" class="'+(i===0?'on':'')+'">'+s.k+(s.d?' (+'+fmt(s.d).replace('€ ','€')+')':'')+'</button>';}).join('')+'</div></div>';
+      } else if(p.t==='promo'){
+        var pizN=PRODUCTS.filter(function(x){return x.c==='pizza';}).map(function(x){return x.name;});
+        var drN=PRODUCTS.filter(function(x){return x.c==='drink';}).map(function(x){return x.name;});
+        h+='<div class="opt-grp"><h4>Kies je pizza\'s</h4>';
+        for(var pk=0;pk<(p.pizzas||1);pk++){ h+='<select class="opt-sel" data-role="pizza"><option value="">Pizza '+(pk+1)+' kiezen…</option>'+pizN.map(function(nm){return '<option>'+nm+'</option>';}).join('')+'</select>'; }
+        h+='</div>';
+        if(p.drink){ h+='<div class="opt-grp"><h4>Kies je drank</h4><select class="opt-sel" data-role="drink"><option value="">Drank kiezen…</option>'+drN.map(function(nm){return '<option>'+nm+'</option>';}).join('')+'</select></div>'; }
+        if(p.side){ h+='<p class="opt-side">Inclusief: '+p.side+'</p>'; }
       }
       body.innerHTML=h;
       ov.querySelectorAll('.opt-seg').forEach(function(seg){
@@ -1159,6 +1170,7 @@
     }
     function readOpts(){
       var p=optState.p, opts=[], price=p.price;
+      if(p.t==='promo'){ [].forEach.call(ov.querySelectorAll('.opt-sel'),function(s){ if(s.value) opts.push(s.value); }); if(p.side)opts.push(p.side); return {opts:opts, unit:p.price}; }
       var sizeSeg=ov.querySelector('[data-role="size"]');
       if(sizeSeg){var si=+sizeSeg.querySelector('.on').getAttribute('data-i');price=p.sz[si];opts.push(SIZE_LABELS[si]);}
       var dsizeSeg=ov.querySelector('[data-role="dsize"]');
@@ -1174,7 +1186,10 @@
     function optPrice(){var r=readOpts();optPriceEl.textContent=fmt(r.unit*optState.qty);}
     $('#optMinus').addEventListener('click',function(){optState.qty=Math.max(1,optState.qty-1);optQtyEl.textContent=optState.qty;optPrice();});
     $('#optPlus').addEventListener('click',function(){optState.qty++;optQtyEl.textContent=optState.qty;optPrice();});
-    $('#optAdd').addEventListener('click',function(){var r=readOpts();addToCart(optState.p.name,r.opts,$('#optNote').value.trim(),r.unit,optState.qty);closeOv(ov);toast();});
+    $('#optAdd').addEventListener('click',function(){
+      if(optState.p.t==='promo'){ var miss=[].some.call(ov.querySelectorAll('.opt-sel'),function(s){return !s.value;}); if(miss){ alert(document.documentElement.getAttribute('data-lang')==='en'?'Please choose all pizzas and the drink for this deal.':'Kies eerst alle pizza\'s en de drank voor deze deal.'); return; } }
+      var r=readOpts();addToCart(optState.p.name,r.opts,$('#optNote').value.trim(),r.unit,optState.qty);closeOv(ov);toast();
+    });
     $('#optX').addEventListener('click',function(){closeOv(ov);});
     ov.addEventListener('click',function(e){if(e.target===ov)closeOv(ov);});
 
@@ -1552,7 +1567,7 @@
     "populair":"Popular","aanrader":"Recommended","deal":"Deal",
     "met salade, komkommer, tomaat & saus":"With salad, cucumber, tomato & sauce","friet, kaas, salade & saus":"Fries, cheese, salad & sauce","vers gebakken":"Freshly baked",
     "krokante kipfilet":"Crispy chicken fillet","met dip":"With dip","pittig":"Spicy","gefrituurd":"Fried","vegetarisch":"Vegetarian","pikante worst":"Spicy sausage","kruidige soep":"Spicy soup","klassieker":"Classic","mexicaans":"Mexican","pikant of bbq":"Spicy or BBQ","diverse smaken":"Various flavours","romig":"Creamy","rijk aan chocolade":"Rich in chocolate","warme chocoladebrownie":"Warm chocolate brownie","huisgemaakt met mascarpone":"Homemade with mascarpone","frisdrank":"Soft drink","plat":"Still","sprankelend":"Sparkling",
-    "3 pizza’s + lookbrood + 1,5l drank":"3 pizzas + garlic bread + 1.5L drink","2 large pizza’s + lookbrood + 1,5l":"2 large pizzas + garlic bread + 1.5L","3 large pizza’s + mozzarella sticks + 1,5l":"3 large pizzas + mozzarella sticks + 1.5L","1 large pizza + mozzarella sticks + drankje":"1 large pizza + mozzarella sticks + drink","hoe wil je bestellen?":"How would you like to order?","bestellen als gast":"Order as guest","account aanmaken":"Create account","snel afrekenen zonder account.":"Fast checkout without an account.","handig voor de volgende keer.":"Handy for next time.","geen registratie nodig":"No registration needed","enkel je contactgegevens":"Only your contact details","meteen klaar":"Ready right away","sneller bestellen volgende keer":"Order faster next time","vorige bestellingen bekijken":"View past orders","favoriete pizza's bewaren":"Save favourite pizzas","adresgegevens opslaan":"Save address details","verder als gast →":"Continue as guest →","je bent niet verplicht een account te maken.":"You are not required to create an account.","naam":"Name","telefoon":"Phone","wachtwoord":"Password","account aanmaken & verder →":"Create account & continue →","← terug naar keuze":"← Back to choice","order your new york slice":"Order your New York slice","kies je favoriet, stel je pizza samen en rond je bestelling snel af.":"Pick your favourite, build your pizza and check out fast.","bestellen":"Order online",
+    "3 pizza’s + lookbrood + 1,5l drank":"3 pizzas + garlic bread + 1.5L drink","2 large pizza’s + lookbrood + 1,5l":"2 large pizzas + garlic bread + 1.5L","3 large pizza’s + mozzarella sticks + 1,5l":"3 large pizzas + mozzarella sticks + 1.5L","1 large pizza + mozzarella sticks + drankje":"1 large pizza + mozzarella sticks + drink","hoe wil je bestellen?":"How would you like to order?","bestellen als gast":"Order as guest","account aanmaken":"Create account","snel afrekenen zonder account.":"Fast checkout without an account.","handig voor de volgende keer.":"Handy for next time.","geen registratie nodig":"No registration needed","enkel je contactgegevens":"Only your contact details","meteen klaar":"Ready right away","sneller bestellen volgende keer":"Order faster next time","vorige bestellingen bekijken":"View past orders","favoriete pizza's bewaren":"Save favourite pizzas","adresgegevens opslaan":"Save address details","verder als gast →":"Continue as guest →","je bent niet verplicht een account te maken.":"You are not required to create an account.","naam":"Name","telefoon":"Phone","wachtwoord":"Password","account aanmaken & verder →":"Create account & continue →","← terug naar keuze":"← Back to choice","order your new york slice":"Order your New York slice","kies je pizza's":"Choose your pizzas","kies je drank":"Choose your drink","inclusief: lookbrood":"Included: Garlic bread","inclusief: mozzarella sticks":"Included: Mozzarella sticks","kies je favoriet, stel je pizza samen en rond je bestelling snel af.":"Pick your favourite, build your pizza and check out fast.","bestellen":"Order online",
     // visit
     "kom langs":"Visit us","bezoek & openingsuren":"Visit & opening hours",
     "je vindt ons in de abdijstraat in antwerpen-zuid (2020).":"Find us on Abdijstraat in Antwerp-South (2020).",
