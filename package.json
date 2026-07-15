@@ -1,0 +1,13 @@
+{
+  "name": "lamia-pizzeria-systeem",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Eigen bestel- en kassasysteem voor La Mia Pizzeria (menu, webshop, kassa, keuken, rapporten).",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}

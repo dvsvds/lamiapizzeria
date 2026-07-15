@@ -1,0 +1,9 @@
+# Node
+node_modules/
+
+# Data (database, sessiesleutel) — hoort NIET in git
+data/
+
+# Logs / rommel
+*.log
+.DS_Store

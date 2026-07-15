@@ -1,0 +1,79 @@
+# La Mia Pizzeria — eigen bestel- & kassasysteem
+
+Dit is de start van ons **eigen systeem**, dat stap voor stap OrderBuddy vervangt
+voor alles rond bestellen, menu, keuken en rapporten. Alles draait in je eigen
+repo, zonder externe abonnementen.
+
+> **Belangrijk (fiscaal).** In België is een **geregistreerde kassa (GKS) met
+> blackbox/FDM** verplicht boven €25.000 horeca-omzet. Dit systeem is (nog) niet
+> gecertificeerd en mag de officiële kassa dus **niet** vervangen voor het
+> wettelijke aanslaan. Gebruik het naast je gecertificeerde kassa; we ontwerpen
+> het "blackbox-ready" zodat een certificering later gekoppeld kan worden.
+
+## Snel starten
+
+Vereist: **Node.js 22.5 of nieuwer** (bevat de ingebouwde database — geen
+`npm install` nodig).
+
+```bash
+node server.js
+```
+
+Dan openen:
+
+| Onderdeel | Adres |
+|---|---|
+| Beheer (menu & prijzen) | http://localhost:3000/beheer.html |
+| Webshop (klant) | http://localhost:3000/order.html |
+| Kassa (personeel) | http://localhost:3000/pos.html |
+| Website | http://localhost:3000/ |
+
+Andere poort of PIN:
+
+```bash
+PORT=8080 ADMIN_PIN=4321 node server.js
+```
+
+De beheer-PIN is standaard **1234** (wijzig 'm meteen via de knop **🔑 PIN** in
+het beheerscherm).
+
+## Wat er nu werkt — Fase 1: centraal menu & prijzen
+
+- **Database** (`data/lamia.db`, SQLite). Bij de eerste start automatisch gevuld
+  met de volledige kaart (115 producten, 11 categorieën).
+- **Beheerscherm** `beheer.html`: producten en prijzen bewerken, toevoegen en
+  verwijderen, maten voor pizza's, een product tijdelijk op **onbeschikbaar**
+  zetten ("uitverkocht"), labels (Populair/Aanrader), en categorieën beheren.
+- **API** die straks door de webshop én de kassa gebruikt wordt:
+  - `GET /api/menu` — het menu (enkel beschikbare producten) — publiek
+  - `POST /api/login` · `POST /api/logout` · `GET /api/session`
+  - `GET/POST/PUT/DELETE /api/admin/products`
+  - `GET/POST/PUT/DELETE /api/admin/categories`
+  - `POST /api/admin/pin`
+
+De database is vanaf nu de **bron van waarheid**. `lib/catalogue.js` wordt enkel
+gebruikt om de database de allereerste keer te vullen.
+
+## Roadmap (volgende fases)
+
+- **Fase 2 — Webshop.** `order.html` haalt het menu live uit `/api/menu` en
+  plaatst bestellingen in de database. Eigen online bestellingen = geen
+  Deliveroo/UberEats-commissie.
+- **Fase 3 — Kassa.** `pos.html` gekoppeld aan de database (gedeeld menu,
+  bestellingen centraal).
+- **Fase 4 — Keukenscherm.** Nieuwe bestellingen verschijnen live in de keuken.
+- **Fase 5 — Rapporten & boekhouding.** Omzet, BTW, per betaalmethode; centraal
+  bewaard en exporteerbaar.
+
+## Mappen
+
+```
+server.js         Backend (Node, ingebouwde http + sqlite) — geen dependencies
+lib/catalogue.js  Canonieke kaart (enkel voor de eerste seed)
+beheer.html       Beheerscherm menu & prijzen
+order.html        Webshop (klant)          — wordt in fase 2 gekoppeld
+pos.html          Kassa (personeel)        — wordt in fase 3 gekoppeld
+index.html        Publieke website
+images/           Foto's
+data/             Database + sessiesleutel (staat in .gitignore, hoort niet in git)
+```
