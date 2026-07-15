@@ -143,8 +143,9 @@
   .menu-toggle{display:none;background:none;border:0;font-size:1.6rem;color:var(--coral);cursor:pointer}
   .theme-toggle{background:none;border:1px solid var(--line);color:var(--cream);width:40px;height:40px;border-radius:50%;font-size:1.05rem;cursor:pointer;margin-left:.6rem;line-height:1;transition:border-color .15s}
   .theme-toggle:hover{border-color:var(--gold)}
-  .lang-toggle{background:none;border:1px solid var(--line);color:var(--cream);height:40px;padding:0 .8rem;border-radius:999px;font-weight:800;font-size:.8rem;letter-spacing:.05em;cursor:pointer;margin-left:.7rem;transition:border-color .15s,color .15s}
+  .lang-toggle{display:inline-flex;align-items:center;gap:.42rem;background:none;border:1px solid var(--line);color:var(--cream);height:40px;padding:0 .8rem;border-radius:999px;font-weight:800;font-size:.8rem;letter-spacing:.05em;cursor:pointer;margin-left:.7rem;transition:border-color .15s,color .15s}
   .lang-toggle:hover{border-color:var(--gold);color:var(--gold)}
+  .lang-toggle .flg{display:block;border-radius:2.5px;box-shadow:0 0 0 1px rgba(255,255,255,.14)}
 
   /* ---- Domino's-style order bar ---- */
   .orderbar{position:sticky;top:72px;z-index:55;background:var(--bar-bg);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
@@ -1698,12 +1699,22 @@
       if(!el.hasAttribute('data-ph')) el.setAttribute('data-ph', el.getAttribute('placeholder'));
       var nl=el.getAttribute('data-ph'); el.setAttribute('placeholder',(lang==='en'&&PLACE[nl])?PLACE[nl]:nl);
     });
-    var b=document.getElementById('langToggle'); if(b) b.textContent=(lang==='en'?'NL':'EN');
+    renderLangBtn(lang);
+  }
+  // Toont een kleine vlag (van de taal waarnaar je wisselt) + de code. Inline SVG = werkt op elk platform.
+  function renderLangBtn(lang){
+    var b=document.getElementById('langToggle'); if(!b) return;
+    var target=lang==='en'?'nl':'en';
+    var NL='<svg class="flg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><defs><clipPath id="flgNL"><rect width="20" height="14" rx="2.4"/></clipPath></defs><g clip-path="url(#flgNL)"><rect width="20" height="14" fill="#21468B"/><rect width="20" height="9.34" fill="#fff"/><rect width="20" height="4.67" fill="#AE1C28"/></g></svg>';
+    var GB='<svg class="flg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><defs><clipPath id="flgGB"><rect width="20" height="14" rx="2.4"/></clipPath></defs><g clip-path="url(#flgGB)"><rect width="20" height="14" fill="#012169"/><path d="M0 0 20 14M20 0 0 14" stroke="#fff" stroke-width="2.6"/><path d="M0 0 20 14M20 0 0 14" stroke="#C8102E" stroke-width="1.4"/><path d="M10 0V14M0 7H20" stroke="#fff" stroke-width="4"/><path d="M10 0V14M0 7H20" stroke="#C8102E" stroke-width="2.2"/></g></svg>';
+    b.innerHTML=(target==='nl'?NL:GB)+'<span>'+(target==='nl'?'NL':'EN')+'</span>';
+    b.setAttribute('aria-label', target==='nl'?'Schakel naar Nederlands':'Switch to English');
   }
   window.__i18nApply=apply;
   function setLang(lang){ document.documentElement.setAttribute('lang',lang); document.documentElement.setAttribute('data-lang',lang); apply(); }
   var btn=document.getElementById('langToggle');
   if(btn){ btn.addEventListener('click',function(){ setLang(document.documentElement.getAttribute('data-lang')==='en'?'nl':'en'); }); }
+  renderLangBtn(document.documentElement.getAttribute('data-lang')==='en'?'en':'nl');
 })();
 </script>
 </body>
