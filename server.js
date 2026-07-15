@@ -244,6 +244,22 @@ function serveStatic(req, res, urlPath) {
 }
 
 /* ============================================================================
+   LIVE UPDATES (Server-Sent Events) — voedt het keukenscherm
+   ========================================================================== */
+var sseClients = new Set();
+function sseWrite(res, event, data) {
+  try { res.write('event: ' + event + '\n'); res.write('data: ' + JSON.stringify(data) + '\n\n'); } catch (e) {}
+}
+function broadcast(event, data) { sseClients.forEach(function (r) { sseWrite(r, event, data); }); }
+function orderRow(id) {
+  var o = db.prepare('SELECT * FROM orders WHERE id=?').get(id);
+  if (!o) return null;
+  o.items = o.items ? JSON.parse(o.items) : [];
+  o.pay = o.pay ? JSON.parse(o.pay) : null;
+  return o;
+}
+
+/* ============================================================================
    API ROUTES
    ========================================================================== */
 function validProduct(b) {
@@ -295,7 +311,9 @@ async function handleApi(req, res, urlPath) {
     var discount = Math.round(Math.max(0, Math.min(parseFloat(ob.discount) || 0, subtotal)) * 100) / 100;
     var delivery = type === 'leveren' ? DELIVERY_FEE : 0;
     var total = Math.round((subtotal - discount + delivery) * 100) / 100;
-    var status = source === 'pos' ? 'betaald' : 'nieuw';
+    // status = keukenvoortgang (nieuw→bereiden→klaar→afgehaald), los van betaling.
+    // Kassabonnen zijn al betaald; dat zit in het pay-veld, niet in de status.
+    var status = 'nieuw';
     var cust = ob.customer || {};
     var now = new Date().toISOString();
     var providedNo = (source === 'pos' && ob.no) ? String(ob.no).slice(0, 20) : null;
@@ -311,8 +329,25 @@ async function handleApi(req, res, urlPath) {
     var oid = Number(out.lastInsertRowid);
     var no = providedNo || ('LM-' + String(oid).padStart(4, '0'));
     if (!providedNo) db.prepare('UPDATE orders SET no=? WHERE id=?').run(no, oid);
+    broadcast('order', orderRow(oid)); // live naar het keukenscherm
     var eta = type === 'leveren' ? '35–50 min' : '20–30 min';
     return sendJson(res, 200, { no: no, id: oid, eta: eta, subtotal: subtotal, discount: discount, delivery: delivery, total: total });
+  }
+
+  /* ---------- live updates (keukenscherm) ---------- */
+  if (seg[0] === 'events' && method === 'GET') {
+    if (!isAuthed(req)) return sendJson(res, 401, { error: 'Niet ingelogd' });
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no'
+    });
+    res.write('retry: 3000\n\n');
+    sseClients.add(res);
+    var ping = setInterval(function () { try { res.write(': ping\n\n'); } catch (e) {} }, 25000);
+    req.on('close', function () { clearInterval(ping); sseClients.delete(res); });
+    return; // verbinding blijft open
   }
 
   /* ---------- sessie ---------- */
@@ -396,7 +431,11 @@ async function handleApi(req, res, urlPath) {
 
     if (kind === 'orders') {
       if (method === 'GET') {
-        var rows = db.prepare('SELECT * FROM orders ORDER BY id DESC LIMIT 200').all().map(function (o) {
+        var activeOnly = urlPath.indexOf('active=1') >= 0;
+        var sql = activeOnly
+          ? "SELECT * FROM orders WHERE status != 'afgehaald' ORDER BY id ASC LIMIT 200"
+          : 'SELECT * FROM orders ORDER BY id DESC LIMIT 200';
+        var rows = db.prepare(sql).all().map(function (o) {
           o.items = o.items ? JSON.parse(o.items) : [];
           o.pay = o.pay ? JSON.parse(o.pay) : null;
           return o;
@@ -407,6 +446,7 @@ async function handleApi(req, res, urlPath) {
         var stb = await readBody(req);
         var st = ['nieuw', 'bereiden', 'klaar', 'afgehaald'].indexOf(stb.status) >= 0 ? stb.status : 'nieuw';
         db.prepare('UPDATE orders SET status=? WHERE id=?').run(st, id);
+        broadcast('status', { id: Number(id), status: st }); // live naar het keukenscherm
         return sendJson(res, 200, { ok: true });
       }
     }

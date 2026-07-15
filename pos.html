@@ -917,7 +917,7 @@
         source:'pos', no:'K-'+String(no).padStart(4,'0'),
         type:sale.type, table:sale.table,
         items:sale.lines.map(function(l){return {name:l.name,opts:l.opts,note:l.note,unit:l.unit,qty:l.qty};}),
-        discount:sale.disc, pay:sale.pay, status:'betaald'
+        discount:sale.disc, pay:sale.pay
       })}).catch(function(){});
     }catch(e){}
   }

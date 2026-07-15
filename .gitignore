@@ -7,3 +7,6 @@ data/
 # Logs / rommel
 *.log
 .DS_Store
+
+# Preview-screenshots (lokaal)
+.preview/

@@ -26,6 +26,7 @@ Dan openen:
 | Beheer (menu & prijzen) | http://localhost:3000/beheer.html |
 | Webshop (klant) | http://localhost:3000/order.html |
 | Kassa (personeel) | http://localhost:3000/pos.html |
+| Keukenscherm | http://localhost:3000/keuken.html |
 | Website | http://localhost:3000/ |
 
 Andere poort of PIN:
@@ -69,6 +70,22 @@ het beheerscherm).
 - De kassa blijft volledig werken als de server even wegvalt: alles staat ook
   lokaal (localStorage) en het versturen gebeurt "best effort".
 
+### Fase 4 — keukenscherm ✅
+
+- **`keuken.html`**: een live keukenscherm met drie kolommen —
+  **Nieuw → In bereiding → Klaar**. Elke bestelling (web én kassa) is een
+  kaartje met de artikelen, opmerkingen, type/tafel en tijd-sinds-binnenkomst.
+- **Live, vanzelf** via Server-Sent Events (`GET /api/events`): nieuwe
+  bestellingen verschijnen direct, met een geluidssignaal en een korte
+  knippering. Statuswijzigingen zijn meteen op elk keukenscherm zichtbaar.
+- Eén tik zet een bon een stap verder (`PATCH /api/admin/orders/:id`);
+  "Meegegeven" haalt hem van het bord.
+- **Betaling ≠ keukenstatus.** Kassabonnen zijn al betaald (staat in het
+  `pay`-veld); ze doorlopen de keuken toch als `nieuw` want ze moeten nog
+  gemaakt worden.
+- Draait op **elk toestel** met een browser (tablet, telefoon, laptop, of een
+  tweede tab op de kassa). Optioneel — zonder keukenscherm werkt de rest gewoon.
+
 ### API
 
 - `GET /api/menu` — het menu (enkel beschikbare producten) — publiek
@@ -76,7 +93,9 @@ het beheerscherm).
 - `POST /api/login` · `POST /api/logout` · `GET /api/session`
 - `GET/POST/PUT/DELETE /api/admin/products`
 - `GET/POST/PUT/DELETE /api/admin/categories`
-- `GET /api/admin/orders` · `PATCH /api/admin/orders/:id` (status)
+- `GET /api/admin/orders` (voeg `?active=1` toe voor het keukenscherm) ·
+  `PATCH /api/admin/orders/:id` (status)
+- `GET /api/events` — live updates (Server-Sent Events) voor het keukenscherm
 - `POST /api/admin/pin`
 
 De database is de **bron van waarheid**. `lib/catalogue.js` wordt enkel gebruikt
@@ -84,11 +103,10 @@ om de database de allereerste keer te vullen.
 
 ## Roadmap (volgende fases)
 
-- **Fase 4 — Keukenscherm.** Nieuwe bestellingen (web + kassa) verschijnen live
-  in de keuken. De `orders`-tabel en `/api/admin/orders` liggen hiervoor al
-  klaar.
 - **Fase 5 — Rapporten & boekhouding.** Omzet, BTW, per betaalmethode; centraal
   bewaard en exporteerbaar — over web én kassa heen.
+- **Optioneel — keukenticket printen.** In plaats van (of naast) het
+  keukenscherm elke bestelling automatisch op de bonprinter laten uitkomen.
 
 > Let op — promoties (deals) worden in de webshop nu als één artikel toegevoegd;
 > de keuze van welke pizza's in een deal zitten bespreek je bij de
