@@ -241,6 +241,7 @@
     <span class="spacer"></span>
     <button class="tbtn" id="btnPark2" title="Bekijk geparkeerde bons">🅿️ Geparkeerd <span class="badge" id="parkBadge" style="display:none">0</span></button>
     <button class="tbtn" id="btnReport">📊 Dagrapport</button>
+    <button class="tbtn" id="btnFull" title="Volledig scherm (kiosk)">⛶ Scherm</button>
     <button class="tbtn" id="btnTheme" title="Licht / donker">🌙</button>
     <a class="tbtn" href="index.html" title="Terug naar site">↩ Site</a>
   </div>
@@ -1050,6 +1051,17 @@
   function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); themeBtn.textContent=t==='light'?'☀️':'🌙'; save(LS.theme,t); }
   themeBtn.onclick=function(){ applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'); };
   applyTheme(load(LS.theme,'dark'));
+
+  // Volledig scherm / kioskmodus
+  var fullBtn=$('#btnFull');
+  function isFull(){ return !!(document.fullscreenElement||document.webkitFullscreenElement); }
+  function reqFull(el){ (el.requestFullscreen||el.webkitRequestFullscreen||function(){}).call(el); }
+  function exitFull(){ (document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document); }
+  fullBtn.onclick=function(){ if(isFull()) exitFull(); else reqFull(document.documentElement); };
+  function syncFull(){ fullBtn.innerHTML=isFull()?'⛶ Verlaat':'⛶ Scherm'; }
+  document.addEventListener('fullscreenchange',syncFull);
+  document.addEventListener('webkitfullscreenchange',syncFull);
+  syncFull();
 
   function tick(){
     var d=new Date();
