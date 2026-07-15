@@ -33,6 +33,7 @@ var DB_PATH = path.join(DATA_DIR, 'lamia.db');
 var PORT = parseInt(process.env.PORT || '3000', 10);
 var ADMIN_PIN = String(process.env.ADMIN_PIN || '1234');
 var SESSION_HOURS = 12;
+var DELIVERY_FEE = parseFloat(process.env.DELIVERY_FEE || '3.00'); // leveringskosten
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -71,7 +72,8 @@ db.exec(
   '  sizes TEXT,' +                          // JSON [S,M,L] of NULL
   "  tag TEXT DEFAULT ''," +
   '  available INTEGER NOT NULL DEFAULT 1,' +
-  '  sort INTEGER DEFAULT 0' +
+  '  sort INTEGER DEFAULT 0,' +
+  "  img TEXT DEFAULT ''" +
   ');'
 );
 db.exec(
@@ -80,6 +82,40 @@ db.exec(
   '  value TEXT' +
   ');'
 );
+db.exec(
+  'CREATE TABLE IF NOT EXISTS orders (' +
+  '  id INTEGER PRIMARY KEY,' +
+  '  no TEXT,' +
+  '  created_at TEXT,' +
+  '  type TEXT,' +
+  '  cust_name TEXT, cust_phone TEXT, cust_email TEXT, cust_address TEXT,' +
+  '  items TEXT,' +
+  '  subtotal REAL, delivery REAL, total REAL,' +
+  '  note TEXT,' +
+  '  time_wanted TEXT,' +
+  "  status TEXT NOT NULL DEFAULT 'nieuw'," +  // nieuw | bereiden | klaar | afgehaald
+  "  source TEXT NOT NULL DEFAULT 'web'" +      // web | pos
+  ');'
+);
+
+/* categorie → standaardafbeelding voor de webshopkaartjes */
+var CAT_IMG = {
+  pizza: 'pizza-card', pasta: 'pasta', burger: 'burger', broodje: 'burger',
+  kapsalon: 'snacks', lookbrood: 'snacks', snack: 'snacks', friet: 'snacks',
+  dessert: 'dessert', drink: 'drinks', promo: 'promo-card'
+};
+function imgForCat(cat) { return CAT_IMG[cat] || 'pizza-card'; }
+
+/* migratie: img-kolom toevoegen aan een database van vóór fase 2 */
+(function migrate() {
+  var cols = db.prepare('PRAGMA table_info(products)').all().map(function (c) { return c.name; });
+  if (cols.indexOf('img') < 0) {
+    db.exec("ALTER TABLE products ADD COLUMN img TEXT DEFAULT ''");
+    db.prepare('SELECT id,cat FROM products').all().forEach(function (r) {
+      db.prepare('UPDATE products SET img=? WHERE id=?').run(imgForCat(r.cat), r.id);
+    });
+  }
+})();
 
 /* ---- eerste keer: vul de database met de canonieke kaart ---- */
 function seedIfEmpty() {
@@ -90,12 +126,12 @@ function seedIfEmpty() {
     insCat.run(c.id, c.label, c.color || null, c.kind || 'food', c.sort || 0);
   });
   var insProd = db.prepare(
-    'INSERT INTO products (id,cat,type,name,descr,price,sizes,tag,available,sort) VALUES (?,?,?,?,?,?,?,?,?,?)'
+    'INSERT INTO products (id,cat,type,name,descr,price,sizes,tag,available,sort,img) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
   );
   catalogue.PRODUCTS.forEach(function (p, i) {
     insProd.run(
       p.id, p.c, p.t || 'simple', p.name, p.desc || '', p.price,
-      p.sz ? JSON.stringify(p.sz) : null, p.tag || '', 1, i
+      p.sz ? JSON.stringify(p.sz) : null, p.tag || '', 1, i, p.img || imgForCat(p.c)
     );
   });
   db.prepare('INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)').run('admin_pin', ADMIN_PIN);
@@ -113,7 +149,7 @@ function rowToProduct(r) {
   return {
     id: r.id, cat: r.cat, type: r.type, name: r.name, descr: r.descr,
     price: r.price, sizes: r.sizes ? JSON.parse(r.sizes) : null,
-    tag: r.tag || '', available: !!r.available, sort: r.sort
+    tag: r.tag || '', img: r.img || '', available: !!r.available, sort: r.sort
   };
 }
 function allCategories() {
@@ -231,6 +267,44 @@ async function handleApi(req, res, urlPath) {
     return sendJson(res, 200, { categories: cats, products: prods });
   }
 
+  /* ---------- publiek: bestelling plaatsen (webshop) ---------- */
+  if (seg[0] === 'orders' && method === 'POST') {
+    var ob = await readBody(req);
+    var rawItems = Array.isArray(ob.items) ? ob.items : [];
+    if (!rawItems.length) return sendJson(res, 400, { error: 'Lege bestelling' });
+    var type = ['afhalen', 'leveren', 'terplaatse'].indexOf(ob.type) >= 0 ? ob.type : 'afhalen';
+    var subtotal = 0;
+    var items = rawItems.slice(0, 100).map(function (it) {
+      var qty = Math.max(1, parseInt(it.qty, 10) || 1);
+      var unit = Math.max(0, parseFloat(it.unit) || 0);
+      subtotal += unit * qty;
+      return {
+        name: String(it.name || '').slice(0, 120),
+        opts: Array.isArray(it.opts) ? it.opts.slice(0, 20).map(String) : [],
+        note: String(it.note || '').slice(0, 200),
+        unit: Math.round(unit * 100) / 100, qty: qty
+      };
+    });
+    subtotal = Math.round(subtotal * 100) / 100;
+    var delivery = type === 'leveren' ? DELIVERY_FEE : 0;
+    var total = Math.round((subtotal + delivery) * 100) / 100;
+    var cust = ob.customer || {};
+    var now = new Date().toISOString();
+    var out = db.prepare(
+      'INSERT INTO orders (no,created_at,type,cust_name,cust_phone,cust_email,cust_address,items,subtotal,delivery,total,note,time_wanted,status,source) ' +
+      'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+    ).run(null, now, type,
+      String(cust.name || '').slice(0, 120), String(cust.phone || '').slice(0, 40),
+      String(cust.email || '').slice(0, 120), String(cust.address || '').slice(0, 240),
+      JSON.stringify(items), subtotal, delivery, total,
+      String(ob.note || '').slice(0, 300), String(ob.time || '').slice(0, 40), 'nieuw', 'web');
+    var oid = Number(out.lastInsertRowid);
+    var no = 'LM-' + String(oid).padStart(4, '0');
+    db.prepare('UPDATE orders SET no=? WHERE id=?').run(no, oid);
+    var eta = type === 'leveren' ? '35–50 min' : '20–30 min';
+    return sendJson(res, 200, { no: no, id: oid, eta: eta, subtotal: subtotal, delivery: delivery, total: total });
+  }
+
   /* ---------- sessie ---------- */
   if (seg[0] === 'session' && method === 'GET') {
     return sendJson(res, 200, { authed: isAuthed(req) });
@@ -260,10 +334,10 @@ async function handleApi(req, res, urlPath) {
         if (err) return sendJson(res, 400, { error: err });
         var nid = (nb.id && !db.prepare('SELECT 1 FROM products WHERE id=?').get(nb.id)) ? nb.id : genId(nb.cat);
         var maxSort = db.prepare('SELECT COALESCE(MAX(sort),0)+1 AS s FROM products').get().s;
-        db.prepare('INSERT INTO products (id,cat,type,name,descr,price,sizes,tag,available,sort) VALUES (?,?,?,?,?,?,?,?,?,?)')
+        db.prepare('INSERT INTO products (id,cat,type,name,descr,price,sizes,tag,available,sort,img) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
           .run(nid, nb.cat, nb.type || 'simple', nb.name.trim(), nb.descr || '', parseFloat(nb.price),
                (nb.sizes && nb.sizes.length) ? JSON.stringify(nb.sizes) : null, nb.tag || '',
-               nb.available === false ? 0 : 1, maxSort);
+               nb.available === false ? 0 : 1, maxSort, nb.img || imgForCat(nb.cat));
         return sendJson(res, 200, { product: rowToProduct(db.prepare('SELECT * FROM products WHERE id=?').get(nid)) });
       }
       if (method === 'PUT' && id) {
@@ -271,10 +345,10 @@ async function handleApi(req, res, urlPath) {
         if (!db.prepare('SELECT 1 FROM products WHERE id=?').get(id)) return sendJson(res, 404, { error: 'Niet gevonden' });
         var e2 = validProduct(ub);
         if (e2) return sendJson(res, 400, { error: e2 });
-        db.prepare('UPDATE products SET cat=?,type=?,name=?,descr=?,price=?,sizes=?,tag=?,available=? WHERE id=?')
+        db.prepare('UPDATE products SET cat=?,type=?,name=?,descr=?,price=?,sizes=?,tag=?,available=?,img=? WHERE id=?')
           .run(ub.cat, ub.type || 'simple', ub.name.trim(), ub.descr || '', parseFloat(ub.price),
                (ub.sizes && ub.sizes.length) ? JSON.stringify(ub.sizes) : null, ub.tag || '',
-               ub.available === false ? 0 : 1, id);
+               ub.available === false ? 0 : 1, ub.img || imgForCat(ub.cat), id);
         return sendJson(res, 200, { product: rowToProduct(db.prepare('SELECT * FROM products WHERE id=?').get(id)) });
       }
       if (method === 'DELETE' && id) {
@@ -306,6 +380,22 @@ async function handleApi(req, res, urlPath) {
         var used = db.prepare('SELECT COUNT(*) AS n FROM products WHERE cat=?').get(id).n;
         if (used > 0) return sendJson(res, 400, { error: 'Categorie bevat nog ' + used + ' product(en)' });
         db.prepare('DELETE FROM categories WHERE id=?').run(id);
+        return sendJson(res, 200, { ok: true });
+      }
+    }
+
+    if (kind === 'orders') {
+      if (method === 'GET') {
+        var rows = db.prepare('SELECT * FROM orders ORDER BY id DESC LIMIT 200').all().map(function (o) {
+          o.items = o.items ? JSON.parse(o.items) : [];
+          return o;
+        });
+        return sendJson(res, 200, { orders: rows });
+      }
+      if (method === 'PATCH' && id) {
+        var stb = await readBody(req);
+        var st = ['nieuw', 'bereiden', 'klaar', 'afgehaald'].indexOf(stb.status) >= 0 ? stb.status : 'nieuw';
+        db.prepare('UPDATE orders SET status=? WHERE id=?').run(st, id);
         return sendJson(res, 200, { ok: true });
       }
     }

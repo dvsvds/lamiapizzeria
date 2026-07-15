@@ -164,6 +164,16 @@
       <div><label>Label (optioneel)</label><input id="fTag" placeholder="bv. Populair"></div>
       <div><label>Beschikbaar</label><div class="switch"><button type="button" class="toggle on" id="fAvail"></button><span id="fAvailTxt">Ja</span></div></div>
     </div>
+    <div class="fld"><label>Afbeelding (webshop)</label><select id="fImg">
+      <option value="pizza-card">Pizza</option>
+      <option value="slice-card">Pizza — slice</option>
+      <option value="pasta">Pasta</option>
+      <option value="burger">Burger / broodje</option>
+      <option value="snacks">Snacks / friet / kapsalon</option>
+      <option value="dessert">Dessert</option>
+      <option value="drinks">Drank</option>
+      <option value="promo-card">Promo</option>
+    </select></div>
   </div>
   <div class="mfoot">
     <button class="del" id="prodDel" style="display:none">Verwijder</button>
@@ -313,6 +323,7 @@
     $('#fType').value=p?p.type:'simple';
     $('#fPrice').value=p?p.price:''; $('#fTag').value=p?(p.tag||''):'';
     var sz=p&&p.sizes?p.sizes:[]; $('#fS').value=sz[0]!=null?sz[0]:''; $('#fM').value=sz[1]!=null?sz[1]:''; $('#fL').value=sz[2]!=null?sz[2]:'';
+    $('#fImg').value=p&&p.img?p.img:'pizza-card';
     availState=p?p.available:true; $('#fAvail').classList.toggle('on',availState); $('#fAvailTxt').textContent=availState?'Ja':'Nee';
     $('#prodDel').style.display=p?'':'none';
     syncSizes(); open('#ovProd'); setTimeout(function(){$('#fName').focus();},60);
@@ -327,7 +338,7 @@
       sizes=[s,m,l];
     }
     var body={ cat:$('#fCat').value, type:type, name:$('#fName').value.trim(), descr:$('#fDesc').value.trim(),
-      price:parseFloat($('#fPrice').value), sizes:sizes, tag:$('#fTag').value.trim(), available:availState };
+      price:parseFloat($('#fPrice').value), sizes:sizes, tag:$('#fTag').value.trim(), img:$('#fImg').value, available:availState };
     if(!body.name) return prodError('Naam is verplicht.');
     if(isNaN(body.price)) return prodError('Vul een geldige prijs in.');
     var isNew=!editingProd;

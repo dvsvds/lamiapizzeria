@@ -37,33 +37,54 @@ PORT=8080 ADMIN_PIN=4321 node server.js
 De beheer-PIN is standaard **1234** (wijzig 'm meteen via de knop **🔑 PIN** in
 het beheerscherm).
 
-## Wat er nu werkt — Fase 1: centraal menu & prijzen
+## Wat er nu werkt
+
+### Fase 1 — centraal menu & prijzen ✅
 
 - **Database** (`data/lamia.db`, SQLite). Bij de eerste start automatisch gevuld
   met de volledige kaart (115 producten, 11 categorieën).
 - **Beheerscherm** `beheer.html`: producten en prijzen bewerken, toevoegen en
   verwijderen, maten voor pizza's, een product tijdelijk op **onbeschikbaar**
-  zetten ("uitverkocht"), labels (Populair/Aanrader), en categorieën beheren.
-- **API** die straks door de webshop én de kassa gebruikt wordt:
-  - `GET /api/menu` — het menu (enkel beschikbare producten) — publiek
-  - `POST /api/login` · `POST /api/logout` · `GET /api/session`
-  - `GET/POST/PUT/DELETE /api/admin/products`
-  - `GET/POST/PUT/DELETE /api/admin/categories`
-  - `POST /api/admin/pin`
+  zetten ("uitverkocht"), labels (Populair/Aanrader), afbeelding kiezen, en
+  categorieën beheren.
 
-De database is vanaf nu de **bron van waarheid**. `lib/catalogue.js` wordt enkel
-gebruikt om de database de allereerste keer te vullen.
+### Fase 2 — webshop gekoppeld ✅
+
+- **`order.html`** haalt het menu nu **live uit de database** (`/api/menu`). Pas
+  je in het beheerscherm een prijs aan of zet je iets op onbeschikbaar, dan zie
+  je dat meteen in de webshop. (Zonder server valt de pagina terug op de
+  ingebakken kaart, zodat ze altijd blijft werken.)
+- Bestellingen worden via **`POST /api/orders`** in de database opgeslagen met
+  een bestelnummer (bv. `LM-0007`), klantgegevens, artikelen en totalen.
+  Leveringskosten worden serverzijde toegevoegd.
+
+### API
+
+- `GET /api/menu` — het menu (enkel beschikbare producten) — publiek
+- `POST /api/orders` — bestelling plaatsen — publiek
+- `POST /api/login` · `POST /api/logout` · `GET /api/session`
+- `GET/POST/PUT/DELETE /api/admin/products`
+- `GET/POST/PUT/DELETE /api/admin/categories`
+- `GET /api/admin/orders` · `PATCH /api/admin/orders/:id` (status)
+- `POST /api/admin/pin`
+
+De database is de **bron van waarheid**. `lib/catalogue.js` wordt enkel gebruikt
+om de database de allereerste keer te vullen.
 
 ## Roadmap (volgende fases)
 
-- **Fase 2 — Webshop.** `order.html` haalt het menu live uit `/api/menu` en
-  plaatst bestellingen in de database. Eigen online bestellingen = geen
-  Deliveroo/UberEats-commissie.
 - **Fase 3 — Kassa.** `pos.html` gekoppeld aan de database (gedeeld menu,
   bestellingen centraal).
-- **Fase 4 — Keukenscherm.** Nieuwe bestellingen verschijnen live in de keuken.
+- **Fase 4 — Keukenscherm.** Nieuwe bestellingen (web + kassa) verschijnen live
+  in de keuken. De `orders`-tabel en `/api/admin/orders` liggen hiervoor al
+  klaar.
 - **Fase 5 — Rapporten & boekhouding.** Omzet, BTW, per betaalmethode; centraal
   bewaard en exporteerbaar.
+
+> Let op — promoties (deals) worden in de webshop nu als één artikel toegevoegd;
+> de keuze van welke pizza's in een deal zitten bespreek je bij de
+> bevestiging. Een pizza-kiezer per deal kan later terugkomen als we
+> deal-samenstelling in de database opnemen.
 
 ## Mappen
 
