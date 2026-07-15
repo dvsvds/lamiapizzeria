@@ -334,7 +334,14 @@
   .oi-size{background:var(--ink);border:1px solid var(--line);color:var(--cream);border-radius:8px;padding:.4rem .4rem;font-family:inherit;font-size:.78rem;cursor:pointer;flex:none}
   .oi-size:focus{outline:none;border-color:var(--gold)}
   /* category filter (Frituur-stijl) */
-  .cat-filter{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1.7rem}
+  .cat-filter{display:flex;flex-wrap:wrap;gap:.5rem;
+    position:sticky;top:var(--catsticky,132px);z-index:50;
+    background:var(--ink);border-bottom:1px solid var(--line);
+    margin:0 -22px 1.3rem;padding:.75rem 22px}
+  @media(max-width:860px){
+    .cat-filter{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .cat-filter::-webkit-scrollbar{display:none}
+  }
   .cf{border:1px solid var(--line);background:var(--panel);color:var(--muted);font-weight:700;font-size:.85rem;padding:.5rem 1rem;border-radius:999px;cursor:pointer;transition:background .15s,color .15s,border-color .15s;white-space:nowrap}
   .cf:hover{border-color:var(--gold);color:var(--cream)}
   .cf.active{background:var(--red);border-color:var(--red);color:#fff}
@@ -1293,7 +1300,15 @@
       else { if(cartBoxEl.parentNode!==cartHome) cartHome.appendChild(cartBoxEl); closeCart(); }
     }
     placeCart();
-    window.addEventListener('resize',placeCart);
+    // Plak-offset van de categoriebalk = hoogte van header + orderbar, zodat ze er net onder blijft plakken
+    function setStickyTop(){
+      var h=document.querySelector('header'), ob=document.querySelector('.orderbar');
+      var top=(h?h.offsetHeight:0)+(ob?ob.offsetHeight:0);
+      document.documentElement.style.setProperty('--catsticky', top+'px');
+    }
+    setStickyTop();
+    window.addEventListener('load',setStickyTop);
+    window.addEventListener('resize',function(){ placeCart(); setStickyTop(); });
 
     // Zwevend karretje: opent altijd het mandje. Op mobiel als lade, op desktop scrollt het naar de zijbalk.
     var fabEl=$('#cartFab');
