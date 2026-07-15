@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beheer — La Mia Pizzeria</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#141110">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#141110; --ink:#1c1815; --panel:#221d19; --panel-2:#2a231e;
+    --line:#3a322b; --line-2:#4a4038; --cream:#f4ece0; --muted:#b6a99c; --muted-2:#8c8073;
+    --gold:#e6b24c; --coral:#e0533f; --green:#5aa469; --red:#d9483b; --blue:#4f93c4;
+    --radius:14px; --sh:0 16px 40px rgba(0,0,0,.5);
+  }
+  :root[data-theme="light"]{
+    --bg:#f3ecde; --ink:#fbf6ec; --panel:#ffffff; --panel-2:#f7f0e3;
+    --line:#e2d6c1; --line-2:#d3c4a9; --cream:#241c14; --muted:#6b5c4d; --muted-2:#9a8a76;
+    --gold:#b0790c; --coral:#cf2f22; --green:#3f8a52; --red:#c0392b; --blue:#2f79ab;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Manrope',"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--cream);min-height:100vh}
+  h1,h2,h3{font-family:'Anton','Arial Narrow',Impact,sans-serif;font-weight:400;letter-spacing:.5px;text-transform:uppercase}
+  button{font-family:inherit;cursor:pointer;color:inherit}
+  input,select{font-family:inherit}
+  a{color:var(--gold);text-decoration:none}
+  ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:6px}
+
+  header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:.9rem;padding:.6rem 1rem;background:var(--ink);border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:.6rem;font-weight:800}
+  .brand .mark{width:34px;height:34px;border-radius:9px;background:conic-gradient(from -35deg at 50% 100%,var(--gold) 0 70deg,transparent 70deg),var(--coral);display:grid;place-items:center;font-size:1.05rem}
+  .brand b{color:var(--coral);font-size:1rem;line-height:1}.brand small{display:block;color:var(--gold);font-size:.56rem;letter-spacing:.28em;font-weight:800;text-transform:uppercase}
+  .spacer{flex:1}
+  .tbtn{border:1px solid var(--line-2);background:var(--panel);border-radius:10px;padding:.5rem .8rem;font-weight:800;font-size:.82rem;display:inline-flex;align-items:center;gap:.4rem}
+  .tbtn:hover{border-color:var(--gold);color:var(--gold)}
+  .tbtn.primary{background:var(--gold);border-color:var(--gold);color:#241708}
+  .live{display:inline-flex;align-items:center;gap:.4rem;font-size:.74rem;color:var(--muted);font-weight:700}
+  .live .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(90,164,105,.6);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(90,164,105,.5)}70%{box-shadow:0 0 0 7px rgba(90,164,105,0)}100%{box-shadow:0 0 0 0 rgba(90,164,105,0)}}
+
+  .wrap{max-width:1100px;margin:0 auto;padding:1.1rem 1rem 4rem}
+  .pagehead{display:flex;align-items:baseline;gap:.8rem;margin:.4rem 0 1rem;flex-wrap:wrap}
+  .pagehead h1{font-size:1.9rem;color:var(--coral)}
+  .pagehead p{color:var(--muted-2);font-size:.85rem}
+
+  .toolbar{display:flex;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center;position:sticky;top:60px;z-index:30;background:var(--bg);padding:.4rem 0}
+  .search{flex:1;min-width:180px;position:relative}
+  .search input{width:100%;background:var(--panel);border:1px solid var(--line-2);border-radius:10px;color:var(--cream);padding:.6rem .8rem .6rem 2.1rem;font-size:.95rem;font-weight:600}
+  .search:before{content:"🔍";position:absolute;left:.6rem;top:50%;transform:translateY(-50%);opacity:.6}
+  select.filter{background:var(--panel);border:1px solid var(--line-2);border-radius:10px;color:var(--cream);padding:.6rem .7rem;font-weight:700;font-size:.9rem}
+
+  .catblock{margin-bottom:1.5rem}
+  .catblock h2{font-size:1.05rem;display:flex;align-items:center;gap:.55rem;margin-bottom:.5rem;color:var(--cream)}
+  .catblock h2 .swatch{width:12px;height:12px;border-radius:3px}
+  .catblock h2 .count{font-family:'Manrope';font-size:.72rem;color:var(--muted-2);font-weight:800;letter-spacing:0}
+  .catblock h2 .editcat{margin-left:.3rem;font-size:.7rem;color:var(--muted-2);border:1px solid var(--line);border-radius:7px;padding:.15rem .5rem;font-weight:800}
+  .catblock h2 .editcat:hover{color:var(--gold);border-color:var(--gold)}
+
+  .row{display:grid;grid-template-columns:1fr auto auto auto;gap:.6rem;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:.55rem .7rem;margin-bottom:.4rem}
+  .row.off{opacity:.5}
+  .row .nm{font-weight:800;font-size:.94rem}
+  .row .nm .tag{font-size:.62rem;background:var(--gold);color:#241708;border-radius:5px;padding:.05rem .35rem;margin-left:.4rem;font-weight:800;vertical-align:middle}
+  .row .nm .dsc{display:block;font-weight:600;font-size:.75rem;color:var(--muted-2);margin-top:.1rem}
+  .row .price{font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .row .price .sz{display:block;font-size:.68rem;color:var(--muted-2);font-weight:700}
+  .toggle{position:relative;width:44px;height:25px;border-radius:999px;background:var(--line-2);border:0;transition:.15s;flex:0 0 auto}
+  .toggle:before{content:"";position:absolute;top:2px;left:2px;width:21px;height:21px;border-radius:50%;background:#fff;transition:.15s}
+  .toggle.on{background:var(--green)}.toggle.on:before{left:21px}
+  .row .edit{border:1px solid var(--line-2);background:var(--panel-2);border-radius:8px;padding:.4rem .6rem;font-weight:800;font-size:.8rem}
+  .row .edit:hover{border-color:var(--gold);color:var(--gold)}
+
+  .empty{color:var(--muted-2);text-align:center;padding:3rem 1rem;font-weight:600}
+
+  /* modal */
+  .ov{position:fixed;inset:0;background:rgba(0,0,0,.66);backdrop-filter:blur(3px);z-index:100;display:none;align-items:center;justify-content:center;padding:1rem}
+  .ov.open{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--line-2);border-radius:16px;box-shadow:var(--sh);width:100%;max-width:460px;max-height:92vh;overflow-y:auto}
+  .mhead{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+  .mhead h3{font-size:1.25rem;color:var(--coral)}.mhead .x{background:none;border:0;font-size:1.5rem;color:var(--muted)}
+  .mbody{padding:1.1rem 1.2rem}
+  .fld{margin-bottom:.9rem}
+  .fld label{display:block;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);font-weight:800;margin-bottom:.35rem}
+  .fld input,.fld select,.fld textarea{width:100%;background:var(--ink);border:1px solid var(--line-2);border-radius:10px;color:var(--cream);padding:.6rem .7rem;font-size:.95rem;font-weight:600}
+  .fld textarea{resize:vertical;min-height:52px}
+  .fld.row2{display:flex;gap:.7rem}.fld.row2>div{flex:1}
+  .sizes{display:none;gap:.5rem}.sizes.show{display:flex}
+  .sizes>div{flex:1}.sizes label{font-size:.68rem}
+  .switch{display:flex;align-items:center;gap:.6rem;font-weight:700;font-size:.9rem;color:var(--muted)}
+  .mfoot{display:flex;gap:.6rem;padding:1rem 1.2rem;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--panel)}
+  .mfoot .del{border:1px solid var(--line-2);background:var(--panel);border-radius:11px;padding:.75rem 1rem;font-weight:800;color:var(--muted)}
+  .mfoot .del:hover{border-color:var(--red);color:var(--red)}
+  .mfoot .save{flex:1;background:var(--green);border:0;border-radius:11px;color:#08210e;font-family:'Anton';font-size:1.1rem;letter-spacing:.5px}
+  .err{background:rgba(217,72,59,.15);border:1px solid var(--red);color:var(--cream);border-radius:9px;padding:.5rem .7rem;font-size:.85rem;font-weight:600;margin-bottom:.8rem;display:none}
+  .err.show{display:block}
+
+  /* login */
+  .login{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem}
+  .login .box{background:var(--panel);border:1px solid var(--line-2);border-radius:18px;box-shadow:var(--sh);width:100%;max-width:340px;padding:1.8rem;text-align:center}
+  .login .mark{width:56px;height:56px;border-radius:14px;margin:0 auto 1rem;background:conic-gradient(from -35deg at 50% 100%,var(--gold) 0 70deg,transparent 70deg),var(--coral);display:grid;place-items:center;font-size:1.6rem}
+  .login h2{color:var(--coral);font-size:1.4rem;margin-bottom:.3rem}
+  .login p{color:var(--muted-2);font-size:.85rem;margin-bottom:1.2rem}
+  .login input{width:100%;background:var(--ink);border:1px solid var(--line-2);border-radius:12px;color:var(--cream);padding:.8rem;font-size:1.5rem;text-align:center;letter-spacing:.4em;font-weight:800}
+  .login button{width:100%;margin-top:.9rem;background:var(--gold);border:0;border-radius:12px;color:#241708;font-family:'Anton';font-size:1.2rem;padding:.8rem;letter-spacing:.5px}
+  .login .lerr{color:var(--red);font-size:.82rem;font-weight:700;margin-top:.7rem;min-height:1rem}
+
+  .toast{position:fixed;left:50%;bottom:1.4rem;transform:translateX(-50%) translateY(20px);background:var(--gold);color:#241708;padding:.7rem 1.3rem;border-radius:999px;font-weight:800;box-shadow:var(--sh);opacity:0;pointer-events:none;transition:.25s;z-index:300}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media(max-width:560px){ .row{grid-template-columns:1fr auto auto;} .row .price{grid-column:1;grid-row:2} }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><span class="mark">🍕</span><span><b>La Mia Pizzeria</b><small>Beheer</small></span></div>
+  <span class="live"><span class="dot"></span> Live · voedt site &amp; kassa</span>
+  <span class="spacer"></span>
+  <a class="tbtn" href="order.html" target="_blank">🛒 Webshop</a>
+  <a class="tbtn" href="pos.html" target="_blank">🧾 Kassa</a>
+  <a class="tbtn" href="keuken.html" target="_blank">🍳 Keuken</a>
+  <a class="tbtn" href="rapporten.html" target="_blank">📊 Rapporten</a>
+  <button class="tbtn" id="btnPin">🔑 PIN</button>
+  <button class="tbtn" id="btnTheme">🌙</button>
+  <button class="tbtn" id="btnLogout">Uitloggen</button>
+</header>
+
+<div class="wrap">
+  <div class="pagehead">
+    <h1>Menu &amp; prijzen</h1>
+    <p id="subCount">—</p>
+  </div>
+
+  <div class="toolbar">
+    <div class="search"><input id="search" type="search" placeholder="Zoek product…" autocomplete="off"></div>
+    <select class="filter" id="catFilter"><option value="all">Alle categorieën</option></select>
+    <button class="tbtn primary" id="btnAdd">＋ Product</button>
+    <button class="tbtn" id="btnCatNew">＋ Categorie</button>
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<!-- Product modal -->
+<div class="ov" id="ovProd"><div class="modal"><div class="mhead"><h3 id="prodTitle">Product</h3><button class="x" data-close>✕</button></div>
+  <div class="mbody">
+    <div class="err" id="prodErr"></div>
+    <div class="fld"><label>Naam</label><input id="fName" placeholder="bv. Margherita"></div>
+    <div class="fld"><label>Omschrijving</label><textarea id="fDesc" placeholder="Toppings / ingrediënten"></textarea></div>
+    <div class="fld row2">
+      <div><label>Categorie</label><select id="fCat"></select></div>
+      <div><label>Type</label><select id="fType">
+        <option value="simple">Enkel (vaste prijs)</option>
+        <option value="pizza">Pizza (S/M/L)</option>
+        <option value="pasta">Pasta</option>
+        <option value="drink">Drank</option>
+      </select></div>
+    </div>
+    <div class="fld"><label id="lblPrice">Prijs (€)</label><input id="fPrice" type="number" inputmode="decimal" step="0.1" placeholder="0.00"></div>
+    <div class="fld sizes" id="fSizesWrap">
+      <div><label>Small (€)</label><input id="fS" type="number" step="0.1" inputmode="decimal"></div>
+      <div><label>Medium (€)</label><input id="fM" type="number" step="0.1" inputmode="decimal"></div>
+      <div><label>Large (€)</label><input id="fL" type="number" step="0.1" inputmode="decimal"></div>
+    </div>
+    <div class="fld row2">
+      <div><label>Label (optioneel)</label><input id="fTag" placeholder="bv. Populair"></div>
+      <div><label>Beschikbaar</label><div class="switch"><button type="button" class="toggle on" id="fAvail"></button><span id="fAvailTxt">Ja</span></div></div>
+    </div>
+    <div class="fld"><label>Afbeelding (webshop)</label><select id="fImg">
+      <option value="pizza-card">Pizza</option>
+      <option value="slice-card">Pizza — slice</option>
+      <option value="pasta">Pasta</option>
+      <option value="burger">Burger / broodje</option>
+      <option value="snacks">Snacks / friet / kapsalon</option>
+      <option value="dessert">Dessert</option>
+      <option value="drinks">Drank</option>
+      <option value="promo-card">Promo</option>
+    </select></div>
+  </div>
+  <div class="mfoot">
+    <button class="del" id="prodDel" style="display:none">Verwijder</button>
+    <button class="save" id="prodSave">Opslaan</button>
+  </div>
+</div></div>
+
+<!-- Category modal -->
+<div class="ov" id="ovCat"><div class="modal" style="max-width:380px"><div class="mhead"><h3 id="catTitle">Categorie</h3><button class="x" data-close>✕</button></div>
+  <div class="mbody">
+    <div class="err" id="catErr"></div>
+    <div class="fld"><label>Id (technisch, a-z)</label><input id="cId" placeholder="bv. salades"></div>
+    <div class="fld"><label>Naam</label><input id="cLabel" placeholder="bv. Salades"></div>
+    <div class="fld row2">
+      <div><label>Kleur</label><input id="cColor" type="color" value="#e6b24c" style="height:44px;padding:.2rem"></div>
+      <div><label>BTW-soort</label><select id="cKind"><option value="food">Eten</option><option value="drink">Drank</option></select></div>
+    </div>
+  </div>
+  <div class="mfoot">
+    <button class="del" id="catDel" style="display:none">Verwijder</button>
+    <button class="save" id="catSave">Opslaan</button>
+  </div>
+</div></div>
+
+<!-- PIN modal -->
+<div class="ov" id="ovPin"><div class="modal" style="max-width:340px"><div class="mhead"><h3>PIN wijzigen</h3><button class="x" data-close>✕</button></div>
+  <div class="mbody">
+    <div class="err" id="pinErr"></div>
+    <div class="fld"><label>Nieuwe PIN (4–8 cijfers)</label><input id="pinNew" type="password" inputmode="numeric" placeholder="••••"></div>
+  </div>
+  <div class="mfoot"><button class="save" id="pinSave">Opslaan</button></div>
+</div></div>
+
+<!-- Login -->
+<div class="login" id="login" style="display:none">
+  <div class="box">
+    <div class="mark">🍕</div>
+    <h2>Beheer</h2>
+    <p>Log in met je PIN om het menu te beheren.</p>
+    <input id="loginPin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="off">
+    <button id="loginBtn">Inloggen</button>
+    <div class="lerr" id="loginErr"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+  var $=function(s,r){return (r||document).querySelector(s);};
+  function euro(n){ return '€ '+(Math.round(n*100)/100).toFixed(2).replace('.',','); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function toast(m){ var t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove('show');},1600); }
+
+  function api(method,url,body){
+    return fetch(url,{method:method,headers:body?{'Content-Type':'application/json'}:undefined,
+      body:body?JSON.stringify(body):undefined,credentials:'same-origin'})
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,status:r.status,data:j}; }); });
+  }
+
+  var CATS=[], PRODS=[], filterCat='all', term='';
+
+  /* ---------- laden ---------- */
+  function loadAll(){
+    return Promise.all([ api('GET','/api/admin/categories'), api('GET','/api/admin/products') ])
+      .then(function(res){
+        if(res[0].status===401||res[1].status===401){ showLogin(); return; }
+        CATS=res[0].data.categories||[]; PRODS=res[1].data.products||[];
+        buildCatFilter(); render();
+      });
+  }
+  function buildCatFilter(){
+    var sel=$('#catFilter'); var cur=sel.value;
+    sel.innerHTML='<option value="all">Alle categorieën</option>'+
+      CATS.map(function(c){return '<option value="'+c.id+'">'+esc(c.label)+'</option>';}).join('');
+    sel.value=cur||'all';
+    var fc=$('#fCat'); fc.innerHTML=CATS.map(function(c){return '<option value="'+c.id+'">'+esc(c.label)+'</option>';}).join('');
+  }
+  function catById(id){ for(var i=0;i<CATS.length;i++) if(CATS[i].id===id) return CATS[i]; return null; }
+
+  function render(){
+    var list=$('#list');
+    $('#subCount').textContent=PRODS.length+' producten · '+CATS.length+' categorieën';
+    var q=term.trim().toLowerCase();
+    var shown=PRODS.filter(function(p){
+      if(filterCat!=='all'&&p.cat!==filterCat) return false;
+      if(q&&(p.name+' '+p.descr).toLowerCase().indexOf(q)<0) return false;
+      return true;
+    });
+    if(!shown.length){ list.innerHTML='<div class="empty">Geen producten gevonden.</div>'; return; }
+    var html='';
+    CATS.forEach(function(c){
+      var items=shown.filter(function(p){return p.cat===c.id;});
+      if(!items.length) return;
+      html+='<div class="catblock"><h2><span class="swatch" style="background:'+(c.color||'#e6b24c')+'"></span>'+
+        esc(c.label)+' <span class="count">'+items.length+'</span>'+
+        '<button class="editcat" data-editcat="'+c.id+'">bewerk</button></h2>';
+      items.forEach(function(p){
+        var sz=p.sizes?('<span class="sz">'+p.sizes.map(euro).join(' / ')+'</span>'):'';
+        html+='<div class="row'+(p.available?'':' off')+'" data-id="'+p.id+'">'+
+          '<div class="nm">'+esc(p.name)+(p.tag?'<span class="tag">'+esc(p.tag)+'</span>':'')+
+            '<span class="dsc">'+esc(p.descr)+'</span></div>'+
+          '<div class="price">'+euro(p.price)+sz+'</div>'+
+          '<button class="toggle'+(p.available?' on':'')+'" data-toggle="'+p.id+'" title="Beschikbaar"></button>'+
+          '<button class="edit" data-edit="'+p.id+'">Bewerk</button></div>';
+      });
+      html+='</div>';
+    });
+    list.innerHTML=html;
+  }
+
+  /* ---------- events op de lijst ---------- */
+  $('#list').addEventListener('click',function(e){
+    var tg=e.target.closest('[data-toggle]'), ed=e.target.closest('[data-edit]'), ec=e.target.closest('[data-editcat]');
+    if(tg){ toggleAvail(tg.getAttribute('data-toggle')); }
+    else if(ed){ openProduct(ed.getAttribute('data-edit')); }
+    else if(ec){ openCategory(ec.getAttribute('data-editcat')); }
+  });
+  function prodById(id){ for(var i=0;i<PRODS.length;i++) if(PRODS[i].id===id) return PRODS[i]; return null; }
+
+  function toggleAvail(id){
+    var p=prodById(id); if(!p) return;
+    var upd=Object.assign({},p,{available:!p.available});
+    api('PUT','/api/admin/products/'+id,upd).then(function(r){
+      if(r.ok){ p.available=!p.available; render(); toast(p.available?'Weer beschikbaar':'Op onbeschikbaar gezet'); }
+      else toast(r.data.error||'Fout');
+    });
+  }
+
+  /* ---------- product modal ---------- */
+  var editingProd=null;
+  var availState=true;
+  $('#fAvail').onclick=function(){ availState=!availState; this.classList.toggle('on',availState); $('#fAvailTxt').textContent=availState?'Ja':'Nee'; };
+  $('#fType').onchange=function(){ syncSizes(); };
+  function syncSizes(){
+    var isPizza=$('#fType').value==='pizza';
+    $('#fSizesWrap').classList.toggle('show',isPizza);
+    $('#lblPrice').textContent=isPizza?'Referentieprijs (€)':'Prijs (€)';
+  }
+  function openProduct(id){
+    var p=id?prodById(id):null; editingProd=p;
+    $('#prodTitle').textContent=p?'Product bewerken':'Nieuw product';
+    $('#prodErr').classList.remove('show');
+    $('#fName').value=p?p.name:''; $('#fDesc').value=p?p.descr:'';
+    $('#fCat').value=p?p.cat:(filterCat!=='all'?filterCat:CATS[0]&&CATS[0].id);
+    $('#fType').value=p?p.type:'simple';
+    $('#fPrice').value=p?p.price:''; $('#fTag').value=p?(p.tag||''):'';
+    var sz=p&&p.sizes?p.sizes:[]; $('#fS').value=sz[0]!=null?sz[0]:''; $('#fM').value=sz[1]!=null?sz[1]:''; $('#fL').value=sz[2]!=null?sz[2]:'';
+    $('#fImg').value=p&&p.img?p.img:'pizza-card';
+    availState=p?p.available:true; $('#fAvail').classList.toggle('on',availState); $('#fAvailTxt').textContent=availState?'Ja':'Nee';
+    $('#prodDel').style.display=p?'':'none';
+    syncSizes(); open('#ovProd'); setTimeout(function(){$('#fName').focus();},60);
+  }
+  $('#btnAdd').onclick=function(){ openProduct(null); };
+  $('#prodSave').onclick=function(){
+    var type=$('#fType').value;
+    var sizes=null;
+    if(type==='pizza'){
+      var s=parseFloat($('#fS').value),m=parseFloat($('#fM').value),l=parseFloat($('#fL').value);
+      if(![s,m,l].every(function(x){return !isNaN(x);})){ return prodError('Vul alle drie de maten in voor een pizza.'); }
+      sizes=[s,m,l];
+    }
+    var body={ cat:$('#fCat').value, type:type, name:$('#fName').value.trim(), descr:$('#fDesc').value.trim(),
+      price:parseFloat($('#fPrice').value), sizes:sizes, tag:$('#fTag').value.trim(), img:$('#fImg').value, available:availState };
+    if(!body.name) return prodError('Naam is verplicht.');
+    if(isNaN(body.price)) return prodError('Vul een geldige prijs in.');
+    var isNew=!editingProd;
+    var req=isNew?api('POST','/api/admin/products',body):api('PUT','/api/admin/products/'+editingProd.id,body);
+    req.then(function(r){
+      if(!r.ok) return prodError(r.data.error||'Opslaan mislukt.');
+      close('#ovProd'); toast(isNew?'Product toegevoegd':'Opgeslagen'); loadAll();
+    });
+  };
+  $('#prodDel').onclick=function(){
+    if(!editingProd||!confirm('"'+editingProd.name+'" verwijderen?')) return;
+    api('DELETE','/api/admin/products/'+editingProd.id).then(function(r){
+      if(r.ok){ close('#ovProd'); toast('Verwijderd'); loadAll(); } else toast(r.data.error||'Fout');
+    });
+  };
+  function prodError(m){ var e=$('#prodErr'); e.textContent=m; e.classList.add('show'); }
+
+  /* ---------- category modal ---------- */
+  var editingCat=null;
+  function openCategory(id){
+    var c=id?catById(id):null; editingCat=c;
+    $('#catTitle').textContent=c?'Categorie bewerken':'Nieuwe categorie';
+    $('#catErr').classList.remove('show');
+    $('#cId').value=c?c.id:''; $('#cId').disabled=!!c;
+    $('#cLabel').value=c?c.label:''; $('#cColor').value=c?(c.color||'#e6b24c'):'#e6b24c';
+    $('#cKind').value=c?c.kind:'food';
+    $('#catDel').style.display=c?'':'none';
+    open('#ovCat');
+  }
+  $('#btnCatNew').onclick=function(){ openCategory(null); };
+  $('#catSave').onclick=function(){
+    var body={ id:$('#cId').value.trim().toLowerCase(), label:$('#cLabel').value.trim(),
+      color:$('#cColor').value, kind:$('#cKind').value };
+    if(!body.label) return catError('Naam verplicht.');
+    var req=editingCat?api('PUT','/api/admin/categories/'+editingCat.id,body):api('POST','/api/admin/categories',body);
+    req.then(function(r){ if(!r.ok) return catError(r.data.error||'Fout'); close('#ovCat'); toast('Categorie opgeslagen'); loadAll(); });
+  };
+  $('#catDel').onclick=function(){
+    if(!editingCat||!confirm('Categorie "'+editingCat.label+'" verwijderen?')) return;
+    api('DELETE','/api/admin/categories/'+editingCat.id).then(function(r){
+      if(r.ok){ close('#ovCat'); toast('Categorie verwijderd'); loadAll(); } else catError(r.data.error||'Fout');
+    });
+  };
+  function catError(m){ var e=$('#catErr'); e.textContent=m; e.classList.add('show'); }
+
+  /* ---------- PIN ---------- */
+  $('#btnPin').onclick=function(){ $('#pinErr').classList.remove('show'); $('#pinNew').value=''; open('#ovPin'); };
+  $('#pinSave').onclick=function(){
+    api('POST','/api/admin/pin',{pin:$('#pinNew').value}).then(function(r){
+      if(!r.ok){ var e=$('#pinErr'); e.textContent=r.data.error||'Fout'; e.classList.add('show'); return; }
+      close('#ovPin'); toast('PIN gewijzigd');
+    });
+  };
+
+  /* ---------- login ---------- */
+  function showLogin(){ $('#login').style.display='flex'; setTimeout(function(){$('#loginPin').focus();},60); }
+  function doLogin(){
+    api('POST','/api/login',{pin:$('#loginPin').value}).then(function(r){
+      if(r.ok){ $('#login').style.display='none'; $('#loginPin').value=''; loadAll(); }
+      else { $('#loginErr').textContent=(r.data&&r.data.error)||'Verkeerde PIN'; }
+    });
+  }
+  $('#loginBtn').onclick=doLogin;
+  $('#loginPin').addEventListener('keydown',function(e){ if(e.key==='Enter') doLogin(); });
+  $('#btnLogout').onclick=function(){ api('POST','/api/logout').then(function(){ showLogin(); }); };
+
+  /* ---------- overlays / thema ---------- */
+  function open(sel){ $(sel).classList.add('open'); }
+  function close(sel){ $(sel).classList.remove('open'); }
+  document.querySelectorAll('.ov').forEach(function(ov){
+    ov.addEventListener('click',function(e){ if(e.target===ov) ov.classList.remove('open'); });
+    ov.querySelectorAll('[data-close]').forEach(function(x){ x.onclick=function(){ ov.classList.remove('open'); }; });
+  });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') document.querySelectorAll('.ov.open').forEach(function(o){o.classList.remove('open');}); });
+
+  var themeBtn=$('#btnTheme');
+  function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); themeBtn.textContent=t==='light'?'☀️':'🌙'; try{localStorage.setItem('lamia_admin_theme',t);}catch(e){} }
+  themeBtn.onclick=function(){ applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'); };
+  var savedTheme='dark'; try{savedTheme=localStorage.getItem('lamia_admin_theme')||'dark';}catch(e){}
+  applyTheme(savedTheme);
+
+  $('#search').addEventListener('input',function(){ term=this.value; render(); });
+  $('#catFilter').addEventListener('change',function(){ filterCat=this.value; render(); });
+
+  /* ---------- start ---------- */
+  api('GET','/api/session').then(function(r){
+    if(r.data&&r.data.authed) loadAll(); else showLogin();
+  });
+})();
+</script>
+</body>
+</html>

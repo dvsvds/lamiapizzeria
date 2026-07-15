@@ -906,8 +906,7 @@
     <p class="conf-num">Bestelnummer <b id="confNum">—</b></p>
     <div class="conf-eta" id="confEta"></div>
     <div class="conf-sum" id="confSum"></div>
-    <p class="conf-msg">Je bestelling staat klaar in WhatsApp — verstuur het bericht om te bevestigen. 🍕</p>
-    <button type="button" class="btn" id="confWa" style="background:#25D366;color:#08320f;width:100%;justify-content:center;margin-bottom:.6rem">📲 Verstuur via WhatsApp</button>
+    <p class="conf-msg">We bellen je zo dadelijk om te bevestigen. Buon appetito! 🍕</p>
     <button type="button" class="btn btn-gold" id="confClose" style="width:100%;justify-content:center">Sluiten</button>
   </div>
 </div>
@@ -1223,19 +1222,26 @@
     grid.addEventListener('click',function(e){
       var b=e.target.closest('.pc-add'); if(!b) return;
       var p=PRODUCTS.filter(function(x){return x.id===b.getAttribute('data-id');})[0];
+      if(!p) return;
       if(p.t==='simple'){ addToCart(p.name, [], '', p.price, 1); toast(); }
       else openOptions(p);
     });
     // Meest gekozen — toont producten met een 'tag'
     var popGrid=$('#popGrid');
-    if(popGrid){
+    function fillPop(){
+      if(!popGrid) return;
+      popGrid.innerHTML='';
       PRODUCTS.filter(function(p){return p.tag;}).forEach(function(p){
         var el=document.createElement('div'); el.className='prod-card';
         el.innerHTML='<div class="pc-img" style="background-image:url('+imgUrl(p.img)+')"><span class="pc-tag">'+p.tag+'</span></div><div class="pc-body"><div class="pc-name">'+esc(p.name)+'</div><div class="pc-desc">'+esc(p.desc)+'</div><div class="pc-foot"><span class="pc-price">'+fmt(p.price)+'</span><button type="button" class="btn btn-primary pc-add" data-id="'+p.id+'">Toevoegen</button></div></div>';
         popGrid.appendChild(el);
       });
-      popGrid.addEventListener('click',function(e){var b=e.target.closest('.pc-add');if(!b)return;var p=PRODUCTS.filter(function(x){return x.id===b.getAttribute('data-id');})[0];if(p.t==='simple'){addToCart(p.name,[],'',p.price,1);toast();}else openOptions(p);});
+      re();
     }
+    if(popGrid){
+      popGrid.addEventListener('click',function(e){var b=e.target.closest('.pc-add');if(!b)return;var p=PRODUCTS.filter(function(x){return x.id===b.getAttribute('data-id');})[0];if(!p)return;if(p.t==='simple'){addToCart(p.name,[],'',p.price,1);toast();}else openOptions(p);});
+    }
+    fillPop();
 
     /* ---------- FILTER ---------- */
     var filter=$('#catFilter2');
@@ -1244,6 +1250,29 @@
       [].forEach.call(filter.querySelectorAll('.cf'),function(x){x.classList.remove('active');});
       b.classList.add('active'); cards(b.getAttribute('data-c'));
     });
+
+    /* ---------- LIVE MENU uit de database ----------
+       Haalt het actuele menu + prijzen op uit /api/menu (beheerd in beheer.html).
+       Lukt dat niet (bv. pagina los geopend zonder server), dan blijft de
+       ingebakken kaart hierboven staan. */
+    (function loadLiveMenu(){
+      if(!window.fetch) return;
+      fetch('api/menu',{headers:{'Accept':'application/json'}})
+        .then(function(r){ return r.ok?r.json():null; })
+        .then(function(j){
+          if(!j||!j.products||!j.products.length) return;
+          var mapped=j.products.map(function(p){
+            return {id:p.id, c:p.cat, t:p.type||'simple', name:p.name, desc:p.descr||'',
+                    sz:p.sizes||null, price:p.price, img:p.img||'pizza-card', tag:p.tag||'',
+                    pizzas:p.pizzas, drink:p.drink, side:p.side};
+          });
+          PRODUCTS.length=0; Array.prototype.push.apply(PRODUCTS,mapped);
+          var act=filter&&filter.querySelector('.cf.active');
+          cards(act?act.getAttribute('data-c'):'all');
+          fillPop();
+        })
+        .catch(function(){ /* offline: ingebakken kaart blijft staan */ });
+    })();
 
     /* ---------- OPTIES-MODAL ---------- */
     var ov=$('#optOv'), optQtyEl=$('#optQty'), optPriceEl=$('#optPrice');
@@ -1478,20 +1507,35 @@
       e.preventDefault();
       var f=e.target;
       if(mode==='leveren' && !f.adres.value.trim()){ f.adres.focus(); return; }
-      // bestelnummer + geschatte tijd
-      var num='LM-'+String(Date.now()).slice(-6);
-      var eta = mode==='leveren' ? '35–50 min' : '20–30 min';
-      // Bevestiging
-      $('#confNum').textContent=num;
-      $('#confEta').innerHTML='<b>'+(mode==='leveren'?'Geschatte levertijd':'Klaar om af te halen over')+':</b> '+eta;
       var sub=subtotal();
-      $('#confSum').innerHTML=cart.map(function(l){return '<div class="cr"><span>'+l.qty+'× '+esc(l.name)+'</span><span>'+fmt(l.unit*l.qty)+'</span></div>';}).join('')+
-        '<div class="cr cr-tot"><span>Totaal ('+(mode==='leveren'?'levering':'afhaling')+')</span><span>'+fmt(sub+delFee())+'</span></div>';
-      // WhatsApp: bericht opbouwen (mand nog gevuld) en openen in een nieuw venster
-      lastWaUrl=buildWaUrl(f,num);
-      window.open(lastWaUrl,'_blank');
-      closeOv(coOv); re(); confOv.classList.add('open'); confOv.setAttribute('aria-hidden','false');
-      cart=[]; renderCart();
+      var addr=[ f.adres?f.adres.value.trim():'', f.postcode?f.postcode.value.trim():'', f.gemeente?f.gemeente.value.trim():'' ]
+                 .filter(Boolean).join(', ');
+      var timeField=$('#coTimeField');
+      var payload={
+        type: mode,
+        customer:{ name:f.naam?f.naam.value.trim():'', phone:f.tel?f.tel.value.trim():'',
+                   email:f.email?f.email.value.trim():'', address:addr },
+        items: cart.map(function(l){ return {name:l.name, opts:l.opts, note:l.note, unit:l.unit, qty:l.qty}; }),
+        time: (timeField && timeField.style.display!=='none' && f.uur) ? f.uur.value.trim() : ''
+      };
+      function showConfirm(num,eta){
+        $('#confNum').textContent=num;
+        $('#confEta').innerHTML='<b>'+(mode==='leveren'?'Geschatte levertijd':'Klaar om af te halen over')+':</b> '+eta;
+        $('#confSum').innerHTML=cart.map(function(l){return '<div class="cr"><span>'+l.qty+'× '+esc(l.name)+'</span><span>'+fmt(l.unit*l.qty)+'</span></div>';}).join('')+
+          '<div class="cr cr-tot"><span>Totaal ('+(mode==='leveren'?'levering':'afhaling')+')</span><span>'+fmt(sub+delFee())+'</span></div>';
+        closeOv(coOv); re(); confOv.classList.add('open'); confOv.setAttribute('aria-hidden','false');
+        cart=[]; renderCart();
+      }
+      var localNum='LM-'+String(Date.now()).slice(-6);
+      var localEta=mode==='leveren'?'35–50 min':'20–30 min';
+      var btn=f.querySelector('[type="submit"]'); if(btn) btn.disabled=true;
+      // Bestelling naar de database (verschijnt op kassa, keuken en in rapporten)
+      if(window.fetch){
+        fetch('api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+          .then(function(r){ return r.ok?r.json():null; })
+          .then(function(j){ if(btn)btn.disabled=false; showConfirm(j&&j.no?j.no:localNum, j&&j.eta?j.eta:localEta); })
+          .catch(function(){ if(btn)btn.disabled=false; showConfirm(localNum,localEta); });
+      } else { showConfirm(localNum,localEta); }
     });
 
     /* ---------- BEVESTIGING ---------- */

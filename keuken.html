@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keuken — La Mia Pizzeria</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#141110">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#141110; --ink:#1c1815; --panel:#221d19; --panel-2:#2a231e;
+    --line:#3a322b; --line-2:#4a4038; --cream:#f4ece0; --muted:#b6a99c; --muted-2:#8c8073;
+    --gold:#e6b24c; --coral:#e0533f; --green:#5aa469; --red:#d9483b; --blue:#4f93c4;
+    --sh:0 16px 40px rgba(0,0,0,.5);
+    --col-new:#e0533f; --col-prep:#e6b24c; --col-done:#5aa469;
+  }
+  :root[data-theme="light"]{
+    --bg:#f3ecde; --ink:#fbf6ec; --panel:#ffffff; --panel-2:#f7f0e3;
+    --line:#e2d6c1; --line-2:#d3c4a9; --cream:#241c14; --muted:#6b5c4d; --muted-2:#9a8a76;
+    --gold:#b0790c; --coral:#cf2f22; --green:#3f8a52; --red:#c0392b; --blue:#2f79ab;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{font-family:'Manrope',"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--cream);overflow:hidden;user-select:none}
+  h1,h2,h3{font-family:'Anton','Arial Narrow',Impact,sans-serif;font-weight:400;letter-spacing:.5px;text-transform:uppercase}
+  button{font-family:inherit;cursor:pointer;color:inherit}
+  ::-webkit-scrollbar{width:10px}::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:6px}
+
+  .app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+  header{display:flex;align-items:center;gap:.9rem;padding:.55rem 1rem;background:var(--ink);border-bottom:1px solid var(--line);flex:0 0 auto}
+  .brand{display:flex;align-items:center;gap:.6rem;font-weight:800}
+  .brand .mark{width:34px;height:34px;border-radius:9px;background:conic-gradient(from -35deg at 50% 100%,var(--gold) 0 70deg,transparent 70deg),var(--coral);display:grid;place-items:center;font-size:1.05rem}
+  .brand b{color:var(--coral);font-size:1rem;line-height:1}.brand small{display:block;color:var(--gold);font-size:.56rem;letter-spacing:.28em;font-weight:800;text-transform:uppercase}
+  .conn{display:inline-flex;align-items:center;gap:.4rem;font-size:.74rem;font-weight:800;color:var(--muted)}
+  .conn .dot{width:9px;height:9px;border-radius:50%;background:var(--muted-2)}
+  .conn.on .dot{background:var(--green);box-shadow:0 0 0 0 rgba(90,164,105,.6);animation:pulse 2s infinite}
+  .conn.off .dot{background:var(--red)}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(90,164,105,.5)}70%{box-shadow:0 0 0 7px rgba(90,164,105,0)}100%{box-shadow:0 0 0 0 rgba(90,164,105,0)}}
+  .spacer{flex:1}
+  .clock{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:700;font-size:.9rem}
+  .tbtn{border:1px solid var(--line-2);background:var(--panel);border-radius:10px;padding:.5rem .8rem;font-weight:800;font-size:.82rem;display:inline-flex;gap:.4rem;align-items:center}
+  .tbtn:hover{border-color:var(--gold);color:var(--gold)}
+  .sound-off{opacity:.5}
+
+  .board{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;padding:.7rem;min-height:0}
+  .col{display:flex;flex-direction:column;min-height:0;background:var(--ink);border:1px solid var(--line);border-radius:14px}
+  .col-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:.7rem .9rem;border-bottom:1px solid var(--line)}
+  .col-head h2{font-size:1.1rem;display:flex;align-items:center;gap:.5rem}
+  .col-head .bar{width:12px;height:12px;border-radius:3px}
+  .col-head .n{font-family:'Manrope';font-weight:800;font-size:.8rem;color:var(--muted-2);background:var(--panel);border:1px solid var(--line-2);border-radius:999px;padding:.1rem .55rem}
+  .col.new .bar{background:var(--col-new)} .col.prep .bar{background:var(--col-prep)} .col.done .bar{background:var(--col-done)}
+  .cards{flex:1;overflow-y:auto;padding:.6rem;display:flex;flex-direction:column;gap:.6rem}
+  .cards .empty{color:var(--muted-2);text-align:center;padding:2.5rem 1rem;font-weight:600;font-size:.9rem}
+
+  .card{background:var(--panel);border:1px solid var(--line-2);border-radius:12px;padding:.7rem .8rem;box-shadow:var(--sh)}
+  .card.flash{animation:flash 1.1s ease-in-out 2}
+  @keyframes flash{0%,100%{box-shadow:var(--sh)}50%{box-shadow:0 0 0 3px var(--coral)}}
+  .card .top{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.5rem}
+  .card .no{font-family:'Anton';font-size:1.15rem;letter-spacing:.5px}
+  .card .src{font-size:.64rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;border:1px solid var(--line-2);border-radius:6px;padding:.1rem .4rem;color:var(--muted)}
+  .card .src.web{color:var(--blue);border-color:var(--blue)} .card .src.pos{color:var(--gold);border-color:var(--gold)}
+  .card .meta{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem}
+  .card .chip{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--cream);background:var(--panel-2);border:1px solid var(--line-2);border-radius:999px;padding:.15rem .5rem}
+  .card .time{font-size:.76rem;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums;margin-left:auto}
+  .card .time.warn{color:var(--gold)} .card .time.late{color:var(--red)}
+  .card .cust{font-size:.78rem;color:var(--muted-2);margin-bottom:.45rem}
+  .card ul{list-style:none;display:flex;flex-direction:column;gap:.28rem;margin-bottom:.6rem}
+  .card li{display:flex;gap:.5rem;font-size:.92rem;font-weight:700;line-height:1.2}
+  .card li .q{color:var(--coral);font-weight:800;min-width:1.6rem}
+  .card li .op{display:block;font-weight:600;font-size:.75rem;color:var(--muted-2)}
+  .card li .nt{display:block;font-weight:700;font-size:.75rem;color:var(--blue);font-style:italic}
+  .card .acts{display:flex;gap:.45rem}
+  .card .acts button{flex:1;border:0;border-radius:9px;padding:.6rem;font-weight:800;font-size:.9rem}
+  .card .acts .back{flex:0 0 auto;background:var(--panel-2);border:1px solid var(--line-2);color:var(--muted);padding:.6rem .7rem}
+  .card .acts .fwd.start{background:var(--col-prep);color:#241708}
+  .card .acts .fwd.ready{background:var(--col-done);color:#08210e}
+  .card .acts .fwd.gone{background:var(--panel-2);border:1px solid var(--line-2);color:var(--cream)}
+  .card .acts button:active{transform:scale(.97)}
+
+  /* login */
+  .login{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem}
+  .login .box{background:var(--panel);border:1px solid var(--line-2);border-radius:18px;box-shadow:var(--sh);width:100%;max-width:340px;padding:1.8rem;text-align:center}
+  .login .mark{width:56px;height:56px;border-radius:14px;margin:0 auto 1rem;background:conic-gradient(from -35deg at 50% 100%,var(--gold) 0 70deg,transparent 70deg),var(--coral);display:grid;place-items:center;font-size:1.6rem}
+  .login h2{color:var(--coral);font-size:1.4rem;margin-bottom:.3rem}
+  .login p{color:var(--muted-2);font-size:.85rem;margin-bottom:1.2rem}
+  .login input{width:100%;background:var(--ink);border:1px solid var(--line-2);border-radius:12px;color:var(--cream);padding:.8rem;font-size:1.5rem;text-align:center;letter-spacing:.4em;font-weight:800}
+  .login button{width:100%;margin-top:.9rem;background:var(--gold);border:0;border-radius:12px;color:#241708;font-family:'Anton';font-size:1.2rem;padding:.8rem;letter-spacing:.5px}
+  .login .lerr{color:var(--red);font-size:.82rem;font-weight:700;margin-top:.7rem;min-height:1rem}
+
+  @media(max-width:760px){ .board{grid-template-columns:1fr;overflow-y:auto} .col{min-height:60vh} }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><span class="mark">🍳</span><span><b>La Mia Pizzeria</b><small>Keuken</small></span></div>
+    <span class="conn off" id="conn"><span class="dot"></span><span id="connTxt">verbinden…</span></span>
+    <span class="spacer"></span>
+    <span class="clock" id="clock">—</span>
+    <button class="tbtn" id="btnSound" title="Geluid aan/uit">🔔</button>
+    <button class="tbtn" id="btnTheme">🌙</button>
+    <a class="tbtn" href="beheer.html">Beheer</a>
+    <button class="tbtn" id="btnLogout">Uitloggen</button>
+  </header>
+
+  <div class="board">
+    <div class="col new"><div class="col-head"><h2><span class="bar"></span>Nieuw</h2><span class="n" id="nNew">0</span></div><div class="cards" id="colNew"></div></div>
+    <div class="col prep"><div class="col-head"><h2><span class="bar"></span>In bereiding</h2><span class="n" id="nPrep">0</span></div><div class="cards" id="colPrep"></div></div>
+    <div class="col done"><div class="col-head"><h2><span class="bar"></span>Klaar</h2><span class="n" id="nDone">0</span></div><div class="cards" id="colDone"></div></div>
+  </div>
+</div>
+
+<div class="login" id="login" style="display:none">
+  <div class="box">
+    <div class="mark">🍳</div><h2>Keuken</h2>
+    <p>Log in met je PIN om het keukenscherm te openen.</p>
+    <input id="loginPin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="off">
+    <button id="loginBtn">Inloggen</button>
+    <div class="lerr" id="loginErr"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $=function(s){return document.querySelector(s);};
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  var TYPE={terplaatse:'🍽 Ter plaatse',afhalen:'🥡 Afhalen',leveren:'🛵 Leveren'};
+
+  var orders={};       // id -> order
+  var flash={};        // id -> true (kort laten knipperen)
+  var es=null, soundOn=true;
+
+  /* ---------- render ---------- */
+  function minsAgo(iso){ var t=Date.parse(iso); if(isNaN(t)) return 0; return Math.max(0,Math.floor((Date.now()-t)/60000)); }
+  function cardHtml(o){
+    var m=minsAgo(o.created_at);
+    var tcls=m>=20?'late':(m>=10?'warn':'');
+    var src=o.source==='pos'?'<span class="src pos">Kassa</span>':'<span class="src web">Web</span>';
+    var chips='<span class="chip">'+(TYPE[o.type]||o.type)+(o.tbl?(' '+esc(o.tbl)):'')+'</span>';
+    var items=(o.items||[]).map(function(l){
+      return '<li><span class="q">'+l.qty+'×</span><span>'+esc(l.name)+
+        (l.opts&&l.opts.length?'<span class="op">'+esc(l.opts.join(', '))+'</span>':'')+
+        (l.note?'<span class="nt">✎ '+esc(l.note)+'</span>':'')+'</span></li>';
+    }).join('');
+    var cust='';
+    if(o.source==='web'){ cust='<div class="cust">'+esc(o.cust_name||'')+(o.type==='leveren'&&o.cust_address?(' · '+esc(o.cust_address)):'')+'</div>'; }
+    var acts='';
+    if(o.status==='nieuw') acts='<button class="fwd start" data-adv="'+o.id+'" data-to="bereiden">Start ▸</button>';
+    else if(o.status==='bereiden') acts='<button class="back" data-adv="'+o.id+'" data-to="nieuw">↩</button><button class="fwd ready" data-adv="'+o.id+'" data-to="klaar">Klaar ✓</button>';
+    else if(o.status==='klaar') acts='<button class="back" data-adv="'+o.id+'" data-to="bereiden">↩</button><button class="fwd gone" data-adv="'+o.id+'" data-to="afgehaald">Meegegeven</button>';
+    return '<div class="card'+(flash[o.id]?' flash':'')+'" data-card="'+o.id+'">'+
+      '<div class="top"><span class="no">'+esc(o.no||('#'+o.id))+'</span>'+src+'</div>'+
+      '<div class="meta">'+chips+'<span class="time '+tcls+'">⏱ '+m+' min</span></div>'+
+      cust+'<ul>'+items+'</ul><div class="acts">'+acts+'</div></div>';
+  }
+  function render(){
+    var cols={nieuw:[],bereiden:[],klaar:[]};
+    Object.keys(orders).forEach(function(id){ var o=orders[id]; if(cols[o.status]) cols[o.status].push(o); });
+    ['nieuw','bereiden','klaar'].forEach(function(s){ cols[s].sort(function(a,b){return a.id-b.id;}); });
+    fill('#colNew', cols.nieuw, 'Geen nieuwe bestellingen');
+    fill('#colPrep', cols.bereiden, 'Niets in bereiding');
+    fill('#colDone', cols.klaar, 'Niets klaar');
+    $('#nNew').textContent=cols.nieuw.length; $('#nPrep').textContent=cols.bereiden.length; $('#nDone').textContent=cols.klaar.length;
+    flash={};
+  }
+  function fill(sel,list,emptyMsg){
+    var el=$(sel);
+    el.innerHTML=list.length?list.map(cardHtml).join(''):'<div class="empty">'+emptyMsg+'</div>';
+  }
+
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('[data-adv]'); if(!b) return;
+    var id=+b.getAttribute('data-adv'), to=b.getAttribute('data-to');
+    // optimistisch
+    if(orders[id]){ if(to==='afgehaald') delete orders[id]; else orders[id].status=to; render(); }
+    fetch('api/admin/orders/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status:to})})
+      .catch(function(){});
+  });
+
+  /* ---------- geluid ---------- */
+  var actx;
+  function beep(){
+    if(!soundOn) return;
+    try{
+      actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+      var o=actx.createOscillator(), g=actx.createGain();
+      o.connect(g); g.connect(actx.destination); o.type='sine'; o.frequency.value=880;
+      g.gain.setValueAtTime(0.0001,actx.currentTime); g.gain.exponentialRampToValueAtTime(0.12,actx.currentTime+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,actx.currentTime+0.35);
+      o.start(); o.stop(actx.currentTime+0.36);
+    }catch(e){}
+  }
+  $('#btnSound').onclick=function(){ soundOn=!soundOn; this.textContent=soundOn?'🔔':'🔕'; this.classList.toggle('sound-off',!soundOn); if(soundOn) beep(); };
+
+  /* ---------- live verbinding ---------- */
+  function setConn(on){ var c=$('#conn'); c.className='conn '+(on?'on':'off'); $('#connTxt').textContent=on?'live':'offline'; }
+  function connect(){
+    if(es) es.close();
+    es=new EventSource('api/events');
+    es.onopen=function(){ setConn(true); };
+    es.onerror=function(){ setConn(false); }; // EventSource probeert vanzelf opnieuw
+    es.addEventListener('order',function(ev){
+      var o=JSON.parse(ev.data); if(o.status==='afgehaald') return;
+      var isNew=!orders[o.id]; orders[o.id]=o; if(isNew){ flash[o.id]=true; beep(); }
+      render();
+    });
+    es.addEventListener('status',function(ev){
+      var d=JSON.parse(ev.data);
+      if(d.status==='afgehaald'){ delete orders[d.id]; }
+      else if(orders[d.id]){ orders[d.id].status=d.status; }
+      render();
+    });
+  }
+
+  function loadInitial(){
+    return fetch('api/admin/orders?active=1',{credentials:'same-origin'}).then(function(r){
+      if(r.status===401){ showLogin(); return null; }
+      return r.json();
+    }).then(function(j){
+      if(!j) return;
+      orders={}; (j.orders||[]).forEach(function(o){ orders[o.id]=o; });
+      render(); connect();
+    });
+  }
+
+  /* ---------- login ---------- */
+  function showLogin(){ if(es){es.close();es=null;} setConn(false); $('#login').style.display='flex'; setTimeout(function(){$('#loginPin').focus();},60); }
+  function doLogin(){
+    fetch('api/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:$('#loginPin').value})})
+      .then(function(r){ return r.json().then(function(j){return {ok:r.ok,j:j};}); })
+      .then(function(x){ if(x.ok){ $('#login').style.display='none'; $('#loginPin').value=''; loadInitial(); } else { $('#loginErr').textContent=(x.j&&x.j.error)||'Verkeerde PIN'; } });
+  }
+  $('#loginBtn').onclick=doLogin;
+  $('#loginPin').addEventListener('keydown',function(e){ if(e.key==='Enter') doLogin(); });
+  $('#btnLogout').onclick=function(){ fetch('api/logout',{method:'POST',credentials:'same-origin'}).then(showLogin); };
+
+  /* ---------- thema / klok / timers ---------- */
+  var themeBtn=$('#btnTheme');
+  function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); themeBtn.textContent=t==='light'?'☀️':'🌙'; try{localStorage.setItem('lamia_keuken_theme',t);}catch(e){} }
+  themeBtn.onclick=function(){ applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'); };
+  var st='dark'; try{st=localStorage.getItem('lamia_keuken_theme')||'dark';}catch(e){} applyTheme(st);
+
+  function tick(){ var d=new Date(); $('#clock').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0'); }
+  setInterval(tick,1000); tick();
+  setInterval(function(){ if(Object.keys(orders).length) render(); }, 20000); // timers verversen
+
+  /* ---------- start ---------- */
+  fetch('api/session',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+    if(j&&j.authed) loadInitial(); else showLogin();
+  }).catch(showLogin);
+})();
+</script>
+</body>
+</html>
