@@ -1246,6 +1246,11 @@
     document.querySelectorAll('.ob-toggle button[data-mode]').forEach(function(b){
       b.addEventListener('click',function(){ setMode(b.getAttribute('data-mode')==='Bezorgen'?'leveren':'afhalen'); });
     });
+    // Zwevend karretje → scroll naar het mandje/afrekenen (i.p.v. naar boven) als er iets in zit
+    var fabEl=$('.fab');
+    if(fabEl) fabEl.addEventListener('click',function(e){
+      if(cart.length){ e.preventDefault(); var t=$('#cartBox'); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); }
+    });
 
     /* ---------- CHECKOUT ---------- */
     var coOv=$('#coOv'), authOv=$('#authOv'), acctOv=$('#acctOv'), acct=null;
