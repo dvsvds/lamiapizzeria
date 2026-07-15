@@ -121,11 +121,9 @@
   /* ---- Brand mark (CSS logo) ---- */
   .logo{display:flex;align-items:center;gap:.6rem}.logo-img{height:58px;width:auto;display:block}footer .logo-img{height:96px;margin:0 auto}
   /* Logo-embleem in de order-hero */
-  .hero-badge{width:clamp(140px,20vw,190px);aspect-ratio:1;border-radius:50%;margin:0 auto 1.1rem;
-    background:radial-gradient(circle at 50% 44%,#fffaf3,#f2e5d4);
-    border:5px solid var(--red);box-shadow:0 0 0 3px #1a1206,0 14px 36px rgba(0,0,0,.5);
-    display:flex;align-items:center;justify-content:center;overflow:hidden}
-  .hero-badge img{width:84%;height:auto;display:block}
+  .hero-badge{width:clamp(150px,22vw,210px);aspect-ratio:1;margin:0 auto 1.1rem;
+    display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 12px 30px rgba(0,0,0,.5))}
+  .hero-badge img{width:100%;height:auto;display:block}
   .logo .slice{
     width:34px;height:34px;position:relative;flex:none;
     background:conic-gradient(from -35deg at 50% 100%, var(--gold) 0 70deg, transparent 70deg);
@@ -750,7 +748,7 @@
   <span class="stamp stamp-1" style="top:18%;left:6%;transform:rotate(-9deg)">Fresh dough daily</span>
   <span class="stamp stamp-2" style="top:16%;right:6%;transform:rotate(7deg)">By the slice</span>
   <div class="wrap">
-    <div class="hero-badge"><img src="images/logo.png" alt="La Mia Pizzeria — Pizza, Pasta &amp; More"></div>
+    <div class="hero-badge"><img src="images/logo-badge.png" alt="La Mia Pizzeria — Pizza, Pasta &amp; More"></div>
     <span class="eyebrow">New York style · Antwerpen</span>
     <h1>Order your New York slice</h1>
     <p>Kies je favoriet, stel je pizza samen en rond je bestelling snel af.</p>
@@ -822,6 +820,7 @@
       <button type="button" class="cf" data-c="snack">🍗 Snacks</button>
       <button type="button" class="cf" data-c="friet">🍟 Frieten</button>
       <button type="button" class="cf" data-c="dessert">🍰 Desserts</button>
+      <button type="button" class="cf" data-c="ijs">🍦 IJs</button>
       <button type="button" class="cf" data-c="drink">🥤 Drankjes</button>
       <button type="button" class="cf" data-c="promo">🔥 Promoties</button>
     </div>
@@ -1158,10 +1157,10 @@
       {id:'de05',c:'dessert',t:'simple',name:'Chocolate Cake',desc:'Rijk aan chocolade',price:5,img:'dessert'},
       {id:'de06',c:'dessert',t:'simple',name:'Red Velvet Cake',desc:'Klassieker',price:5,img:'dessert'},
       {id:'de07',c:'dessert',t:'simple',name:'Speciaal Nagerecht',desc:'Vraag naar onze suggestie',price:5,img:'dessert'},
-      {id:'de08',c:'dessert',t:'simple',name:"Ben & Jerry's",desc:'Amerikaans roomijs',price:7,img:'dessert',tag:'Nieuw'},
-      {id:'de09',c:'dessert',t:'simple',name:'Häagen-Dazs',desc:'Premium roomijs',price:6,img:'dessert'},
-      {id:'de10',c:'dessert',t:'simple',name:'Barattolino',desc:'Italiaans roomijs',price:6,img:'dessert'},
-      {id:'de11',c:'dessert',t:'simple',name:'Waterijs / kinderijs',desc:'Nogger, Calippo & meer',price:2,img:'dessert'},
+      {id:'ijs01',c:'ijs',t:'simple',name:"Ben & Jerry's",desc:'Amerikaans roomijs',price:7,img:'dessert',tag:'Nieuw'},
+      {id:'ijs02',c:'ijs',t:'simple',name:'Häagen-Dazs',desc:'Premium roomijs',price:6,img:'dessert'},
+      {id:'ijs03',c:'ijs',t:'simple',name:'Barattolino',desc:'Italiaans roomijs',price:6,img:'dessert'},
+      {id:'ijs04',c:'ijs',t:'simple',name:'Waterijs / kinderijs',desc:'Nogger, Calippo & meer',price:2,img:'dessert'},
       // DRANKJES (t:'drink' met formaat)
       {id:'dr01',c:'drink',t:'drink',name:'Cola',desc:'Frisdrank',price:2.5,img:'drinks'},
       {id:'dr02',c:'drink',t:'drink',name:'Cola Zero',desc:'Frisdrank',price:2.5,img:'drinks'},

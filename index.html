@@ -121,11 +121,10 @@
   /* ---- Brand mark (CSS logo) ---- */
   .logo{display:flex;align-items:center;gap:.6rem}.logo-img{height:58px;width:auto;display:block}footer .logo-img{height:96px;margin:0 auto}
   /* Groot logo-embleem in de hero */
-  .hero-badge{width:clamp(190px,30vw,300px);aspect-ratio:1;border-radius:50%;margin:0 auto 1.5rem;
-    background:radial-gradient(circle at 50% 44%,#fffaf3,#f2e5d4);
-    border:6px solid var(--red);box-shadow:0 0 0 4px #1a1206,0 18px 46px rgba(0,0,0,.55);
-    display:flex;align-items:center;justify-content:center;overflow:hidden;animation:badgePop .6s cubic-bezier(.34,1.56,.64,1) both}
-  .hero-badge img{width:84%;height:auto;display:block}
+  .hero-badge{width:clamp(210px,32vw,330px);aspect-ratio:1;margin:0 auto 1.5rem;
+    display:flex;align-items:center;justify-content:center;
+    filter:drop-shadow(0 18px 42px rgba(0,0,0,.6));animation:badgePop .6s cubic-bezier(.34,1.56,.64,1) both}
+  .hero-badge img{width:100%;height:auto;display:block}
   @keyframes badgePop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
   .logo .slice{
     width:34px;height:34px;position:relative;flex:none;
@@ -728,7 +727,7 @@
   <span class="stamp stamp-2" style="transform:rotate(7deg)">By the slice</span>
   <span class="stamp round stamp-3" style="transform:rotate(-6deg)">NY<br>Style</span>
   <div class="wrap">
-    <div class="hero-badge"><img src="images/logo.png" alt="La Mia Pizzeria — Pizza, Pasta &amp; More"></div>
+    <div class="hero-badge"><img src="images/logo-badge.png" alt="La Mia Pizzeria — Pizza, Pasta &amp; More"></div>
     <span class="eyebrow">New York style · Antwerpen</span>
     <h1>La Mia Pizzeria</h1>
     <p class="tagline">Pizza, Pasta &amp; More</p>
@@ -964,6 +963,11 @@
       <div class="m-row"><div class="m-name">Chocolate cake</div><div class="m-price">€ 5</div></div>
       <div class="m-row"><div class="m-name">Red velvet cake</div><div class="m-price">€ 5</div></div>
       <div class="m-row"><div class="m-name">Speciaal nagerecht</div><div class="m-price">€ 5</div></div>
+    </div>
+        </details>
+        <details class="m-acc"><summary class="m-cat">🍦 IJs</summary>
+
+    <div class="m-cols">
       <div class="m-row"><div><div class="m-name">Ben &amp; Jerry's <span class="pop">Nieuw</span></div><div class="m-desc">Amerikaans roomijs</div></div><div class="m-price">€ 7</div></div>
       <div class="m-row"><div><div class="m-name">Häagen-Dazs</div><div class="m-desc">Premium roomijs</div></div><div class="m-price">€ 6</div></div>
       <div class="m-row"><div><div class="m-name">Barattolino</div><div class="m-desc">Italiaans roomijs</div></div><div class="m-price">€ 6</div></div>
