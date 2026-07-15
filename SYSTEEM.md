@@ -86,6 +86,19 @@ het beheerscherm).
 - Draait op **elk toestel** met een browser (tablet, telefoon, laptop, of een
   tweede tab op de kassa). Optioneel — zonder keukenscherm werkt de rest gewoon.
 
+### Fase 5 — rapporten & boekhouding ✅
+
+- **`rapporten.html`**: omzetoverzicht over **web én kassa samen**, voor een
+  periode (vandaag / gisteren / deze week / deze maand / een eigen datumbereik).
+- Toont **omzet, aantal bestellingen, gemiddelde bon**, en uitsplitsingen per
+  **betaalmethode** (cash/kaart/nog te betalen), **bron** (web/kassa),
+  **type** (afhalen/leveren/ter plaatse), **categorie**, en **BTW per tarief**
+  (6/12/21%).
+- **BTW wordt bij elke bestelling berekend en opgeslagen** (categorie afgeleid
+  uit de productnaam), zodat de cijfers altijd kloppen en snel op te tellen zijn.
+- **CSV-export** (`/api/admin/export`) — één regel per bestelling met alle
+  bedragen en BTW, klaar voor Excel of je boekhouder.
+
 ### API
 
 - `GET /api/menu` — het menu (enkel beschikbare producten) — publiek

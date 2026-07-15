@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rapporten — La Mia Pizzeria</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#141110">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#141110; --ink:#1c1815; --panel:#221d19; --panel-2:#2a231e;
+    --line:#3a322b; --line-2:#4a4038; --cream:#f4ece0; --muted:#b6a99c; --muted-2:#8c8073;
+    --gold:#e6b24c; --coral:#e0533f; --green:#5aa469; --red:#d9483b; --blue:#4f93c4;
+    --sh:0 16px 40px rgba(0,0,0,.5);
+  }
+  :root[data-theme="light"]{
+    --bg:#f3ecde; --ink:#fbf6ec; --panel:#ffffff; --panel-2:#f7f0e3;
+    --line:#e2d6c1; --line-2:#d3c4a9; --cream:#241c14; --muted:#6b5c4d; --muted-2:#9a8a76;
+    --gold:#b0790c; --coral:#cf2f22; --green:#3f8a52; --red:#c0392b; --blue:#2f79ab;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Manrope',"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--cream);min-height:100vh}
+  h1,h2,h3{font-family:'Anton','Arial Narrow',Impact,sans-serif;font-weight:400;letter-spacing:.5px;text-transform:uppercase}
+  button{font-family:inherit;cursor:pointer;color:inherit}
+  input,select{font-family:inherit}
+  a{color:var(--gold);text-decoration:none}
+  ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:6px}
+
+  header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:.9rem;padding:.6rem 1rem;background:var(--ink);border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:.6rem;font-weight:800}
+  .brand .mark{width:34px;height:34px;border-radius:9px;background:conic-gradient(from -35deg at 50% 100%,var(--gold) 0 70deg,transparent 70deg),var(--coral);display:grid;place-items:center;font-size:1.05rem}
+  .brand b{color:var(--coral);font-size:1rem;line-height:1}.brand small{display:block;color:var(--gold);font-size:.56rem;letter-spacing:.28em;font-weight:800;text-transform:uppercase}
+  .spacer{flex:1}
+  .tbtn{border:1px solid var(--line-2);background:var(--panel);border-radius:10px;padding:.5rem .8rem;font-weight:800;font-size:.82rem;display:inline-flex;gap:.4rem;align-items:center}
+  .tbtn:hover{border-color:var(--gold);color:var(--gold)}
+  .tbtn.gold{background:var(--gold);border-color:var(--gold);color:#241708}
+
+  .wrap{max-width:1000px;margin:0 auto;padding:1.1rem 1rem 4rem}
+  .pagehead{display:flex;align-items:baseline;gap:.8rem;margin:.4rem 0 1rem;flex-wrap:wrap}
+  .pagehead h1{font-size:1.9rem;color:var(--coral)}
+  .pagehead p{color:var(--muted-2);font-size:.85rem}
+
+  .periods{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:1.2rem}
+  .periods .p{border:1px solid var(--line-2);background:var(--panel);border-radius:999px;padding:.5rem .95rem;font-weight:800;font-size:.85rem}
+  .periods .p.on{background:var(--gold);border-color:var(--gold);color:#241708}
+  .periods .custom{display:flex;gap:.4rem;align-items:center;margin-left:.3rem}
+  .periods input[type=date]{background:var(--panel);border:1px solid var(--line-2);border-radius:9px;color:var(--cream);padding:.45rem .5rem;font-weight:700;font-size:.85rem}
+
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-bottom:1.2rem}
+  .kpi{border:1px solid var(--line-2);background:var(--panel);border-radius:14px;padding:1rem 1.1rem}
+  .kpi .k{font-size:.74rem;color:var(--muted-2);text-transform:uppercase;letter-spacing:.05em;font-weight:800}
+  .kpi .v{font-family:'Anton';font-size:2rem;margin-top:.25rem}
+  .kpi.hl .v{color:var(--gold)}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .panelbox{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:1rem 1.1rem;margin-bottom:1rem}
+  .panelbox h3{font-size:1rem;color:var(--cream);margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th,td{text-align:left;padding:.45rem .3rem;border-bottom:1px solid var(--line)}
+  td:last-child,th:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  tr:last-child td{border-bottom:0}
+  tfoot td{font-weight:800;border-top:2px solid var(--line-2);border-bottom:0}
+  .muted{color:var(--muted-2)}
+  .empty{color:var(--muted-2);text-align:center;padding:2.5rem 1rem;font-weight:600}
+
+  .login{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem}
+  .login .box{background:var(--panel);border:1px solid var(--line-2);border-radius:18px;box-shadow:var(--sh);width:100%;max-width:340px;padding:1.8rem;text-align:center}
+  .login .mark{width:56px;height:56px;border-radius:14px;margin:0 auto 1rem;background:conic-gradient(from -35deg at 50% 100%,var(--gold) 0 70deg,transparent 70deg),var(--coral);display:grid;place-items:center;font-size:1.6rem}
+  .login h2{color:var(--coral);font-size:1.4rem;margin-bottom:.3rem}
+  .login p{color:var(--muted-2);font-size:.85rem;margin-bottom:1.2rem}
+  .login input{width:100%;background:var(--ink);border:1px solid var(--line-2);border-radius:12px;color:var(--cream);padding:.8rem;font-size:1.5rem;text-align:center;letter-spacing:.4em;font-weight:800}
+  .login button{width:100%;margin-top:.9rem;background:var(--gold);border:0;border-radius:12px;color:#241708;font-family:'Anton';font-size:1.2rem;padding:.8rem;letter-spacing:.5px}
+  .login .lerr{color:var(--red);font-size:.82rem;font-weight:700;margin-top:.7rem;min-height:1rem}
+  @media(max-width:720px){ .kpis{grid-template-columns:1fr} .grid2{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><span class="mark">📊</span><span><b>La Mia Pizzeria</b><small>Rapporten</small></span></div>
+  <span class="spacer"></span>
+  <a class="tbtn" href="beheer.html">Beheer</a>
+  <button class="tbtn" id="btnTheme">🌙</button>
+  <button class="tbtn" id="btnLogout">Uitloggen</button>
+</header>
+
+<div class="wrap">
+  <div class="pagehead"><h1>Rapporten</h1><p id="periodLabel">—</p></div>
+
+  <div class="periods" id="periods">
+    <button class="p on" data-r="today">Vandaag</button>
+    <button class="p" data-r="yesterday">Gisteren</button>
+    <button class="p" data-r="week">Deze week</button>
+    <button class="p" data-r="month">Deze maand</button>
+    <span class="custom">
+      <input type="date" id="cFrom"> <span class="muted">→</span> <input type="date" id="cTo">
+      <button class="p" id="cApply">Toon</button>
+    </span>
+    <span class="spacer" style="flex:1"></span>
+    <button class="tbtn gold" id="btnExport">⬇ Export CSV</button>
+  </div>
+
+  <div id="content"></div>
+</div>
+
+<div class="login" id="login" style="display:none">
+  <div class="box">
+    <div class="mark">📊</div><h2>Rapporten</h2>
+    <p>Log in met je PIN.</p>
+    <input id="loginPin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="off">
+    <button id="loginBtn">Inloggen</button>
+    <div class="lerr" id="loginErr"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $=function(s){return document.querySelector(s);};
+  function euro(n){ return '€ '+(Math.round((n||0)*100)/100).toFixed(2).replace('.',','); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+  var range={from:null,to:null,label:''};
+
+  function dayStart(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
+  function addDays(d,n){ var x=new Date(d); x.setDate(x.getDate()+n); return x; }
+  function fmtDay(d){ return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
+
+  function setRange(key){
+    var now=new Date(), s, e, label;
+    if(key==='today'){ s=dayStart(now); e=addDays(s,1); label='Vandaag · '+fmtDay(s); }
+    else if(key==='yesterday'){ e=dayStart(now); s=addDays(e,-1); label='Gisteren · '+fmtDay(s); }
+    else if(key==='week'){ var wd=(now.getDay()+6)%7; s=addDays(dayStart(now),-wd); e=addDays(dayStart(now),1); label='Deze week · vanaf '+fmtDay(s); }
+    else if(key==='month'){ s=new Date(now.getFullYear(),now.getMonth(),1); e=addDays(dayStart(now),1); label='Deze maand · '+fmtDay(s)+' → '+fmtDay(now); }
+    range={from:s.toISOString(), to:e.toISOString(), label:label};
+    load();
+  }
+  function setCustom(){
+    var f=$('#cFrom').value, t=$('#cTo').value;
+    if(!f||!t){ return; }
+    var s=new Date(f+'T00:00:00'), e=addDays(new Date(t+'T00:00:00'),1);
+    range={from:s.toISOString(), to:e.toISOString(), label:'Aangepast · '+fmtDay(s)+' → '+fmtDay(new Date(t+'T00:00:00'))};
+    [].forEach.call(document.querySelectorAll('#periods .p'),function(x){x.classList.remove('on');});
+    load();
+  }
+
+  $('#periods').addEventListener('click',function(e){
+    var b=e.target.closest('.p[data-r]'); if(!b) return;
+    [].forEach.call(document.querySelectorAll('#periods .p'),function(x){x.classList.remove('on');});
+    b.classList.add('on'); setRange(b.getAttribute('data-r'));
+  });
+  $('#cApply').onclick=setCustom;
+  $('#btnExport').onclick=function(){
+    if(!range.from) return;
+    window.location='api/admin/export?from='+encodeURIComponent(range.from)+'&to='+encodeURIComponent(range.to);
+  };
+
+  function row(label,val){ return '<tr><td>'+label+'</td><td>'+euro(val)+'</td></tr>'; }
+
+  function load(){
+    $('#periodLabel').textContent=range.label;
+    fetch('api/admin/report?from='+encodeURIComponent(range.from)+'&to='+encodeURIComponent(range.to),{credentials:'same-origin'})
+      .then(function(r){ if(r.status===401){ showLogin(); return null; } return r.json(); })
+      .then(function(j){ if(j) render(j); });
+  }
+
+  function render(j){
+    var r=j.report, cl=j.catLabels||{};
+    var avg=r.count?r.revenue/r.count:0;
+    var vatTotal=Object.keys(r.vat).reduce(function(a,k){return a+r.vat[k];},0);
+    var h='';
+    if(!r.count){ $('#content').innerHTML='<div class="empty">Geen bestellingen in deze periode.</div>'; return; }
+
+    h+='<div class="kpis">'+
+       '<div class="kpi hl"><div class="k">Omzet (incl. BTW)</div><div class="v">'+euro(r.revenue)+'</div></div>'+
+       '<div class="kpi"><div class="k">Aantal bestellingen</div><div class="v">'+r.count+'</div></div>'+
+       '<div class="kpi"><div class="k">Gemiddelde bon</div><div class="v">'+euro(avg)+'</div></div>'+
+       '</div>';
+
+    h+='<div class="grid2">';
+    // betaalmethode
+    h+='<div class="panelbox"><h3>💳 Per betaalmethode</h3><table><tbody>'+
+       row('💵 Cash', r.byPay.cash)+row('💳 Kaart', r.byPay.card)+
+       row('⏳ Bij afhaling/levering', r.byPay.onbetaald)+
+       '</tbody><tfoot><tr><td>Totaal</td><td>'+euro(r.revenue)+'</td></tr></tfoot></table></div>';
+    // bron
+    h+='<div class="panelbox"><h3>🧾 Web vs. kassa</h3><table><tbody>'+
+       row('🛒 Webshop', r.bySource.web)+row('🧾 Kassa', r.bySource.pos)+
+       '</tbody></table></div>';
+    h+='</div>';
+
+    h+='<div class="grid2">';
+    // type
+    h+='<div class="panelbox"><h3>📦 Per type</h3><table><tbody>'+
+       row('🍽 Ter plaatse', r.byType.terplaatse)+row('🥡 Afhalen', r.byType.afhalen)+row('🛵 Leveren', r.byType.leveren)+
+       (r.delivery?('<tr><td class="muted">waarvan leveringskosten</td><td class="muted">'+euro(r.delivery)+'</td></tr>'):'')+
+       (r.discount?('<tr><td class="muted">korting gegeven</td><td class="muted">-'+euro(r.discount)+'</td></tr>'):'')+
+       '</tbody></table></div>';
+    // BTW
+    var vatRows='';
+    ['6','12','21'].forEach(function(k){ if(r.vat[k]) vatRows+=row('BTW '+k+'%', r.vat[k]); });
+    h+='<div class="panelbox"><h3>🧮 BTW (in de omzet begrepen)</h3><table><tbody>'+
+       (vatRows||'<tr><td class="muted">geen</td><td></td></tr>')+
+       '</tbody><tfoot><tr><td>Totaal BTW</td><td>'+euro(vatTotal)+'</td></tr></tfoot></table></div>';
+    h+='</div>';
+
+    // categorie
+    var cats=Object.keys(r.byCat).sort(function(a,b){return r.byCat[b]-r.byCat[a];});
+    if(cats.length){
+      h+='<div class="panelbox"><h3>🍕 Omzet per categorie</h3><table><tbody>';
+      cats.forEach(function(c){ h+=row(esc(cl[c]||c), r.byCat[c]); });
+      h+='</tbody></table></div>';
+    }
+    $('#content').innerHTML=h;
+  }
+
+  /* login */
+  function showLogin(){ $('#login').style.display='flex'; setTimeout(function(){$('#loginPin').focus();},60); }
+  function doLogin(){
+    fetch('api/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:$('#loginPin').value})})
+      .then(function(r){ return r.json().then(function(j){return {ok:r.ok,j:j};}); })
+      .then(function(x){ if(x.ok){ $('#login').style.display='none'; $('#loginPin').value=''; setRange('today'); } else { $('#loginErr').textContent=(x.j&&x.j.error)||'Verkeerde PIN'; } });
+  }
+  $('#loginBtn').onclick=doLogin;
+  $('#loginPin').addEventListener('keydown',function(e){ if(e.key==='Enter') doLogin(); });
+  $('#btnLogout').onclick=function(){ fetch('api/logout',{method:'POST',credentials:'same-origin'}).then(showLogin); };
+
+  var themeBtn=$('#btnTheme');
+  function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); themeBtn.textContent=t==='light'?'☀️':'🌙'; try{localStorage.setItem('lamia_rap_theme',t);}catch(e){} }
+  themeBtn.onclick=function(){ applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'); };
+  var st='dark'; try{st=localStorage.getItem('lamia_rap_theme')||'dark';}catch(e){} applyTheme(st);
+
+  fetch('api/session',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+    if(j&&j.authed) setRange('today'); else showLogin();
+  }).catch(showLogin);
+})();
+</script>
+</body>
+</html>

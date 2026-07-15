@@ -93,6 +93,7 @@ db.exec(
   '  items TEXT,' +
   '  subtotal REAL, discount REAL DEFAULT 0, delivery REAL, total REAL,' +
   '  pay TEXT,' +                                // betaalinfo (JSON, kassa)
+  '  vat TEXT,' +                                // BTW per tarief (JSON) — berekend bij opslaan
   '  note TEXT,' +
   '  time_wanted TEXT,' +
   "  status TEXT NOT NULL DEFAULT 'nieuw'," +    // nieuw | bereiden | klaar | afgehaald | betaald
@@ -120,7 +121,17 @@ function imgForCat(cat) { return CAT_IMG[cat] || 'pizza-card'; }
   if (!has('orders', 'discount')) db.exec('ALTER TABLE orders ADD COLUMN discount REAL DEFAULT 0');
   if (!has('orders', 'pay')) db.exec('ALTER TABLE orders ADD COLUMN pay TEXT');
   if (!has('orders', 'tbl')) db.exec('ALTER TABLE orders ADD COLUMN tbl TEXT');
+  if (!has('orders', 'vat')) db.exec('ALTER TABLE orders ADD COLUMN vat TEXT');
 })();
+
+// categorie → soort (food/drink), voor het juiste BTW-tarief
+function catKind(catId) {
+  if (!catId) return 'food';
+  var r = db.prepare('SELECT kind FROM categories WHERE id=?').get(catId);
+  return r && r.kind === 'drink' ? 'drink' : 'food';
+}
+// BTW-tarief (België, prijzen incl. BTW): drank 21%, eten ter plaatse 12%, eten afhaal/levering 6%
+function vatRateFor(kind, type) { return kind === 'drink' ? 0.21 : (type === 'terplaatse' ? 0.12 : 0.06); }
 
 /* ---- eerste keer: vul de database met de canonieke kaart ---- */
 function seedIfEmpty() {
@@ -222,6 +233,20 @@ function readBody(req) {
   });
 }
 
+function parseQuery(u) {
+  var out = {}, i = u.indexOf('?');
+  if (i < 0) return out;
+  u.slice(i + 1).split('&').forEach(function (p) {
+    var kv = p.split('='); if (kv[0]) out[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1] || '');
+  });
+  return out;
+}
+function csvCell(v) {
+  if (typeof v === 'number') return String(v).replace('.', ',');   // NL-decimaal
+  var s = String(v == null ? '' : v);
+  return /[";\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
 var MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
@@ -303,6 +328,7 @@ async function handleApi(req, res, urlPath) {
         name: String(it.name || '').slice(0, 120),
         opts: Array.isArray(it.opts) ? it.opts.slice(0, 20).map(String) : [],
         note: String(it.note || '').slice(0, 200),
+        cat: it.cat ? String(it.cat).slice(0, 30) : '',
         unit: Math.round(unit * 100) / 100, qty: qty
       };
     });
@@ -314,17 +340,32 @@ async function handleApi(req, res, urlPath) {
     // status = keukenvoortgang (nieuw→bereiden→klaar→afgehaald), los van betaling.
     // Kassabonnen zijn al betaald; dat zit in het pay-veld, niet in de status.
     var status = 'nieuw';
+
+    // BTW berekenen (incl. prijzen). Categorie per item afleiden uit de naam als
+    // ze niet is meegegeven; korting evenredig verdelen; levering telt als eten 6%.
+    var factor = subtotal > 0 ? (subtotal - discount) / subtotal : 0;
+    var vat = {};
+    items.forEach(function (it) {
+      if (!it.cat) { var pr = db.prepare('SELECT cat FROM products WHERE name=?').get(it.name); it.cat = pr ? pr.cat : ''; }
+      var rate = vatRateFor(catKind(it.cat), type);
+      var lineAfter = it.unit * it.qty * factor;
+      var key = String(Math.round(rate * 100));
+      vat[key] = (vat[key] || 0) + (lineAfter - lineAfter / (1 + rate));
+    });
+    if (delivery > 0) vat['6'] = (vat['6'] || 0) + (delivery - delivery / 1.06);
+    Object.keys(vat).forEach(function (k) { vat[k] = Math.round(vat[k] * 100) / 100; });
+
     var cust = ob.customer || {};
     var now = new Date().toISOString();
     var providedNo = (source === 'pos' && ob.no) ? String(ob.no).slice(0, 20) : null;
     var out = db.prepare(
-      'INSERT INTO orders (no,created_at,type,tbl,cust_name,cust_phone,cust_email,cust_address,items,subtotal,discount,delivery,total,pay,note,time_wanted,status,source) ' +
-      'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+      'INSERT INTO orders (no,created_at,type,tbl,cust_name,cust_phone,cust_email,cust_address,items,subtotal,discount,delivery,total,pay,vat,note,time_wanted,status,source) ' +
+      'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
     ).run(providedNo, now, type, String(ob.table || '').slice(0, 20),
       String(cust.name || '').slice(0, 120), String(cust.phone || '').slice(0, 40),
       String(cust.email || '').slice(0, 120), String(cust.address || '').slice(0, 240),
       JSON.stringify(items), subtotal, discount, delivery, total,
-      ob.pay ? JSON.stringify(ob.pay) : null,
+      ob.pay ? JSON.stringify(ob.pay) : null, JSON.stringify(vat),
       String(ob.note || '').slice(0, 300), String(ob.time || '').slice(0, 40), status, source);
     var oid = Number(out.lastInsertRowid);
     var no = providedNo || ('LM-' + String(oid).padStart(4, '0'));
@@ -449,6 +490,58 @@ async function handleApi(req, res, urlPath) {
         broadcast('status', { id: Number(id), status: st }); // live naar het keukenscherm
         return sendJson(res, 200, { ok: true });
       }
+    }
+
+    if (kind === 'report' && method === 'GET') {
+      var q = parseQuery(urlPath);
+      var from = q.from || '0000', to = q.to || '9999';
+      var rows = db.prepare('SELECT * FROM orders WHERE created_at >= ? AND created_at < ? ORDER BY id').all(from, to);
+      var rep = {
+        count: 0, revenue: 0, discount: 0, delivery: 0,
+        byPay: { cash: 0, card: 0, onbetaald: 0 },
+        bySource: { web: 0, pos: 0 },
+        byType: { afhalen: 0, leveren: 0, terplaatse: 0 },
+        byCat: {}, vat: {}
+      };
+      rows.forEach(function (o) {
+        rep.count++; rep.revenue += o.total || 0; rep.discount += o.discount || 0; rep.delivery += o.delivery || 0;
+        rep.bySource[o.source] = (rep.bySource[o.source] || 0) + (o.total || 0);
+        rep.byType[o.type] = (rep.byType[o.type] || 0) + (o.total || 0);
+        var pay = o.pay ? JSON.parse(o.pay) : null;
+        if (!pay) rep.byPay.onbetaald += o.total || 0;
+        else if (pay.method === 'split') { rep.byPay.cash += pay.cash || 0; rep.byPay.card += pay.card || 0; }
+        else if (pay.method === 'card') rep.byPay.card += o.total || 0;
+        else rep.byPay.cash += o.total || 0;
+        var vat = o.vat ? JSON.parse(o.vat) : {};
+        Object.keys(vat).forEach(function (r) { rep.vat[r] = (rep.vat[r] || 0) + vat[r]; });
+        (o.items ? JSON.parse(o.items) : []).forEach(function (it) {
+          var c = it.cat || 'onbekend'; rep.byCat[c] = (rep.byCat[c] || 0) + (it.unit * it.qty);
+        });
+      });
+      function r2(x) { return Math.round(x * 100) / 100; }
+      rep.revenue = r2(rep.revenue); rep.discount = r2(rep.discount); rep.delivery = r2(rep.delivery);
+      ['byPay', 'bySource', 'byType', 'byCat', 'vat'].forEach(function (g) {
+        Object.keys(rep[g]).forEach(function (k) { rep[g][k] = r2(rep[g][k]); });
+      });
+      // labels voor categorieën
+      var catLabels = {};
+      allCategories().forEach(function (c) { catLabels[c.id] = c.label; });
+      return sendJson(res, 200, { report: rep, from: from, to: to, catLabels: catLabels });
+    }
+
+    if (kind === 'export' && method === 'GET') {
+      var eq = parseQuery(urlPath);
+      var erows = db.prepare('SELECT * FROM orders WHERE created_at >= ? AND created_at < ? ORDER BY id').all(eq.from || '0000', eq.to || '9999');
+      var out = ['nummer;datum;bron;type;tafel;klant;subtotaal;korting;levering;totaal;btw6;btw12;btw21;betaalwijze'];
+      erows.forEach(function (o) {
+        var v = o.vat ? JSON.parse(o.vat) : {}, pay = o.pay ? JSON.parse(o.pay) : null;
+        out.push([o.no, o.created_at, o.source, o.type, o.tbl || '', o.cust_name || '',
+          o.subtotal || 0, o.discount || 0, o.delivery || 0, o.total || 0,
+          v['6'] || 0, v['12'] || 0, v['21'] || 0, pay ? pay.method : 'onbetaald'].map(csvCell).join(';'));
+      });
+      var csv = '﻿' + out.join('\r\n');
+      res.writeHead(200, { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="lamia-rapport.csv"', 'Cache-Control': 'no-store' });
+      return res.end(csv);
     }
 
     if (kind === 'pin' && method === 'POST') {
