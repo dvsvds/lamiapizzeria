@@ -367,7 +367,8 @@
   /* ---- Sticky order button ---- */
   .fab{position:fixed;right:18px;bottom:18px;z-index:70;display:inline-flex;align-items:center;gap:.5rem;
     background:var(--gold);color:#2a1c08;font-weight:800;padding:.85rem 1.4rem;border-radius:999px;
-    box-shadow:var(--sh);font-size:.95rem;transition:transform .15s ease,background .15s ease}
+    box-shadow:var(--sh);font-size:.95rem;transition:transform .15s ease,background .15s ease;
+    border:0;cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none}
   .fab:hover{transform:translateY(-2px);background:#f0c467}
 
   footer{background:var(--footer-bg);color:var(--muted-2);padding:3rem 0 2rem;text-align:center;border-top:1px solid var(--line)}
@@ -941,7 +942,7 @@
 </footer>
 
 <div class="cart-backdrop" id="cartBackdrop"></div>
-<a href="#bestellen" class="fab" aria-label="Bestel nu">🍕 Bestel nu</a>
+<button type="button" class="fab" id="cartFab" aria-label="Bekijk mandje">🍕 Bestel nu</button>
 
 <script>
   document.getElementById('yr').textContent = new Date().getFullYear();
@@ -1294,15 +1295,11 @@
     placeCart();
     window.addEventListener('resize',placeCart);
 
-    // Zwevend karretje: op mobiel de lade openen (of naar het menu scrollen als leeg); op desktop naar het mandje scrollen
-    var fabEl=$('.fab');
-    if(fabEl) fabEl.addEventListener('click',function(e){
-      if(isMobile()){
-        e.preventDefault();
-        if(cart.length){ openCart(); } else { var m=$('#bestellen'); if(m) m.scrollIntoView({behavior:'smooth'}); }
-      } else if(cart.length){
-        e.preventDefault(); var t=$('#cartBox'); if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
-      }
+    // Zwevend karretje: opent altijd het mandje. Op mobiel als lade, op desktop scrollt het naar de zijbalk.
+    var fabEl=$('#cartFab');
+    if(fabEl) fabEl.addEventListener('click',function(){
+      if(isMobile()){ openCart(); }
+      else { var t=$('#cartBox'); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); }
     });
 
     /* ---------- CHECKOUT ---------- */
