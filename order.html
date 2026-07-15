@@ -600,10 +600,26 @@
     background:var(--red);color:#fff;font-weight:700;font-size:.9rem;padding:.7rem 1.3rem;border-radius:999px;box-shadow:var(--sh);opacity:0;pointer-events:none;transition:.25s}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+  /* Mandje-lade (mobiel): backdrop + sluitknop, standaard verborgen op desktop */
+  .cart-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:180;opacity:0;pointer-events:none;transition:opacity .3s;display:none}
+  .cart-backdrop.open{opacity:1;pointer-events:auto}
+  .cart-close{position:absolute;top:1rem;right:1.1rem;background:none;border:0;color:var(--muted);font-size:1.5rem;line-height:1;cursor:pointer;display:none}
+  .cart-close:hover{color:var(--coral)}
+  body.cart-locked{overflow:hidden}
+
   @media(max-width:860px){
     .pb{grid-template-columns:1fr;gap:1.4rem}.pb-stage{position:static}
-    .cart{position:static}
     .co-grid{grid-template-columns:1fr}
+    /* Winkelmandje als bottom-sheet die van onderen omhoog schuift */
+    .cart{position:fixed;left:0;right:0;bottom:0;top:auto;margin:0;z-index:185;
+      border-radius:20px 20px 0 0;max-height:86vh;overflow-y:auto;padding-top:1.8rem;
+      transform:translateY(106%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+      box-shadow:0 -16px 46px rgba(0,0,0,.55);-webkit-overflow-scrolling:touch}
+    .cart.open{transform:translateY(0)}
+    .cart::before{content:"";position:absolute;top:.65rem;left:50%;transform:translateX(-50%);
+      width:42px;height:4px;border-radius:2px;background:var(--line)}
+    .cart-backdrop{display:block}
+    .cart-close{display:block}
   }
 
   /* ===================== New York street-style laag ===================== */
@@ -783,6 +799,7 @@
     <div class="order-layout">
       <div class="prod-grid" id="prodGrid"></div>
       <aside class="cart" id="cartBox">
+        <button type="button" class="cart-close" id="cartClose" aria-label="Sluit mandje">✕</button>
         <h3>🛒 Winkelmandje</h3>
         <div id="cartLines"><p class="cart-empty">Je mandje is leeg. Voeg iets toe uit het menu.</p></div>
         <div class="cart-mode">
@@ -923,6 +940,7 @@
   </div>
 </footer>
 
+<div class="cart-backdrop" id="cartBackdrop"></div>
 <a href="#bestellen" class="fab" aria-label="Bestel nu">🍕 Bestel nu</a>
 
 <script>
@@ -1246,17 +1264,41 @@
     document.querySelectorAll('.ob-toggle button[data-mode]').forEach(function(b){
       b.addEventListener('click',function(){ setMode(b.getAttribute('data-mode')==='Bezorgen'?'leveren':'afhalen'); });
     });
-    // Zwevend karretje → scroll naar het mandje/afrekenen (i.p.v. naar boven) als er iets in zit
+    // ---- Mandje-lade (mobiel) ----
+    var isMobile=function(){ return window.matchMedia('(max-width:860px)').matches; };
+    var cartBoxEl=$('#cartBox'), cartBackdrop=$('#cartBackdrop');
+    function openCart(){ if(!cartBoxEl) return; cartBoxEl.classList.add('open'); if(cartBackdrop) cartBackdrop.classList.add('open'); document.body.classList.add('cart-locked'); }
+    function closeCart(){ if(!cartBoxEl) return; cartBoxEl.classList.remove('open'); if(cartBackdrop) cartBackdrop.classList.remove('open'); document.body.classList.remove('cart-locked'); }
+    if(cartBackdrop) cartBackdrop.addEventListener('click',closeCart);
+    var cartCloseBtn=$('#cartClose'); if(cartCloseBtn) cartCloseBtn.addEventListener('click',closeCart);
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeCart(); });
+    // Op mobiel de lade uit de sectie (met eigen stacking-context) halen en aan <body> hangen,
+    // zodat ze correct bovenop de backdrop verschijnt; op desktop terug in de grid.
+    var cartHome=cartBoxEl?cartBoxEl.parentNode:null;
+    function placeCart(){
+      if(!cartBoxEl||!cartHome) return;
+      if(isMobile()){ if(cartBoxEl.parentNode!==document.body) document.body.appendChild(cartBoxEl); }
+      else { if(cartBoxEl.parentNode!==cartHome) cartHome.appendChild(cartBoxEl); closeCart(); }
+    }
+    placeCart();
+    window.addEventListener('resize',placeCart);
+
+    // Zwevend karretje: op mobiel de lade openen (of naar het menu scrollen als leeg); op desktop naar het mandje scrollen
     var fabEl=$('.fab');
     if(fabEl) fabEl.addEventListener('click',function(e){
-      if(cart.length){ e.preventDefault(); var t=$('#cartBox'); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); }
+      if(isMobile()){
+        e.preventDefault();
+        if(cart.length){ openCart(); } else { var m=$('#bestellen'); if(m) m.scrollIntoView({behavior:'smooth'}); }
+      } else if(cart.length){
+        e.preventDefault(); var t=$('#cartBox'); if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+      }
     });
 
     /* ---------- CHECKOUT ---------- */
     var coOv=$('#coOv'), authOv=$('#authOv'), acctOv=$('#acctOv'), acct=null;
     function openOv(o){o.classList.add('open');o.setAttribute('aria-hidden','false');}
     // 'Bestelling afronden' toont eerst de gast/account-keuze
-    toCk.addEventListener('click',function(){ if(!cart.length || (mode==='leveren' && subtotal()<MIN_ORDER)) return; openOv(authOv); });
+    toCk.addEventListener('click',function(){ if(!cart.length || (mode==='leveren' && subtotal()<MIN_ORDER)) return; closeCart(); openOv(authOv); });
     if(authOv){
       $('#authX').addEventListener('click',function(){closeOv(authOv);});
       authOv.addEventListener('click',function(e){if(e.target===authOv)closeOv(authOv);});
