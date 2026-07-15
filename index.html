@@ -298,7 +298,13 @@
   .hours li:last-child{border-bottom:0}
   .hours .day{font-weight:600}
   .open-now{display:inline-flex;align-items:center;gap:.5rem;background:rgba(46,125,50,.16);color:#7fd487;font-weight:700;font-size:.85rem;padding:.35rem .85rem;border-radius:999px;margin-bottom:1rem}
-  .open-now .pulse{width:9px;height:9px;border-radius:50%;background:#7fd487}
+  .open-now .pulse{width:9px;height:9px;border-radius:50%;background:#7fd487;box-shadow:0 0 0 0 rgba(127,212,135,.6);animation:pulsedot 2s infinite}
+  @keyframes pulsedot{0%{box-shadow:0 0 0 0 rgba(127,212,135,.55)}70%{box-shadow:0 0 0 8px rgba(127,212,135,0)}100%{box-shadow:0 0 0 0 rgba(127,212,135,0)}}
+  .open-now.closed{background:rgba(198,40,40,.16);color:#f0928c}
+  .open-now.closed .pulse{background:#f0928c;box-shadow:none;animation:none}
+  .hours li.today{color:var(--yellow);font-weight:700}
+  .hours li.today .day::after{content:"• vandaag";font-size:.72rem;font-weight:600;color:var(--muted-2);margin-left:.5rem}
+  html[data-lang="en"] .hours li.today .day::after{content:"• today"}
   .tags{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.2rem}
   .tags span{background:var(--ink-2);border:1px solid var(--line);color:var(--muted);font-size:.8rem;font-weight:600;padding:.3rem .75rem;border-radius:999px}
 
@@ -1017,8 +1023,8 @@
       </div>
       <div class="info-card">
         <h3>Openingsuren</h3>
-        <div class="open-now"><span class="pulse"></span> Vandaag geopend</div>
-        <ul class="hours">
+        <div class="open-now" id="openBadge"><span class="pulse"></span> <span id="openTxt">Vandaag geopend</span></div>
+        <ul class="hours" id="hoursList">
           <li><span class="day">Maandag</span><span>11:30 – 02:30</span></li>
           <li><span class="day">Dinsdag</span><span>11:30 – 02:30</span></li>
           <li><span class="day">Woensdag</span><span>11:30 – 02:30</span></li>
@@ -1223,6 +1229,42 @@
   function setLang(lang){ document.documentElement.setAttribute('lang',lang); document.documentElement.setAttribute('data-lang',lang); apply(); }
   var btn=document.getElementById('langToggle');
   if(btn){ btn.addEventListener('click',function(){ setLang(document.documentElement.getAttribute('data-lang')==='en'?'nl':'en'); }); }
+})();
+
+/* ---- Live openingsuren: berekent of we nu open zijn ---- */
+(function(){
+  // Openingsuur per weekdag (minuten na middernacht). Index 0=zondag .. 6=zaterdag.
+  // Sluiten doen we elke nacht om 02:30 (valt in de vroege uurtjes van de volgende dag).
+  var OPEN = [14*60, 11*60+30, 11*60+30, 11*60+30, 11*60+30, 11*60+30, 14*60]; // zo,ma,di,wo,do,vr,za
+  var CLOSE = 2*60+30; // 02:30, hoort bij de nacht ná de openingsdag
+  function pad(m){ var h=Math.floor(m/60)%24, mm=m%60; return (h<10?'0':'')+h+':'+(mm<10?'0':'')+mm; }
+  function compute(now){
+    var day=now.getDay(), min=now.getHours()*60+now.getMinutes();
+    // Nog in de nachtshift van gisteren? (open tot 02:30)
+    if(min < CLOSE) return {open:true, at:CLOSE};
+    // Reguliere shift van vandaag: open vanaf OPEN[day] tot middernacht (en door tot 02:30 morgen)
+    if(min >= OPEN[day]) return {open:true, at:CLOSE};
+    // Anders gesloten; opent later vandaag
+    return {open:false, at:OPEN[day]};
+  }
+  function refresh(){
+    var badge=document.getElementById('openBadge'), txt=document.getElementById('openTxt'), list=document.getElementById('hoursList');
+    if(!badge||!txt||!list) return;
+    var en=document.documentElement.getAttribute('data-lang')==='en';
+    var now=new Date(), st=compute(now), t=pad(st.at);
+    if(st.open){ badge.classList.remove('closed'); txt.textContent=en?('Open now · closes at '+t):('Nu open · sluit om '+t); }
+    else{ badge.classList.add('closed'); txt.textContent=en?('Closed now · opens at '+t):('Nu gesloten · opent om '+t); }
+    // Markeer de rij van vandaag (lijst staat als ma..zo → (getDay+6)%7).
+    var items=list.querySelectorAll('li'), idx=(now.getDay()+6)%7;
+    items.forEach(function(li,i){ li.classList.toggle('today', i===idx); });
+  }
+  window.__refreshHours=refresh;
+  refresh();
+  // Bij taalwissel opnieuw opbouwen (loopt ná de i18n-listener).
+  var lt=document.getElementById('langToggle');
+  if(lt) lt.addEventListener('click', function(){ setTimeout(refresh,0); });
+  // Elke minuut bijwerken zodat de status live blijft.
+  setInterval(refresh, 60000);
 })();
 </script>
 </body>
