@@ -376,6 +376,21 @@
     background:var(--gold);color:#2a1c08;font-weight:800;padding:.85rem 1.4rem;border-radius:999px;
     box-shadow:var(--sh);font-size:.95rem;transition:transform .15s ease,background .15s ease}
   .fab:hover{transform:translateY(-2px);background:#f0c467}
+  /* ---- Promo-melding (pop-up bericht) ---- */
+  .promo-pop{position:fixed;left:18px;bottom:18px;z-index:80;width:min(340px,calc(100vw - 100px));
+    background:linear-gradient(180deg,#1d1613,#141010);border:1px solid var(--line);border-radius:16px;
+    box-shadow:0 20px 52px rgba(0,0,0,.55);padding:1.05rem 1.1rem 1.1rem;
+    transform:translateY(26px);opacity:0;pointer-events:none;transition:transform .35s cubic-bezier(.4,0,.2,1),opacity .35s}
+  .promo-pop.show{transform:none;opacity:1;pointer-events:auto}
+  .promo-pop .pp-close{position:absolute;top:.5rem;right:.6rem;background:none;border:0;color:var(--muted-2);font-size:1.15rem;line-height:1;cursor:pointer}
+  .promo-pop .pp-close:hover{color:var(--coral)}
+  .promo-pop .pp-head{display:flex;align-items:center;gap:.55rem;margin-bottom:.5rem;padding-right:1rem}
+  .promo-pop .pp-ic{font-size:1.55rem;flex:none}
+  .promo-pop .pp-title{font-family:'Anton',sans-serif;text-transform:uppercase;color:var(--yellow);font-size:1.05rem;letter-spacing:.02em;line-height:1.05}
+  .promo-pop .pp-text{color:var(--muted);font-size:.86rem;line-height:1.38;margin-bottom:.85rem}
+  .promo-pop .pp-btn{display:block;width:100%;text-align:center;background:var(--yellow);color:#1a1206;font-weight:800;text-transform:uppercase;letter-spacing:.03em;font-size:.83rem;padding:.62rem;border-radius:10px;border:0;cursor:pointer;text-decoration:none}
+  .promo-pop .pp-btn:hover{background:#ffd83a}
+  @media(max-width:560px){.promo-pop{left:12px;right:12px;width:auto;bottom:86px}}
 
   footer{background:var(--footer-bg);color:var(--muted-2);padding:3rem 0 2rem;text-align:center;border-top:1px solid var(--line)}
   footer .logo{justify-content:center;margin-bottom:1rem}
@@ -1069,6 +1084,49 @@
   </div>
 </footer>
 
+<!-- Promo-melding -->
+<div class="promo-pop" id="promoPop" role="dialog" aria-label="Promotie">
+  <button class="pp-close" id="ppClose" aria-label="Sluiten">✕</button>
+  <div class="pp-head"><span class="pp-ic" id="ppIc">🔥</span><div class="pp-title" id="ppTitle">Onze promo's</div></div>
+  <div class="pp-text" id="ppText"></div>
+  <a class="pp-btn" id="ppBtn" href="order.html">Bestel nu →</a>
+</div>
+<script>
+(function(){
+  var pop=document.getElementById('promoPop'); if(!pop) return;
+  var KEY='lm_promo_seen', today='';
+  try{ today=new Date().toDateString(); if(localStorage.getItem(KEY)===today) return; }catch(e){}
+  var day=new Date().getDay(); // 0=zo .. 6=za
+  var P={
+    free:{ic:'🍕',nl:['2 halen = 1 GRATIS','Vandaag (di & do): koop 2 pizza’s in om het even welke maat en krijg er 1 gratis.'],en:['Buy 2, get 1 FREE','Today (Tue & Thu): buy 2 pizzas in any size and get one free.']},
+    weekend:{ic:'🍕',nl:['Weekend deal','3 large pizza’s + lookbroodjes + 1,5L drank voor € 40. Het hele weekend, 14–23u.'],en:['Weekend deal','3 large pizzas + garlic bread + 1.5L drink for €40. All weekend, 2–11pm.']},
+    general:{ic:'🔥',nl:['Onze promo’s','Familiedeals vanaf € 22 en dagelijkse acties — stel je pizza samen en profiteer.'],en:['Our deals','Family deals from €22 and daily specials — build your pizza and save.']}
+  };
+  var pick=(day===2||day===4)?P.free:(day===5||day===6||day===0)?P.weekend:P.general;
+  function fill(){
+    var en=document.documentElement.getAttribute('data-lang')==='en', t=en?pick.en:pick.nl;
+    document.getElementById('ppIc').textContent=pick.ic;
+    document.getElementById('ppTitle').textContent=t[0];
+    document.getElementById('ppText').textContent=t[1];
+    document.getElementById('ppBtn').textContent=en?'Order now →':'Bestel nu →';
+  }
+  fill();
+  var lt=document.getElementById('langToggle'); if(lt) lt.addEventListener('click',function(){ setTimeout(fill,0); });
+  function seen(){ try{ localStorage.setItem(KEY,today);}catch(e){} }
+  function hide(){ pop.classList.remove('show'); seen(); }
+  document.getElementById('ppClose').addEventListener('click',hide);
+  var btn=document.getElementById('ppBtn'), onOrder=!!document.getElementById('catFilter2');
+  if(onOrder){
+    btn.setAttribute('href','#bestellen');
+    btn.addEventListener('click',function(e){
+      var f=document.querySelector('#catFilter2 .cf[data-c="promo"]');
+      if(f){ e.preventDefault(); f.click(); var cf=document.getElementById('catFilter2'); if(cf) cf.scrollIntoView({behavior:'smooth'}); }
+      hide();
+    });
+  } else { btn.addEventListener('click',seen); }
+  setTimeout(function(){ pop.classList.add('show'); seen(); }, 1200);
+})();
+</script>
 <a href="order.html" class="fab" aria-label="Bestel online">🛵 Bestel online</a>
 
 <script>
