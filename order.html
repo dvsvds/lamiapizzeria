@@ -119,7 +119,13 @@
   .hero .btn-ghost:hover{color:var(--gold);border-color:var(--gold)}
 
   /* ---- Brand mark (CSS logo) ---- */
-  .logo{display:flex;align-items:center;gap:.6rem}.logo-img{height:50px;width:auto;display:block}footer .logo-img{height:64px;margin:0 auto}
+  .logo{display:flex;align-items:center;gap:.6rem}.logo-img{height:58px;width:auto;display:block}footer .logo-img{height:96px;margin:0 auto}
+  /* Logo-embleem in de order-hero */
+  .hero-badge{width:clamp(140px,20vw,190px);aspect-ratio:1;border-radius:50%;margin:0 auto 1.1rem;
+    background:radial-gradient(circle at 50% 44%,#fffaf3,#f2e5d4);
+    border:5px solid var(--red);box-shadow:0 0 0 3px #1a1206,0 14px 36px rgba(0,0,0,.5);
+    display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .hero-badge img{width:84%;height:auto;display:block}
   .logo .slice{
     width:34px;height:34px;position:relative;flex:none;
     background:conic-gradient(from -35deg at 50% 100%, var(--gold) 0 70deg, transparent 70deg);
@@ -744,6 +750,7 @@
   <span class="stamp stamp-1" style="top:18%;left:6%;transform:rotate(-9deg)">Fresh dough daily</span>
   <span class="stamp stamp-2" style="top:16%;right:6%;transform:rotate(7deg)">By the slice</span>
   <div class="wrap">
+    <div class="hero-badge"><img src="images/logo.png" alt="La Mia Pizzeria — Pizza, Pasta &amp; More"></div>
     <span class="eyebrow">New York style · Antwerpen</span>
     <h1>Order your New York slice</h1>
     <p>Kies je favoriet, stel je pizza samen en rond je bestelling snel af.</p>
@@ -900,8 +907,9 @@
     <p class="conf-num">Bestelnummer <b id="confNum">—</b></p>
     <div class="conf-eta" id="confEta"></div>
     <div class="conf-sum" id="confSum"></div>
-    <p class="conf-msg">We bellen je zo dadelijk om te bevestigen. Buon appetito! 🍕</p>
-    <button type="button" class="btn btn-gold" id="confClose">Sluiten</button>
+    <p class="conf-msg">Je bestelling staat klaar in WhatsApp — verstuur het bericht om te bevestigen. 🍕</p>
+    <button type="button" class="btn" id="confWa" style="background:#25D366;color:#08320f;width:100%;justify-content:center;margin-bottom:.6rem">📲 Verstuur via WhatsApp</button>
+    <button type="button" class="btn btn-gold" id="confClose" style="width:100%;justify-content:center">Sluiten</button>
   </div>
 </div>
 
@@ -1416,6 +1424,39 @@
     $('#coX').addEventListener('click',function(){closeOv(coOv);});
     coOv.addEventListener('click',function(e){if(e.target===coOv)closeOv(coOv);});
 
+    // ---- WhatsApp-bestelling ----
+    var WA_NUMBER='32469433180'; // WhatsApp-nummer van de zaak (internationaal, zonder + of spaties)
+    var lastWaUrl='';
+    function coTimeLabel(){
+      var b=$('#coTime').querySelector('button.on'); var t=b?b.getAttribute('data-t'):'asap';
+      if(t==='uur'){ var el=$('#coTimeField input'); var u=el?el.value.trim():''; return u?('Om '+u):'Specifiek uur'; }
+      return 'Zo snel mogelijk';
+    }
+    function coPayLabel(f){ try{ return f.pay.value==='online'?'Online betalen':'Betalen bij afhaling/levering'; }catch(e){ return 'Betalen bij afhaling/levering'; } }
+    function buildWaUrl(f,num){
+      var sub=subtotal(), L=[];
+      L.push('🍕 *NIEUWE BESTELLING* — La Mia Pizzeria');
+      L.push('Nr: '+num);
+      L.push('Type: '+(mode==='leveren'?'🛵 Levering':'🥡 Afhalen'));
+      L.push('Wanneer: '+coTimeLabel());
+      L.push('');
+      L.push('*Bestelling:*');
+      cart.forEach(function(l){
+        L.push('• '+l.qty+'× '+l.name+(l.opts&&l.opts.length?' ('+l.opts.join(', ')+')':'')+' — '+fmt(l.unit*l.qty));
+        if(l.note) L.push('   ↳ '+l.note);
+      });
+      L.push('');
+      L.push('Subtotaal: '+fmt(sub));
+      if(mode==='leveren') L.push('Leveringskosten: '+fmt(delFee()));
+      L.push('*Totaal: '+fmt(sub+delFee())+'*');
+      L.push('');
+      L.push('*Klant:* '+((f.naam&&f.naam.value.trim())||'—'));
+      L.push('Tel: '+((f.tel&&f.tel.value.trim())||'—'));
+      if(f.email && f.email.value.trim()) L.push('E-mail: '+f.email.value.trim());
+      if(mode==='leveren') L.push('Adres: '+((f.adres&&f.adres.value.trim())||'—')+', '+((f.postcode&&f.postcode.value.trim())||'')+' '+((f.gemeente&&f.gemeente.value.trim())||''));
+      L.push('Betaling: '+coPayLabel(f));
+      return 'https://wa.me/'+WA_NUMBER+'?text='+encodeURIComponent(L.join('\n'));
+    }
     $('#coForm').addEventListener('submit',function(e){
       e.preventDefault();
       var f=e.target;
@@ -1429,8 +1470,9 @@
       var sub=subtotal();
       $('#confSum').innerHTML=cart.map(function(l){return '<div class="cr"><span>'+l.qty+'× '+esc(l.name)+'</span><span>'+fmt(l.unit*l.qty)+'</span></div>';}).join('')+
         '<div class="cr cr-tot"><span>Totaal ('+(mode==='leveren'?'levering':'afhaling')+')</span><span>'+fmt(sub+delFee())+'</span></div>';
-      /* Hier kun je later koppelen aan WhatsApp / e-mail / betaalprovider.
-         Voorbeeld (WhatsApp):  window.open('https://wa.me/32XXXXXXXXX?text='+encodeURIComponent(bericht)); */
+      // WhatsApp: bericht opbouwen (mand nog gevuld) en openen in een nieuw venster
+      lastWaUrl=buildWaUrl(f,num);
+      window.open(lastWaUrl,'_blank');
       closeOv(coOv); re(); confOv.classList.add('open'); confOv.setAttribute('aria-hidden','false');
       cart=[]; renderCart();
     });
@@ -1438,6 +1480,7 @@
     /* ---------- BEVESTIGING ---------- */
     var confOv=$('#confOv');
     $('#confClose').addEventListener('click',function(){closeOv(confOv);});
+    var confWaBtn=$('#confWa'); if(confWaBtn) confWaBtn.addEventListener('click',function(){ if(lastWaUrl) window.open(lastWaUrl,'_blank'); });
 
     function closeOv(o){o.classList.remove('open');o.setAttribute('aria-hidden','true');}
     document.addEventListener('keydown',function(e){if(e.key==='Escape'){[ov,authOv,acctOv,coOv,confOv].forEach(function(o){if(o)closeOv(o);});}});
@@ -1777,7 +1820,8 @@
     '"deze pizzeria is het echt waard. het personeel is heel vriendelijk en de pizza is vers en heerlijk. de pizza met penne was bizar lekker. zeker een aanrader!"':'"This pizzeria is really worth it. The staff is super friendly and the pizza is fresh and delicious. The penne pizza was insanely good. Highly recommended!"',
     '"heerlijke pizza en topservice! samen met mijn zus gegeten bij la mia en we waren super tevreden."':'"Delicious pizza and great service! Ate at La Mia with my sister and we were super happy."',
     "trek in een echte new york slice? 🍕":"Craving a real New York slice? 🍕","stel je eigen pizza samen of kies uit onze kaart, en reken snel af op onze bestelpagina.":"Build your own pizza or pick from our menu, and check out quickly on our order page.","🛵 bestel online →":"🛵 Order online →",
-    "afhaaldeals":"Takeaway deals","alleen voor afhaal":"Pickup only","familiedeal":"Family deal"
+    "afhaaldeals":"Takeaway deals","alleen voor afhaal":"Pickup only","familiedeal":"Family deal",
+    "je bestelling staat klaar in whatsapp — verstuur het bericht om te bevestigen. 🍕":"Your order is ready in WhatsApp — send the message to confirm it. 🍕","📲 verstuur via whatsapp":"📲 Send via WhatsApp"
   };
   var PLACE = {
     "Naam":"Name","Telefoonnummer":"Phone number","Leveradres (straat, nr, postcode)":"Delivery address (street, no, postcode)",
