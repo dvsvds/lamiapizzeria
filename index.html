@@ -1230,7 +1230,7 @@
   function renderLangBtn(lang){
     var b=document.getElementById('langToggle'); if(!b) return;
     var target=lang==='en'?'nl':'en';
-    var NL='<svg class="flg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><defs><clipPath id="flgNL"><rect width="20" height="14" rx="2.4"/></clipPath></defs><g clip-path="url(#flgNL)"><rect width="20" height="14" fill="#21468B"/><rect width="20" height="9.34" fill="#fff"/><rect width="20" height="4.67" fill="#AE1C28"/></g></svg>';
+    var NL='<svg class="flg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><defs><clipPath id="flgNL"><rect width="20" height="14" rx="2.4"/></clipPath></defs><g clip-path="url(#flgNL)"><rect width="20" height="14" fill="#ED2939"/><rect width="13.34" height="14" fill="#FAE042"/><rect width="6.67" height="14" fill="#2D2926"/></g></svg>';
     var GB='<svg class="flg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><defs><clipPath id="flgGB"><rect width="20" height="14" rx="2.4"/></clipPath></defs><g clip-path="url(#flgGB)"><rect width="20" height="14" fill="#012169"/><path d="M0 0 20 14M20 0 0 14" stroke="#fff" stroke-width="2.6"/><path d="M0 0 20 14M20 0 0 14" stroke="#C8102E" stroke-width="1.4"/><path d="M10 0V14M0 7H20" stroke="#fff" stroke-width="4"/><path d="M10 0V14M0 7H20" stroke="#C8102E" stroke-width="2.2"/></g></svg>';
     b.innerHTML=(target==='nl'?NL:GB)+'<span>'+(target==='nl'?'NL':'EN')+'</span>';
     b.setAttribute('aria-label', target==='nl'?'Schakel naar Nederlands':'Switch to English');
