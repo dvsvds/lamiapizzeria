@@ -43,7 +43,7 @@ het beheerscherm).
 ### Fase 1 — centraal menu & prijzen ✅
 
 - **Database** (`data/lamia.db`, SQLite). Bij de eerste start automatisch gevuld
-  met de volledige kaart (115 producten, 11 categorieën).
+  met de volledige kaart (139 producten, 12 categorieën, incl. ijs).
 - **Beheerscherm** `beheer.html`: producten en prijzen bewerken, toevoegen en
   verwijderen, maten voor pizza's, een product tijdelijk op **onbeschikbaar**
   zetten ("uitverkocht"), labels (Populair/Aanrader), afbeelding kiezen, en
@@ -69,6 +69,11 @@ het beheerscherm).
   (`GET /api/admin/orders`) — de basis voor het keukenscherm.
 - De kassa blijft volledig werken als de server even wegvalt: alles staat ook
   lokaal (localStorage) en het versturen gebeurt "best effort".
+- **Online bestellingen live in de kassa.** De knop **🌐 Online** toont
+  binnenkomende websitebestellingen (live, met melding + geluid). Personeel kan
+  ze met één tik **in de kassa laden** om af te rekenen, of afvinken. Deze
+  functie activeert met de PIN; de kern van de kassa blijft zonder login en
+  offline werken.
 
 ### Fase 4 — keukenscherm ✅
 
