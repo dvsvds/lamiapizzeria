@@ -73,7 +73,8 @@ db.exec(
   "  tag TEXT DEFAULT ''," +
   '  available INTEGER NOT NULL DEFAULT 1,' +
   '  sort INTEGER DEFAULT 0,' +
-  "  img TEXT DEFAULT ''" +
+  "  img TEXT DEFAULT ''," +
+  '  meta TEXT' +                               // promo-samenstelling (JSON): pizzas/drink/side
   ');'
 );
 db.exec(
@@ -122,6 +123,7 @@ function imgForCat(cat) { return CAT_IMG[cat] || 'pizza-card'; }
   if (!has('orders', 'pay')) db.exec('ALTER TABLE orders ADD COLUMN pay TEXT');
   if (!has('orders', 'tbl')) db.exec('ALTER TABLE orders ADD COLUMN tbl TEXT');
   if (!has('orders', 'vat')) db.exec('ALTER TABLE orders ADD COLUMN vat TEXT');
+  if (!has('products', 'meta')) db.exec('ALTER TABLE products ADD COLUMN meta TEXT');
 })();
 
 // categorie → soort (food/drink), voor het juiste BTW-tarief
@@ -142,12 +144,17 @@ function seedIfEmpty() {
     insCat.run(c.id, c.label, c.color || null, c.kind || 'food', c.sort || 0);
   });
   var insProd = db.prepare(
-    'INSERT INTO products (id,cat,type,name,descr,price,sizes,tag,available,sort,img) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+    'INSERT INTO products (id,cat,type,name,descr,price,sizes,tag,available,sort,img,meta) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
   );
   catalogue.PRODUCTS.forEach(function (p, i) {
+    var meta = null;
+    if (p.pizzas != null || p.drink != null || p.side != null) {
+      meta = {}; if (p.pizzas != null) meta.pizzas = p.pizzas; if (p.drink != null) meta.drink = p.drink; if (p.side != null) meta.side = p.side;
+      meta = JSON.stringify(meta);
+    }
     insProd.run(
       p.id, p.c, p.t || 'simple', p.name, p.desc || '', p.price,
-      p.sz ? JSON.stringify(p.sz) : null, p.tag || '', 1, i, p.img || imgForCat(p.c)
+      p.sz ? JSON.stringify(p.sz) : null, p.tag || '', 1, i, p.img || imgForCat(p.c), meta
     );
   });
   db.prepare('INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)').run('admin_pin', ADMIN_PIN);
@@ -162,11 +169,13 @@ function currentPin() {
 
 /* ---- rij → net JSON object ---- */
 function rowToProduct(r) {
-  return {
+  var out = {
     id: r.id, cat: r.cat, type: r.type, name: r.name, descr: r.descr,
     price: r.price, sizes: r.sizes ? JSON.parse(r.sizes) : null,
     tag: r.tag || '', img: r.img || '', available: !!r.available, sort: r.sort
   };
+  if (r.meta) { try { Object.assign(out, JSON.parse(r.meta)); } catch (e) {} } // promo: pizzas/drink/side
+  return out;
 }
 function allCategories() {
   return db.prepare('SELECT * FROM categories ORDER BY sort, label').all();
