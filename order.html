@@ -651,7 +651,7 @@
   .hero .stamp-1{top:15%;left:5%}
   .hero .stamp-2{top:13%;right:5%}
   .hero .stamp-3{bottom:13%;right:7%}
-  @media(max-width:820px){.hero .stamp{display:none}}
+  @media(max-width:820px){.hero .stamp,.order-hero .stamp{display:none}}
 
   /* ===== Bestelpagina ===== */
   .order-hero{position:relative;text-align:center;padding:clamp(2.6rem,6vw,4.5rem) 0 clamp(1.8rem,4vw,2.8rem);background:radial-gradient(120% 90% at 50% -10%,#2a201c,var(--ink) 62%);border-bottom:1px solid var(--line);overflow:hidden}
@@ -709,8 +709,8 @@
   <div class="wrap">
     <span class="ob-label">🍕 Bestel online</span>
     <div class="ob-toggle" role="group" aria-label="Bezorgen of afhalen">
-      <button type="button" class="bez active" data-mode="Bezorgen">🛵 Bezorgen</button>
-      <button type="button" class="afh" data-mode="Afhalen">🥡 Afhalen</button>
+      <button type="button" class="bez" data-mode="Bezorgen">🛵 Bezorgen</button>
+      <button type="button" class="afh active" data-mode="Afhalen">🥡 Afhalen</button>
     </div>
   </div>
 </div>
@@ -1239,8 +1239,14 @@
       $('#ctDel').textContent=fmt(delFee());
       $('#ctTotal').textContent=fmt(sub+delFee());
       var min=$('#cartMin');
-      if(mode==='leveren' && sub>0 && sub<MIN_ORDER){min.style.display='block';min.textContent='Minimum voor levering is € 20 — nog '+fmt(MIN_ORDER-sub)+' te gaan (of kies afhalen).';toCk.disabled=true;}
-      else {min.style.display='none';toCk.disabled=cart.length===0;}
+      if(mode==='leveren' && sub>0 && sub<MIN_ORDER){
+        min.style.display='block';
+        min.textContent='Minimum voor levering is € 20 — nog '+fmt(MIN_ORDER-sub)+' te gaan (of kies afhalen).';
+        toCk.disabled=true; toCk.textContent='Nog '+fmt(MIN_ORDER-sub)+' tot minimum';
+      } else {
+        min.style.display='none';
+        toCk.disabled=cart.length===0; toCk.textContent='Bestelling afronden →';
+      }
       // FAB teller
       var fab=$('.fab'); if(fab){var n=cart.reduce(function(s,l){return s+l.qty;},0); fab.textContent = n?('🛒 '+n+' · '+fmt(sub+delFee())):'🍕 Bestel nu';}
       re();
@@ -1258,6 +1264,11 @@
     function setMode(m){
       mode=m;
       [].forEach.call(document.querySelectorAll('.cart-mode .cm'),function(c){c.classList.toggle('on',c.getAttribute('data-mode')===m);});
+      // houd de bovenbalk (Bezorgen/Afhalen) in sync met de mandjesmodus
+      document.querySelectorAll('.ob-toggle button[data-mode]').forEach(function(b){
+        var bm=b.getAttribute('data-mode')==='Bezorgen'?'leveren':'afhalen';
+        b.classList.toggle('active', bm===m);
+      });
       renderCart();
     }
     // koppel de bovenste "Bezorgen/Afhalen"-balk aan de mandjesmodus
@@ -1364,7 +1375,7 @@
       clearTimeout(toastEl._t); toastEl._t=setTimeout(function(){toastEl.classList.remove('show');},1500);
     }
 
-    renderCart();
+    setMode('afhalen');  // synchroniseert bovenbalk + mandje + interne modus en rendert
 
     /* ===================================================================
        PIZZA BUILDER — stel je eigen pizza samen (ingrediënten live op pizza)
