@@ -89,12 +89,14 @@ db.exec(
   '  created_at TEXT,' +
   '  type TEXT,' +
   '  cust_name TEXT, cust_phone TEXT, cust_email TEXT, cust_address TEXT,' +
+  '  tbl TEXT,' +                                // tafelnummer (ter plaatse)
   '  items TEXT,' +
-  '  subtotal REAL, delivery REAL, total REAL,' +
+  '  subtotal REAL, discount REAL DEFAULT 0, delivery REAL, total REAL,' +
+  '  pay TEXT,' +                                // betaalinfo (JSON, kassa)
   '  note TEXT,' +
   '  time_wanted TEXT,' +
-  "  status TEXT NOT NULL DEFAULT 'nieuw'," +  // nieuw | bereiden | klaar | afgehaald
-  "  source TEXT NOT NULL DEFAULT 'web'" +      // web | pos
+  "  status TEXT NOT NULL DEFAULT 'nieuw'," +    // nieuw | bereiden | klaar | afgehaald | betaald
+  "  source TEXT NOT NULL DEFAULT 'web'" +        // web | pos
   ');'
 );
 
@@ -106,15 +108,18 @@ var CAT_IMG = {
 };
 function imgForCat(cat) { return CAT_IMG[cat] || 'pizza-card'; }
 
-/* migratie: img-kolom toevoegen aan een database van vóór fase 2 */
+/* migratie: kolommen toevoegen aan databases van vóór fase 2/3 */
 (function migrate() {
-  var cols = db.prepare('PRAGMA table_info(products)').all().map(function (c) { return c.name; });
-  if (cols.indexOf('img') < 0) {
+  function has(table, col) { return db.prepare('PRAGMA table_info(' + table + ')').all().some(function (c) { return c.name === col; }); }
+  if (!has('products', 'img')) {
     db.exec("ALTER TABLE products ADD COLUMN img TEXT DEFAULT ''");
     db.prepare('SELECT id,cat FROM products').all().forEach(function (r) {
       db.prepare('UPDATE products SET img=? WHERE id=?').run(imgForCat(r.cat), r.id);
     });
   }
+  if (!has('orders', 'discount')) db.exec('ALTER TABLE orders ADD COLUMN discount REAL DEFAULT 0');
+  if (!has('orders', 'pay')) db.exec('ALTER TABLE orders ADD COLUMN pay TEXT');
+  if (!has('orders', 'tbl')) db.exec('ALTER TABLE orders ADD COLUMN tbl TEXT');
 })();
 
 /* ---- eerste keer: vul de database met de canonieke kaart ---- */
@@ -286,23 +291,28 @@ async function handleApi(req, res, urlPath) {
       };
     });
     subtotal = Math.round(subtotal * 100) / 100;
+    var source = ob.source === 'pos' ? 'pos' : 'web';
+    var discount = Math.round(Math.max(0, Math.min(parseFloat(ob.discount) || 0, subtotal)) * 100) / 100;
     var delivery = type === 'leveren' ? DELIVERY_FEE : 0;
-    var total = Math.round((subtotal + delivery) * 100) / 100;
+    var total = Math.round((subtotal - discount + delivery) * 100) / 100;
+    var status = source === 'pos' ? 'betaald' : 'nieuw';
     var cust = ob.customer || {};
     var now = new Date().toISOString();
+    var providedNo = (source === 'pos' && ob.no) ? String(ob.no).slice(0, 20) : null;
     var out = db.prepare(
-      'INSERT INTO orders (no,created_at,type,cust_name,cust_phone,cust_email,cust_address,items,subtotal,delivery,total,note,time_wanted,status,source) ' +
-      'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
-    ).run(null, now, type,
+      'INSERT INTO orders (no,created_at,type,tbl,cust_name,cust_phone,cust_email,cust_address,items,subtotal,discount,delivery,total,pay,note,time_wanted,status,source) ' +
+      'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+    ).run(providedNo, now, type, String(ob.table || '').slice(0, 20),
       String(cust.name || '').slice(0, 120), String(cust.phone || '').slice(0, 40),
       String(cust.email || '').slice(0, 120), String(cust.address || '').slice(0, 240),
-      JSON.stringify(items), subtotal, delivery, total,
-      String(ob.note || '').slice(0, 300), String(ob.time || '').slice(0, 40), 'nieuw', 'web');
+      JSON.stringify(items), subtotal, discount, delivery, total,
+      ob.pay ? JSON.stringify(ob.pay) : null,
+      String(ob.note || '').slice(0, 300), String(ob.time || '').slice(0, 40), status, source);
     var oid = Number(out.lastInsertRowid);
-    var no = 'LM-' + String(oid).padStart(4, '0');
-    db.prepare('UPDATE orders SET no=? WHERE id=?').run(no, oid);
+    var no = providedNo || ('LM-' + String(oid).padStart(4, '0'));
+    if (!providedNo) db.prepare('UPDATE orders SET no=? WHERE id=?').run(no, oid);
     var eta = type === 'leveren' ? '35–50 min' : '20–30 min';
-    return sendJson(res, 200, { no: no, id: oid, eta: eta, subtotal: subtotal, delivery: delivery, total: total });
+    return sendJson(res, 200, { no: no, id: oid, eta: eta, subtotal: subtotal, discount: discount, delivery: delivery, total: total });
   }
 
   /* ---------- sessie ---------- */
@@ -388,6 +398,7 @@ async function handleApi(req, res, urlPath) {
       if (method === 'GET') {
         var rows = db.prepare('SELECT * FROM orders ORDER BY id DESC LIMIT 200').all().map(function (o) {
           o.items = o.items ? JSON.parse(o.items) : [];
+          o.pay = o.pay ? JSON.parse(o.pay) : null;
           return o;
         });
         return sendJson(res, 200, { orders: rows });

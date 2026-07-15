@@ -498,7 +498,8 @@
   var CATMAP={}; CATS.forEach(function(x){CATMAP[x.c]=x;});
 
   // BTW-tarief (België, prijzen incl. BTW): drank 21%, eten ter plaatse 12%, eten afhaal/levering 6%.
-  function vatRate(cat){ if(cat==='drink') return 0.21; return (state.type==='terplaatse')?0.12:0.06; }
+  var DRINK_CATS={drink:1};
+  function vatRate(cat){ if(DRINK_CATS[cat]) return 0.21; return (state.type==='terplaatse')?0.12:0.06; }
 
   /* =============================================================
      2. STATE + PERSISTENTIE
@@ -898,12 +899,27 @@
       sub:t.sub, disc:t.disc, discount:JSON.parse(JSON.stringify(state.discount)), delivery:t.delivery, total:t.total, vat:t.vat, pay:pay
     };
     sales.push(sale); save(LS.sales,sales);
+    postSaleToServer(sale, no);
     buildReceipt(sale);
     closeOv('#ovPay');
     // reset bon
     state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; renderTicket(); saveCart();
     toast('Bon #'+no+' afgerekend');
     setTimeout(function(){ window.print(); }, 120);
+  }
+
+  // Afgerekende bon naar de centrale database sturen (best effort — de kassa
+  // werkt gewoon door als de server even niet bereikbaar is; alles staat ook lokaal).
+  function postSaleToServer(sale, no){
+    if(!window.fetch) return;
+    try{
+      fetch('api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        source:'pos', no:'K-'+String(no).padStart(4,'0'),
+        type:sale.type, table:sale.table,
+        items:sale.lines.map(function(l){return {name:l.name,opts:l.opts,note:l.note,unit:l.unit,qty:l.qty};}),
+        discount:sale.disc, pay:sale.pay, status:'betaald'
+      })}).catch(function(){});
+    }catch(e){}
   }
 
   /* =============================================================
@@ -1079,6 +1095,34 @@
   initState();
   $('#otype').querySelectorAll('button').forEach(function(x){x.classList.toggle('active',x.getAttribute('data-type')===state.type);});
   renderTabs(); renderGrid(); renderTicket();
+
+  /* ---------- LIVE MENU uit de database (gedeeld met de webshop) ----------
+     Haalt de actuele kaart + prijzen op uit /api/menu. Lukt dat niet (kassa los
+     geopend zonder server), dan blijft de ingebakken kaart gewoon staan. */
+  (function loadLiveMenu(){
+    if(!window.fetch) return;
+    fetch('api/menu',{headers:{'Accept':'application/json'}})
+      .then(function(r){ return r.ok?r.json():null; })
+      .then(function(j){
+        if(!j||!j.products||!j.products.length) return;
+        CATS.length=0; CATS.push({c:'all',label:'Alles',color:'#e6b24c'});
+        DRINK_CATS={};
+        (j.categories||[]).forEach(function(c){
+          CATS.push({c:c.id,label:c.label,color:c.color||'#e6b24c'});
+          if(c.kind==='drink') DRINK_CATS[c.id]=1;
+        });
+        if(!Object.keys(DRINK_CATS).length) DRINK_CATS.drink=1;
+        for(var k in CATMAP){ delete CATMAP[k]; }
+        CATS.forEach(function(x){ CATMAP[x.c]=x; });
+        PRODUCTS.length=0;
+        Array.prototype.push.apply(PRODUCTS, j.products.map(function(p){
+          return {id:p.id, c:p.cat, t:p.type||'simple', name:p.name, desc:p.descr||'', sz:p.sizes||null, price:p.price, tag:p.tag||''};
+        }));
+        if(!CATS.some(function(x){return x.c===activeCat;})) activeCat='all';
+        renderTabs(); renderGrid();
+      })
+      .catch(function(){ /* offline: ingebakken kaart blijft staan */ });
+  })();
 })();
 </script>
 </body>

@@ -58,6 +58,17 @@ het beheerscherm).
   een bestelnummer (bv. `LM-0007`), klantgegevens, artikelen en totalen.
   Leveringskosten worden serverzijde toegevoegd.
 
+### Fase 3 — kassa gekoppeld ✅
+
+- **`pos.html`** gebruikt nu **hetzelfde live menu** uit de database als de
+  webshop (met dezelfde fallback op de ingebakken kaart).
+- Elke afgerekende bon wordt naar de **centrale bestellijst** gestuurd
+  (`source = pos`, nummer `K-0007`), inclusief korting en betaalwijze
+  (cash/kaart/split). Zo staan balie- én online-bestellingen in dezelfde lijst
+  (`GET /api/admin/orders`) — de basis voor het keukenscherm.
+- De kassa blijft volledig werken als de server even wegvalt: alles staat ook
+  lokaal (localStorage) en het versturen gebeurt "best effort".
+
 ### API
 
 - `GET /api/menu` — het menu (enkel beschikbare producten) — publiek
@@ -73,13 +84,11 @@ om de database de allereerste keer te vullen.
 
 ## Roadmap (volgende fases)
 
-- **Fase 3 — Kassa.** `pos.html` gekoppeld aan de database (gedeeld menu,
-  bestellingen centraal).
 - **Fase 4 — Keukenscherm.** Nieuwe bestellingen (web + kassa) verschijnen live
   in de keuken. De `orders`-tabel en `/api/admin/orders` liggen hiervoor al
   klaar.
 - **Fase 5 — Rapporten & boekhouding.** Omzet, BTW, per betaalmethode; centraal
-  bewaard en exporteerbaar.
+  bewaard en exporteerbaar — over web én kassa heen.
 
 > Let op — promoties (deals) worden in de webshop nu als één artikel toegevoegd;
 > de keuze van welke pizza's in een deal zitten bespreek je bij de
