@@ -979,11 +979,9 @@
   try{ today=new Date().toDateString(); if(localStorage.getItem(KEY)===today) return; }catch(e){}
   var day=new Date().getDay(); // 0=zo .. 6=za
   var P={
-    free:{ic:'🍕',nl:['2 halen = 1 GRATIS','Vandaag (di & do): koop 2 pizza’s in om het even welke maat en krijg er 1 gratis.'],en:['Buy 2, get 1 FREE','Today (Tue & Thu): buy 2 pizzas in any size and get one free.']},
-    weekend:{ic:'🍕',nl:['Weekend deal','3 large pizza’s + lookbroodjes + 1,5L drank voor € 40. Het hele weekend, 14–23u.'],en:['Weekend deal','3 large pizzas + garlic bread + 1.5L drink for €40. All weekend, 2–11pm.']},
-    general:{ic:'🔥',nl:['Onze promo’s','Familiedeals vanaf € 22 en dagelijkse acties — stel je pizza samen en profiteer.'],en:['Our deals','Family deals from €22 and daily specials — build your pizza and save.']}
+    deals:{ic:'🍕',nl:['Afhaaldeals','8 afhaaldeals vanaf € 21 — van 2 large pizza’s tot een familiedeal. Enkel voor afhaal.'],en:['Takeaway deals','8 takeaway deals from €21 — from 2 large pizzas to a family deal. Pickup only.']}
   };
-  var pick=(day===2||day===4)?P.free:(day===5||day===6||day===0)?P.weekend:P.general;
+  var pick=P.deals;
   function fill(){
     var en=document.documentElement.getAttribute('data-lang')==='en', t=en?pick.en:pick.nl;
     document.getElementById('ppIc').textContent=pick.ic;
@@ -1070,7 +1068,7 @@
       {id:'pz30',c:'pizza',t:'pizza',name:'C & B Burger',desc:'Cheddar, spek, kofta (gehakt)',sz:STD,price:12.5,img:'pizza-card'},
       {id:'pz31',c:'pizza',t:'pizza',name:'Salami',desc:'Salami, jalapeño',sz:STD,price:12.5,img:'slice-card'},
       {id:'pz32',c:'pizza',t:'pizza',name:'California',desc:'Kip, spinazie, paprika',sz:STD,price:12.5,img:'pizza-card'},
-      {id:'pz33',c:'pizza',t:'pizza',name:'Quattro Formaggi',desc:'Mozzarella, ricotta, gorgonzola, goudse kaas',sz:[12,12.5,13.5],price:12.5,img:'slice-card'},
+      {id:'pz33',c:'pizza',t:'pizza',name:'Quattro Formaggi',desc:'Mozzarella, ricotta, gorgonzola, goudse kaas',sz:STD,price:12.5,img:'slice-card'},
       {id:'pz34',c:'pizza',t:'pizza',name:'Carbonara',desc:'Spek, champignons, parmezaan, roomsaus',sz:STD,price:12.5,img:'pizza-card'},
       {id:'pz35',c:'pizza',t:'pizza',name:'Anchovies',desc:'Ansjovis, rode ui, zwarte olijven',sz:STD,price:12.5,img:'slice-card'},
       {id:'pz36',c:'pizza',t:'pizza',name:'4 Season',desc:'Salami, ham, paprika, champignons',sz:STD,price:12.5,img:'pizza-card'},
@@ -1091,14 +1089,14 @@
       {id:'pa08',c:'pasta',t:'pasta',name:'Pasta Funghi',desc:'Champignons, mozzarella, alfredosaus',price:13,img:'pasta'},
       {id:'pa09',c:'pasta',t:'pasta',name:'Creamy Veggie',desc:'Groenten, creamy saus',price:13,img:'pasta'},
       {id:'pa10',c:'pasta',t:'pasta',name:'Kass & Ham',desc:'Kaassaus, ham',price:14,img:'pasta'},
-      {id:'pa11',c:'pasta',t:'pasta',name:'BBQ Kip Pasta',desc:'Maïs, paprika, kaas, bbq saus',price:15,img:'pasta'},
-      {id:'pa12',c:'pasta',t:'pasta',name:'Fruits de Mer Diavolo',desc:'Champignons, diavolosaus',price:14,img:'pasta'},
+      {id:'pa11',c:'pasta',t:'pasta',name:'BBQ Kip Pasta',desc:'Maïs, paprika, kaas, bbq saus',price:14,img:'pasta'},
+      {id:'pa12',c:'pasta',t:'pasta',name:'Fruits de Mer Diavolo',desc:'Champignons, diavolosaus',price:15,img:'pasta'},
       {id:'pa13',c:'pasta',t:'pasta',name:'Ravioli Ricotta & Spinazie',desc:'Ricotta, spinazie, roomsaus',price:14,img:'pasta'},
       // BURGERS met friet
       {id:'bu01',c:'burger',t:'simple',name:'Bickey Burger',desc:'Met salade, komkommer, tomaat & saus',price:6,img:'burger',tag:'Populair'},
       {id:'bu02',c:'burger',t:'simple',name:'Crispy Kipburger',desc:'Met salade, komkommer, tomaat & saus',price:7.5,img:'burger'},
       {id:'bu03',c:'burger',t:'simple',name:'Crispyburger',desc:'Met salade, komkommer, tomaat & saus',price:7.5,img:'burger'},
-      {id:'bu04',c:'burger',t:'simple',name:'Fishburger',desc:'Met salade, komkommer, tomaat & saus',price:8,img:'burger'},
+      {id:'bu04',c:'burger',t:'simple',name:'Fishburger',desc:'Met salade, komkommer, tomaat & saus',price:7.5,img:'burger'},
       {id:'bu05',c:'burger',t:'simple',name:'Keftaburger',desc:'Met salade, komkommer, tomaat & saus',price:8,img:'burger'},
       {id:'bu06',c:'burger',t:'simple',name:'Mexicano Burger',desc:'Met salade, komkommer, tomaat & saus',price:4.5,img:'burger'},
       // BROODJES met friet
@@ -1126,20 +1124,21 @@
       {id:'lb05',c:'lookbrood',t:'simple',name:'Lookbrood Pesto & Kaas',desc:'Vers gebakken',price:6,img:'snacks'},
       {id:'lb06',c:'lookbrood',t:'simple',name:'Lookbrood Cream Spinazie & Kaas',desc:'Vers gebakken',price:7,img:'snacks'},
       // SNACKS
-      {id:'sn01',c:'snack',t:'simple',name:'Kiptenders (3 st.)',desc:'Krokante kipfilet',price:5,img:'snacks'},
-      {id:'sn02',c:'snack',t:'simple',name:'Chicken Wings',desc:'Pikant of BBQ',price:6,img:'snacks',tag:'Populair'},
+      {id:'sn01',c:'snack',t:'simple',name:'Kiptenders (3 st.)',desc:'Krokante kipfilet',price:3,img:'snacks'},
+      {id:'sn02',c:'snack',t:'simple',name:'Chicken Wings',desc:'Pikant of BBQ',price:4,img:'snacks',tag:'Populair'},
       {id:'sn03',c:'snack',t:'simple',name:'Mozzarellastokjes (5 st.)',desc:'Met dip',price:4,img:'snacks'},
       {id:'sn04',c:'snack',t:'simple',name:'Jalapeño Kaas (5 st.)',desc:'Pittig',price:5,img:'snacks'},
       {id:'sn05',c:'snack',t:'simple',name:'Kip Nuggets (5 st.)',desc:'Met dip',price:4,img:'snacks'},
       {id:'sn06',c:'snack',t:'simple',name:'Calamari (7 st.)',desc:'Gefrituurd',price:6,img:'snacks'},
-      {id:'sn07',c:'snack',t:'simple',name:'Chicken Taquito (2 st.)',desc:'Mexicaans',price:4,img:'snacks'},
+      {id:'sn07',c:'snack',t:'simple',name:'Chicken Taquito (2 st.)',desc:'Mexicaans',price:5,img:'snacks'},
       {id:'sn08',c:'snack',t:'simple',name:'Kaaskroket (2 st.)',desc:'Klassieker',price:3,img:'snacks'},
-      {id:'sn09',c:'snack',t:'simple',name:'Falafel (4 st.)',desc:'Vegetarisch',price:5,img:'snacks'},
+      {id:'sn09',c:'snack',t:'simple',name:'Falafel (4 st.)',desc:'Vegetarisch',price:3,img:'snacks'},
       {id:'sn10',c:'snack',t:'simple',name:'Moroccan Harira (soep)',desc:'Kruidige soep',price:4,img:'snacks'},
       {id:'sn11',c:'snack',t:'simple',name:'Cervela',desc:'Gefrituurd',price:3,img:'snacks'},
       {id:'sn12',c:'snack',t:'simple',name:'Boulet',desc:'Gefrituurd',price:3,img:'snacks'},
-      {id:'sn13',c:'snack',t:'simple',name:'Bami',desc:'Gefrituurd',price:4,img:'snacks'},
-      {id:'sn14',c:'snack',t:'simple',name:'Mexicano',desc:'Pikante worst',price:4,img:'snacks'},
+      {id:'sn13',c:'snack',t:'simple',name:'Bami',desc:'Gefrituurd',price:2,img:'snacks'},
+      {id:'sn14',c:'snack',t:'simple',name:'Mexicano',desc:'Pikante worst',price:3,img:'snacks'},
+      {id:'sn15',c:'snack',t:'simple',name:'Visfilet op een stokje',desc:'Gefrituurd',price:4,img:'snacks'},
       // FRIETEN
       {id:'fr01',c:'friet',t:'simple',name:'Frieten Klein',desc:'Vers gebakken',price:3,img:'snacks'},
       {id:'fr02',c:'friet',t:'simple',name:'Frieten Groot',desc:'Vers gebakken',price:5,img:'snacks'},
@@ -1150,6 +1149,7 @@
       {id:'de04',c:'dessert',t:'simple',name:"IJsje (Ben & Jerry's)",desc:'Diverse smaken',price:3.5,img:'dessert'},
       {id:'de05',c:'dessert',t:'simple',name:'Chocolate Cake',desc:'Rijk aan chocolade',price:5,img:'dessert'},
       {id:'de06',c:'dessert',t:'simple',name:'Red Velvet Cake',desc:'Klassieker',price:5,img:'dessert'},
+      {id:'de07',c:'dessert',t:'simple',name:'Speciaal Nagerecht',desc:'Vraag naar onze suggestie',price:5,img:'dessert'},
       // DRANKJES (t:'drink' met formaat)
       {id:'dr01',c:'drink',t:'drink',name:'Cola',desc:'Frisdrank',price:2.5,img:'drinks'},
       {id:'dr02',c:'drink',t:'drink',name:'Cola Zero',desc:'Frisdrank',price:2.5,img:'drinks'},
@@ -1159,10 +1159,14 @@
       {id:'dr06',c:'drink',t:'drink',name:'Water',desc:'Plat',price:2,img:'drinks'},
       {id:'dr07',c:'drink',t:'drink',name:'Bruiswater',desc:'Sprankelend',price:2,img:'drinks'},
       // PROMOTIES
-      {id:'pr01',c:'promo',t:'promo',name:'Familie Weekend Deal',desc:'3 pizza’s + lookbrood + 1,5L drank',price:45,img:'promo-card',tag:'Deal',pizzas:3,drink:true,side:'Lookbrood'},
-      {id:'pr02',c:'promo',t:'promo',name:'Deal voor twee',desc:'2 large pizza’s + lookbrood + 1,5L',price:35,img:'promo-card',tag:'Deal',pizzas:2,drink:true,side:'Lookbrood'},
-      {id:'pr03',c:'promo',t:'promo',name:'Deal voor drie',desc:'3 large pizza’s + mozzarella sticks + 1,5L',price:40,img:'promo-card',pizzas:3,drink:true,side:'Mozzarella sticks'},
-      {id:'pr04',c:'promo',t:'promo',name:'Single Deal',desc:'1 large pizza + mozzarella sticks + drankje',price:22,img:'promo-card',pizzas:1,drink:true,side:'Mozzarella sticks'}
+      {id:'pr01',c:'promo',t:'promo',name:'Familiedeal',desc:'3 large pizza’s + 3 looksaus + 1,5L frisdrank',price:40,img:'promo-card',tag:'Afhaal',pizzas:3,drink:true,side:'3× looksaus + 1,5L frisdrank · enkel afhaal'},
+      {id:'pr02',c:'promo',t:'promo',name:'Duo Large',desc:'2 large pizza’s',price:21,img:'promo-card',tag:'Afhaal',pizzas:2,side:'Enkel afhaal'},
+      {id:'pr03',c:'promo',t:'promo',name:'Duo Medium',desc:'2 medium pizza’s + 2 looksaus',price:21,img:'promo-card',tag:'Afhaal',pizzas:2,side:'2× looksaus · enkel afhaal'},
+      {id:'pr04',c:'promo',t:'promo',name:'Trio + Wings',desc:'3 medium pizza’s + 3 looksaus + 12 wings',price:45,img:'promo-card',tag:'Afhaal',pizzas:3,side:'3× looksaus + 12 wings · enkel afhaal'},
+      {id:'pr05',c:'promo',t:'promo',name:'Solo Large',desc:'1 large pizza + 2 looksaus + 2 frisdrank + mozzarellastokjes',price:21,img:'promo-card',tag:'Afhaal',pizzas:1,drink:true,side:'2× looksaus + 2 frisdrank + mozzarellastokjes · enkel afhaal'},
+      {id:'pr06',c:'promo',t:'promo',name:'Small Party',desc:'4 small pizza’s + 4 looksaus + 4 frisdrank',price:50,img:'promo-card',tag:'Afhaal',pizzas:4,drink:true,side:'4× looksaus + 4 frisdrank · enkel afhaal'},
+      {id:'pr07',c:'promo',t:'promo',name:'Duo Deluxe',desc:'2 medium pizza’s + 2 looksaus + 1,5L frisdrank',price:26,img:'promo-card',tag:'Afhaal',pizzas:2,drink:true,side:'2× looksaus + 1,5L frisdrank · enkel afhaal'},
+      {id:'pr08',c:'promo',t:'simple',name:'Pasta Deal',desc:'2 pasta’s (kip of scampi) + 1 looksaus',price:26,img:'promo-card',tag:'Afhaal'}
     ];
 
     // foto-url: op de echte site = bestand in /images ; in de self-contained preview = ingebakken data-URI (window.__IMGMAP)
@@ -1511,13 +1515,21 @@
       var sel={};
       function pf(n){return '€ '+n.toFixed(2).replace('.',',');}
       // Formaat-keuze — basisprijs per maat (pas hier aan)
-      var SIZES=[{k:'Small',p:7},{k:'Medium',p:8},{k:'Large',p:10}];
+      var SIZES=[{k:'Small',p:8},{k:'Medium',p:9},{k:'Large',p:10}];
       var curSize=SIZES[1];
+      // Toppingprijs: vlees & kazen kosten € 1 (Small) / € 1,5 (Medium-Large); overige toppings € 1
+      function topPrice(i){ return (i.cat==='Vlees & vis'||i.cat==='Kazen') ? (curSize.k==='Small'?1:1.5) : 1; }
+      function refreshChipPrices(){
+        [].forEach.call(document.querySelectorAll('#pbPanel .pb-chip'),function(chip){
+          var ing=INGR.filter(function(x){return x.id===chip.getAttribute('data-id');})[0]; if(!ing) return;
+          var pr=chip.querySelector('.pb-pr'); if(pr) pr.textContent='+'+pf(topPrice(ing)).replace('€ ','€');
+        });
+      }
       (function(){
         var g=document.createElement('div'); g.className='pb-group';
         g.innerHTML='<h4>Formaat</h4>';
         var w=document.createElement('div'); w.className='opt-seg';
-        SIZES.forEach(function(s,i){var b=document.createElement('button');b.type='button';b.textContent=s.k+' · '+pf(s.p);if(i===1)b.className='on';b.addEventListener('click',function(){[].forEach.call(w.children,function(c){c.classList.remove('on');});b.classList.add('on');curSize=s;upd();});w.appendChild(b);});
+        SIZES.forEach(function(s,i){var b=document.createElement('button');b.type='button';b.textContent=s.k+' · '+pf(s.p);if(i===1)b.className='on';b.addEventListener('click',function(){[].forEach.call(w.children,function(c){c.classList.remove('on');});b.classList.add('on');curSize=s;refreshChipPrices();upd();});w.appendChild(b);});
         g.appendChild(w); panel.insertBefore(g,summary);
       })();
       // bouw chips per categorie
@@ -1528,7 +1540,7 @@
         INGR.filter(function(i){return i.cat===cat;}).forEach(function(ing){
           var chip=document.createElement('button');
           chip.type='button'; chip.className='pb-chip'; chip.setAttribute('data-id',ing.id);
-          chip.innerHTML='<span class="pb-plus">+</span> '+ing.name+' <span class="pb-pr">+'+pf(ing.price).replace('€ ','€')+'</span>';
+          chip.innerHTML='<span class="pb-plus">+</span> '+ing.name+' <span class="pb-pr">+'+pf(topPrice(ing)).replace('€ ','€')+'</span>';
           chip.addEventListener('click',function(){toggle(ing,chip);});
           wrap.appendChild(chip);
         });
@@ -1563,12 +1575,12 @@
       }
       function chosen(){return INGR.filter(function(i){return sel[i.id];});}
       function upd(){
-        var ch=chosen(), total=curSize.p+ch.reduce(function(s,i){return s+i.price;},0);
+        var ch=chosen(), total=curSize.p+ch.reduce(function(s,i){return s+topPrice(i);},0);
         $('#pbPrice').textContent=pf(total);
         $('#pbChosen').textContent=(curSize.k+' pizza')+(ch.length?' · '+ch.map(function(i){return i.name;}).join(', '):' (nog geen toppings)');
       }
       $('#pbAdd').addEventListener('click',function(){
-        var ch=chosen(), total=curSize.p+ch.reduce(function(s,i){return s+i.price;},0);
+        var ch=chosen(), total=curSize.p+ch.reduce(function(s,i){return s+topPrice(i);},0);
         addToCart('Eigen pizza', [curSize.k].concat(ch.map(function(i){return i.name;})), '', total, 1);
         // reset builder
         Object.keys(sel).forEach(function(k){sel[k]=false;});
@@ -1764,7 +1776,8 @@
     '"das nen echte pizza. ambachtelijk en krokant deeg. hier kom ik zeker terug!"':'"Now that\'s a real pizza. Artisanal, crispy crust. I\'ll definitely be back!"',
     '"deze pizzeria is het echt waard. het personeel is heel vriendelijk en de pizza is vers en heerlijk. de pizza met penne was bizar lekker. zeker een aanrader!"':'"This pizzeria is really worth it. The staff is super friendly and the pizza is fresh and delicious. The penne pizza was insanely good. Highly recommended!"',
     '"heerlijke pizza en topservice! samen met mijn zus gegeten bij la mia en we waren super tevreden."':'"Delicious pizza and great service! Ate at La Mia with my sister and we were super happy."',
-    "trek in een echte new york slice? 🍕":"Craving a real New York slice? 🍕","stel je eigen pizza samen of kies uit onze kaart, en reken snel af op onze bestelpagina.":"Build your own pizza or pick from our menu, and check out quickly on our order page.","🛵 bestel online →":"🛵 Order online →"
+    "trek in een echte new york slice? 🍕":"Craving a real New York slice? 🍕","stel je eigen pizza samen of kies uit onze kaart, en reken snel af op onze bestelpagina.":"Build your own pizza or pick from our menu, and check out quickly on our order page.","🛵 bestel online →":"🛵 Order online →",
+    "afhaaldeals":"Takeaway deals","alleen voor afhaal":"Pickup only","familiedeal":"Family deal"
   };
   var PLACE = {
     "Naam":"Name","Telefoonnummer":"Phone number","Leveradres (straat, nr, postcode)":"Delivery address (street, no, postcode)",
