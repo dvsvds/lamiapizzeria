@@ -134,11 +134,11 @@ function optColor(c) { return (typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.te
 // automatische kassakleur op basis van ingrediënten (vis/kip/pittig/vlees/veggie)
 function classifyColor(name, descr, cat) {
   var t = ((name || '') + ' ' + (descr || '')).toLowerCase();
-  if (/tonijn|tuna|ansjovis|anchov|scampi|zeevruchten|frutti di mare|fruits de mer|de mer|calamari|visfilet|\bvis\b|fish/.test(t)) return '#4f93c4'; // vis/zee → blauw
-  if (/jalape|pittig|\bhot\b|arrabbiata|diavolo|spicy|pikant/.test(t)) return '#e0533f';                                                          // pittig → rood
-  if (/\bkip\b|chicken|pollo|shawarma|shoarma/.test(t)) return '#e0a33f';                                                                         // kip → oranje
-  if (/pepperoni|salami|\bham\b|spek|kofta|kafta|meatball|bacon|\bbbq\b|gehakt|worst|merguez|bickey|\bburger\b|\bvlees\b/.test(t)) return '#b5563a'; // vlees → bruin
-  if (cat === 'pizza' || cat === 'pasta') return '#5aa469';                                                                                       // overige pizza/pasta → veggie groen
+  if (/tonijn|tuna|ansjovis|anchov|scampi|zeevruchten|frutti di mare|fruits de mer|de mer|calamari|visfilet|\bvis\b|fish/.test(t)) return '#2f80d4'; // vis/zee → blauw
+  if (/jalape|pittig|\bhot\b|arrabbiata|diavolo|spicy|pikant/.test(t)) return '#e23a2e';                                                          // pittig → fel rood
+  if (/\bkip\b|chicken|pollo|shawarma|shoarma/.test(t)) return '#f2c40f';                                                                         // kip → fel geel
+  if (/pepperoni|salami|\bham\b|spek|kofta|kafta|meatball|bacon|\bbbq\b|gehakt|worst|merguez|bickey|\bburger\b|\bvlees\b/.test(t)) return '#6b3f26'; // vlees → donkerbruin
+  if (cat === 'pizza' || cat === 'pasta') return '#3fa45a';                                                                                       // overige pizza/pasta → veggie groen
   return null; // andere categorieën → categoriekleur
 }
 
@@ -180,15 +180,20 @@ function seedIfEmpty() {
 }
 seedIfEmpty();
 
-// Eenmalig: geef elk product een standaard kassakleur op basis van de ingrediënten.
-// Raakt kleuren die je zelf al hebt ingesteld niet aan; draait maar één keer.
-(function seedColorsOnce() {
-  if (db.prepare('SELECT value FROM settings WHERE key=?').get('colors_v1')) return;
+// Geef elk product een standaard kassakleur op basis van de ingrediënten.
+// Draait één keer per kleurversie. Kleuren van een vorige auto-versie worden
+// bijgewerkt naar het nieuwe schema; kleuren die je zélf hebt gekozen blijven staan.
+(function seedColorsV2() {
+  if (db.prepare('SELECT value FROM settings WHERE key=?').get('colors_v2')) return;
+  // hexes van vorige auto-schema's — die mogen we overschrijven met het nieuwe schema
+  var AUTO_OLD = { '#4f93c4': 1, '#e0533f': 1, '#e0a33f': 1, '#b5563a': 1, '#5aa469': 1 };
   var upd = db.prepare('UPDATE products SET color=? WHERE id=?');
   db.prepare('SELECT id,name,descr,cat,color FROM products').all().forEach(function (r) {
-    if (!r.color) { var c = classifyColor(r.name, r.descr, r.cat); if (c) upd.run(c, r.id); }
+    var cur = (r.color || '').toLowerCase();
+    if (!cur || AUTO_OLD[cur]) { var c = classifyColor(r.name, r.descr, r.cat); if (c) upd.run(c, r.id); }
   });
   db.prepare('INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)').run('colors_v1', '1');
+  db.prepare('INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)').run('colors_v2', '1');
 })();
 
 function currentPin() {
