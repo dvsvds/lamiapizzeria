@@ -99,6 +99,8 @@
     border:1px solid var(--line-2);border-radius:999px;padding:.28rem .6rem;background:var(--panel)}
   .tk-meta input{width:70px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;color:var(--cream);padding:.3rem .5rem;font-weight:700;font-size:.85rem}
   .tk-meta label{font-size:.75rem;color:var(--muted);font-weight:700;display:inline-flex;align-items:center;gap:.35rem}
+  .cust-fields{display:flex;flex-direction:column;gap:.4rem;width:100%;margin-top:.2rem}
+  .cust-fields input{width:100%!important;box-sizing:border-box}
 
   .lines{flex:1;overflow-y:auto;padding:.4rem .55rem}
   .lines .empty{color:var(--muted-2);text-align:center;padding:2.6rem 1rem;font-weight:600;line-height:1.6}
@@ -210,15 +212,19 @@
     body *{visibility:hidden}
     #receipt,#receipt *{visibility:visible}
     #receipt{display:block;position:absolute;left:0;top:0;width:80mm;padding:4mm;color:#000;background:#fff;
-      font-family:'Courier New',monospace;font-size:12px;line-height:1.45}
+      font-family:'Courier New',monospace;font-size:15px;line-height:1.5;font-weight:700}
     #receipt .r-c{text-align:center}
     #receipt .r-b{font-weight:700}
-    #receipt h3{font-size:16px;font-family:'Courier New',monospace;letter-spacing:1px}
+    #receipt .r-logo{display:block;margin:0 auto 4px;width:56mm;max-width:78%;height:auto;filter:grayscale(1) contrast(1.4) brightness(.85)}
+    #receipt h3{font-size:24px;font-family:'Courier New',monospace;letter-spacing:1px;margin:2px 0}
+    #receipt .r-sub{font-size:13px;font-weight:700}
     #receipt hr{border:0;border-top:1px dashed #000;margin:6px 0}
     #receipt table{width:100%;border-collapse:collapse}
     #receipt td{vertical-align:top;padding:1px 0}
     #receipt .rt{text-align:right}
-    #receipt .big{font-size:15px;font-weight:700}
+    #receipt .big{font-size:20px;font-weight:800}
+    #receipt .r-deliv{border:1px solid #000;padding:4px 6px;margin:6px 0;font-size:15px}
+    #receipt .r-deliv b{font-size:16px}
     @page{margin:0;size:80mm auto}
   }
 
@@ -520,17 +526,18 @@
      ============================================================= */
   var LS={cart:'lamia_pos_cart',parked:'lamia_pos_parked',sales:'lamia_pos_sales',
           seq:'lamia_pos_seq',theme:'lamia_pos_theme',closed:'lamia_pos_closed'};
-  var state={ lines:[], type:'afhalen', table:'', discount:{pct:0,eur:0} };
+  var state={ lines:[], type:'afhalen', table:'', discount:{pct:0,eur:0}, cust:{name:'',phone:'',address:''} };
   var parked=[], sales=[], seq={date:'',n:0};
 
   function today(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
   function load(k,def){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):def; }catch(e){ return def; } }
   function save(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
   function saveCart(){ save(LS.cart,state); }
+  (new Image()).src='images/logo.png'; // logo alvast laden zodat de eerste bon hem meteen toont
 
   function initState(){
     var c=load(LS.cart,null);
-    if(c&&c.lines){ state=c; if(!state.discount) state.discount={pct:0,eur:0}; }
+    if(c&&c.lines){ state=c; if(!state.discount) state.discount={pct:0,eur:0}; if(!state.cust) state.cust={name:'',phone:'',address:''}; }
     parked=load(LS.parked,[]);
     sales=load(LS.sales,[]);
     seq=load(LS.seq,{date:'',n:0});
@@ -679,7 +686,7 @@
     state.lines.push({key:key,pid:p.id,cat:p.c,name:p.name,opts:opts,note:note,unit:unit,qty:qty});
     renderTicket(); saveCart();
   }
-  function clearIfEmpty(){ if(!state.lines.length){ state.discount={pct:0,eur:0}; state.table=''; } }
+  function clearIfEmpty(){ if(!state.lines.length){ state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; } }
   function setQty(i,delta){
     var l=state.lines[i]; if(!l) return;
     l.qty+=delta;
@@ -717,8 +724,18 @@
   function renderMeta(){
     var h='<span class="chip">'+({terplaatse:'🍽 Ter plaatse',afhalen:'🥡 Afhalen',leveren:'🛵 Leveren'}[state.type])+'</span>';
     if(state.type==='terplaatse'){ h+='<label>Tafel <input id="tblInp" inputmode="numeric" value="'+esc(state.table)+'" placeholder="#"></label>'; }
+    if(state.type==='leveren'){
+      h+='<div class="cust-fields">'+
+         '<input id="cNaam" value="'+esc(state.cust.name)+'" placeholder="Naam klant">'+
+         '<input id="cTel" inputmode="tel" value="'+esc(state.cust.phone)+'" placeholder="Telefoon">'+
+         '<input id="cAdres" value="'+esc(state.cust.address)+'" placeholder="Adres (straat, nr, postcode, stad)">'+
+         '</div>';
+    }
     metaEl.innerHTML=h;
     var ti=$('#tblInp'); if(ti) ti.oninput=function(){ state.table=this.value; saveCart(); };
+    var cn=$('#cNaam'); if(cn) cn.oninput=function(){ state.cust.name=this.value; saveCart(); };
+    var ct=$('#cTel'); if(ct) ct.oninput=function(){ state.cust.phone=this.value; saveCart(); };
+    var ca=$('#cAdres'); if(ca) ca.oninput=function(){ state.cust.address=this.value; saveCart(); };
   }
   function renderTicket(){
     renderMeta();
@@ -774,7 +791,7 @@
   });
   $('#btnClear').onclick=function(){
     if(!state.lines.length) return;
-    if(confirm('Huidige bon wissen?')){ state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; renderTicket(); saveCart(); }
+    if(confirm('Huidige bon wissen?')){ state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; renderTicket(); saveCart(); }
   };
 
   // Korting
@@ -803,7 +820,7 @@
     if(label===null) return;
     parked.push({id:Date.now(),label:label||def,ts:new Date().toISOString(),state:JSON.parse(JSON.stringify(state))});
     save(LS.parked,parked);
-    state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; renderTicket(); saveCart();
+    state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; renderTicket(); saveCart();
     toast('Bon geparkeerd');
   };
   function openParked(){
@@ -825,7 +842,7 @@
       var id=+lo.getAttribute('data-load'), idx=parked.findIndex(function(x){return x.id===id;});
       if(idx<0) return;
       if(state.lines.length && !confirm('Huidige bon vervangen door de geparkeerde bon?')) return;
-      state=parked[idx].state; if(!state.discount) state.discount={pct:0,eur:0};
+      state=parked[idx].state; if(!state.discount) state.discount={pct:0,eur:0}; if(!state.cust) state.cust={name:'',phone:'',address:''};
       parked.splice(idx,1); save(LS.parked,parked);
       $('#otype').querySelectorAll('button').forEach(function(x){x.classList.toggle('active',x.getAttribute('data-type')===state.type);});
       renderTicket(); saveCart(); closeOv('#ovPark'); toast('Bon geopend');
@@ -916,6 +933,7 @@
     var t=payTotals;
     var sale={
       no:no, ts:new Date().toISOString(), type:state.type, table:state.table,
+      cust:JSON.parse(JSON.stringify(state.cust||{name:'',phone:'',address:''})),
       lines:state.lines.map(function(l){return {name:l.name,cat:l.cat,opts:l.opts.slice(),note:l.note,unit:l.unit,qty:l.qty,total:l.unit*l.qty};}),
       sub:t.sub, disc:t.disc, discount:JSON.parse(JSON.stringify(state.discount)), delivery:t.delivery, total:t.total, vat:t.vat, pay:pay
     };
@@ -924,7 +942,7 @@
     buildReceipt(sale);
     closeOv('#ovPay');
     // reset bon
-    state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; renderTicket(); saveCart();
+    state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; renderTicket(); saveCart();
     toast('Bon #'+no+' afgerekend');
     setTimeout(function(){ window.print(); }, 120);
   }
@@ -952,9 +970,21 @@
            ' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
     var typeLbl={terplaatse:'TER PLAATSE',afhalen:'AFHALEN',leveren:'LEVEREN'}[sale.type];
     var h='';
-    h+='<div class="r-c r-b"><h3>LA MIA PIZZERIA</h3>Abdijstraat 226a, 2020 Antwerpen<br>Tel. 03 644 23 31<br>BTW BE 0000.000.000</div>';
+    h+='<div class="r-c r-b"><img class="r-logo" src="images/logo.png" alt="La Mia Pizzeria"><h3>LA MIA PIZZERIA</h3>'+
+       '<div class="r-sub">Abdijstraat 226a, 2020 Antwerpen<br>Tel. 03 644 23 31<br>BTW BE 0000.000.000</div></div>';
     h+='<hr>';
     h+='<div class="r-b">Bon #'+sale.no+'  ·  '+typeLbl+(sale.table?(' T'+sale.table):'')+'</div>'+dt;
+    var c=sale.cust||{};
+    if(sale.type==='leveren' && (c.name||c.address||c.phone)){
+      h+='<div class="r-deliv"><b>🛵 LEVERADRES</b><br>'+
+         (c.name?esc(c.name)+'<br>':'')+
+         (c.address?esc(c.address)+'<br>':'')+
+         (c.phone?'Tel. '+esc(c.phone):'')+'</div>';
+    } else if((sale.type==='afhalen') && (c.name||c.phone)){
+      h+='<div class="r-deliv"><b>🥡 AFHALEN</b><br>'+
+         (c.name?esc(c.name)+'<br>':'')+
+         (c.phone?'Tel. '+esc(c.phone):'')+'</div>';
+    }
     h+='<hr><table>';
     sale.lines.forEach(function(l){
       h+='<tr><td>'+l.qty+'× '+esc(l.name)+'</td><td class="rt">'+euro(l.total)+'</td></tr>';
@@ -1220,6 +1250,7 @@
         return {key:lineKey('web',l.opts||[],l.note||'',l.unit), pid:'web', cat:l.cat||'', name:l.name, opts:l.opts||[], note:l.note||'', unit:l.unit, qty:l.qty};
       });
       state.type=o.type||'afhalen'; state.discount={pct:0,eur:0}; state.table='';
+      state.cust={name:o.cust_name||'',phone:o.cust_phone||'',address:o.cust_address||''};
       $('#otype').querySelectorAll('button').forEach(function(x){x.classList.toggle('active',x.getAttribute('data-type')===state.type);});
       renderTicket(); saveCart();
       ackOrder(id); closeOv('#ovOnline'); toast('Online bestelling geladen — reken af');
