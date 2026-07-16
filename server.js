@@ -34,6 +34,7 @@ var PORT = parseInt(process.env.PORT || '3000', 10);
 var ADMIN_PIN = String(process.env.ADMIN_PIN || '1234');
 var SESSION_HOURS = 12;
 var DELIVERY_FEE = parseFloat(process.env.DELIVERY_FEE || '3.00'); // leveringskosten
+var MIN_ORDER = parseFloat(process.env.MIN_ORDER || '20.00');      // minimum bestelbedrag (levering)
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -134,6 +135,8 @@ function catKind(catId) {
 }
 // BTW-tarief (België, prijzen incl. BTW): drank 21%, eten ter plaatse 12%, eten afhaal/levering 6%
 function vatRateFor(kind, type) { return kind === 'drink' ? 0.21 : (type === 'terplaatse' ? 0.12 : 0.06); }
+// enkel een geldige hex-kleur toelaten (voorkomt HTML-injectie via het kleurveld)
+function hexColor(c) { return (typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c)) ? c : '#e6b24c'; }
 
 /* ---- eerste keer: vul de database met de canonieke kaart ---- */
 function seedIfEmpty() {
@@ -263,15 +266,28 @@ var MIME = {
   '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.webp': 'image/webp',
   '.woff2': 'font/woff2', '.woff': 'font/woff'
 };
+// Enkel deze extensies zijn publiek serveerbaar (blokkeert .db, .key, .json, .md, Dockerfile, …)
+var SERVE_EXT = { '.html': 1, '.js': 1, '.css': 1, '.png': 1, '.jpg': 1, '.jpeg': 1, '.svg': 1, '.ico': 1, '.webp': 1, '.woff': 1, '.woff2': 1 };
+// Deze mappen bevatten interne bestanden en worden nooit geserveerd
+var BLOCK_DIR = { data: 1, lib: 1, node_modules: 1, '.git': 1 };
 function serveStatic(req, res, urlPath) {
-  var rel = decodeURIComponent(urlPath.split('?')[0]);
+  var rel;
+  try { rel = decodeURIComponent(urlPath.split('?')[0]); }
+  catch (e) { res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Ongeldige URL'); }
   if (rel === '/' || rel === '') rel = '/index.html';
   var safe = path.normalize(rel).replace(/^(\.\.[\/\\])+/, '');
   var file = path.join(ROOT, safe);
   if (file.indexOf(ROOT) !== 0) { res.writeHead(403); return res.end('Verboden'); }
+  var relInside = path.relative(ROOT, file).replace(/\\/g, '/');
+  var first = relInside.split('/')[0];
+  var base = path.basename(file);
+  var ext = path.extname(file).toLowerCase();
+  // beveiliging: geen interne mappen, verborgen bestanden, de server zelf, of niet-publieke types
+  if (BLOCK_DIR[first] || base.charAt(0) === '.' || base === 'server.js' || !SERVE_EXT[ext]) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Niet gevonden');
+  }
   fs.stat(file, function (err, st) {
     if (err || !st.isFile()) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Niet gevonden'); }
-    var ext = path.extname(file).toLowerCase();
     res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
     fs.createReadStream(file).pipe(res);
   });
@@ -319,7 +335,7 @@ async function handleApi(req, res, urlPath) {
   if (seg[0] === 'menu' && method === 'GET') {
     var cats = allCategories();
     var prods = allProducts().filter(function (p) { return p.available; });
-    return sendJson(res, 200, { categories: cats, products: prods });
+    return sendJson(res, 200, { categories: cats, products: prods, config: { deliveryFee: DELIVERY_FEE, minOrder: MIN_ORDER } });
   }
 
   /* ---------- publiek: bestelling plaatsen (webshop) ---------- */
@@ -328,34 +344,43 @@ async function handleApi(req, res, urlPath) {
     var rawItems = Array.isArray(ob.items) ? ob.items : [];
     if (!rawItems.length) return sendJson(res, 400, { error: 'Lege bestelling' });
     var type = ['afhalen', 'leveren', 'terplaatse'].indexOf(ob.type) >= 0 ? ob.type : 'afhalen';
+    // Alleen een ingelogde kassa mag een POS-bon (met betaalinfo/eigen nummer) plaatsen.
+    // De publieke webshop kan enkel gewone webbestellingen aanmaken.
+    var source = (isAuthed(req) && ob.source === 'pos') ? 'pos' : 'web';
     var subtotal = 0;
+    var priceError = null;
     var items = rawItems.slice(0, 100).map(function (it) {
       var qty = Math.max(1, parseInt(it.qty, 10) || 1);
       var unit = Math.max(0, parseFloat(it.unit) || 0);
+      var name = String(it.name || '').slice(0, 120);
+      var prod = db.prepare('SELECT cat, price, sizes FROM products WHERE name=?').get(name);
+      // webshop: prijs valideren tegen de kaart (voorkomt gemanipuleerde lage prijzen)
+      if (source === 'web' && prod) {
+        var minPrice = prod.sizes ? Math.min.apply(null, JSON.parse(prod.sizes)) : prod.price;
+        if (unit < minPrice - 0.01) priceError = name;
+      }
       subtotal += unit * qty;
       return {
-        name: String(it.name || '').slice(0, 120),
+        name: name,
         opts: Array.isArray(it.opts) ? it.opts.slice(0, 20).map(String) : [],
         note: String(it.note || '').slice(0, 200),
-        cat: it.cat ? String(it.cat).slice(0, 30) : '',
+        cat: it.cat ? String(it.cat).slice(0, 30) : (prod ? prod.cat : ''),
         unit: Math.round(unit * 100) / 100, qty: qty
       };
     });
+    if (priceError) return sendJson(res, 400, { error: 'Ongeldige prijs voor ' + priceError });
     subtotal = Math.round(subtotal * 100) / 100;
-    var source = ob.source === 'pos' ? 'pos' : 'web';
-    var discount = Math.round(Math.max(0, Math.min(parseFloat(ob.discount) || 0, subtotal)) * 100) / 100;
+    // korting en betaalinfo enkel voor de (ingelogde) kassa
+    var discount = (source === 'pos') ? Math.round(Math.max(0, Math.min(parseFloat(ob.discount) || 0, subtotal)) * 100) / 100 : 0;
     var delivery = type === 'leveren' ? DELIVERY_FEE : 0;
     var total = Math.round((subtotal - discount + delivery) * 100) / 100;
     // status = keukenvoortgang (nieuw→bereiden→klaar→afgehaald), los van betaling.
-    // Kassabonnen zijn al betaald; dat zit in het pay-veld, niet in de status.
     var status = 'nieuw';
 
-    // BTW berekenen (incl. prijzen). Categorie per item afleiden uit de naam als
-    // ze niet is meegegeven; korting evenredig verdelen; levering telt als eten 6%.
+    // BTW berekenen (incl. prijzen). Korting evenredig verdelen; levering telt als eten 6%.
     var factor = subtotal > 0 ? (subtotal - discount) / subtotal : 0;
     var vat = {};
     items.forEach(function (it) {
-      if (!it.cat) { var pr = db.prepare('SELECT cat FROM products WHERE name=?').get(it.name); it.cat = pr ? pr.cat : ''; }
       var rate = vatRateFor(catKind(it.cat), type);
       var lineAfter = it.unit * it.qty * factor;
       var key = String(Math.round(rate * 100));
@@ -367,14 +392,15 @@ async function handleApi(req, res, urlPath) {
     var cust = ob.customer || {};
     var now = new Date().toISOString();
     var providedNo = (source === 'pos' && ob.no) ? String(ob.no).slice(0, 20) : null;
+    var payVal = (source === 'pos' && ob.pay) ? JSON.stringify(ob.pay) : null;
     var out = db.prepare(
       'INSERT INTO orders (no,created_at,type,tbl,cust_name,cust_phone,cust_email,cust_address,items,subtotal,discount,delivery,total,pay,vat,note,time_wanted,status,source) ' +
       'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
-    ).run(providedNo, now, type, String(ob.table || '').slice(0, 20),
+    ).run(providedNo, now, type, (source === 'pos' ? String(ob.table || '').slice(0, 20) : ''),
       String(cust.name || '').slice(0, 120), String(cust.phone || '').slice(0, 40),
       String(cust.email || '').slice(0, 120), String(cust.address || '').slice(0, 240),
       JSON.stringify(items), subtotal, discount, delivery, total,
-      ob.pay ? JSON.stringify(ob.pay) : null, JSON.stringify(vat),
+      payVal, JSON.stringify(vat),
       String(ob.note || '').slice(0, 300), String(ob.time || '').slice(0, 40), status, source);
     var oid = Number(out.lastInsertRowid);
     var no = providedNo || ('LM-' + String(oid).padStart(4, '0'));
@@ -406,9 +432,12 @@ async function handleApi(req, res, urlPath) {
   }
   if (seg[0] === 'login' && method === 'POST') {
     var body = await readBody(req);
-    if (String(body.pin || '') !== currentPin()) return sendJson(res, 401, { error: 'Verkeerde PIN' });
+    var given = crypto.createHash('sha256').update(String(body.pin || '')).digest();
+    var want = crypto.createHash('sha256').update(currentPin()).digest();
+    if (!crypto.timingSafeEqual(given, want)) return sendJson(res, 401, { error: 'Verkeerde PIN' });
     var token = sign(JSON.stringify({ exp: Date.now() + SESSION_HOURS * 3600e3 }));
-    var cookie = 'lamia_sess=' + token + '; HttpOnly; SameSite=Lax; Path=/; Max-Age=' + (SESSION_HOURS * 3600);
+    var secure = (req.headers['x-forwarded-proto'] === 'https') ? '; Secure' : '';
+    var cookie = 'lamia_sess=' + token + '; HttpOnly; SameSite=Lax; Path=/' + secure + '; Max-Age=' + (SESSION_HOURS * 3600);
     return sendJson(res, 200, { authed: true }, { 'Set-Cookie': cookie });
   }
   if (seg[0] === 'logout' && method === 'POST') {
@@ -461,14 +490,14 @@ async function handleApi(req, res, urlPath) {
         if (db.prepare('SELECT 1 FROM categories WHERE id=?').get(cb.id)) return sendJson(res, 400, { error: 'Bestaat al' });
         var ms = db.prepare('SELECT COALESCE(MAX(sort),0)+1 AS s FROM categories').get().s;
         db.prepare('INSERT INTO categories (id,label,color,kind,sort) VALUES (?,?,?,?,?)')
-          .run(cb.id, cb.label, cb.color || '#e6b24c', cb.kind === 'drink' ? 'drink' : 'food', ms);
+          .run(cb.id, String(cb.label).slice(0, 40), hexColor(cb.color), cb.kind === 'drink' ? 'drink' : 'food', ms);
         return sendJson(res, 200, { category: db.prepare('SELECT * FROM categories WHERE id=?').get(cb.id) });
       }
       if (method === 'PUT' && id) {
         var cu = await readBody(req);
         if (!db.prepare('SELECT 1 FROM categories WHERE id=?').get(id)) return sendJson(res, 404, { error: 'Niet gevonden' });
         db.prepare('UPDATE categories SET label=?,color=?,kind=? WHERE id=?')
-          .run(cu.label, cu.color || '#e6b24c', cu.kind === 'drink' ? 'drink' : 'food', id);
+          .run(String(cu.label || '').slice(0, 40), hexColor(cu.color), cu.kind === 'drink' ? 'drink' : 'food', id);
         return sendJson(res, 200, { category: db.prepare('SELECT * FROM categories WHERE id=?').get(id) });
       }
       if (method === 'DELETE' && id) {

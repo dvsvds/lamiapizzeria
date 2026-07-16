@@ -1261,6 +1261,8 @@
         .then(function(r){ return r.ok?r.json():null; })
         .then(function(j){
           if(!j||!j.products||!j.products.length) return;
+          // leveringskosten & minimum uit de serverconfig (blijft in sync met de kassa)
+          if(j.config){ if(typeof j.config.deliveryFee==='number') DELIVERY_FEE=j.config.deliveryFee; if(typeof j.config.minOrder==='number') MIN_ORDER=j.config.minOrder; }
           var mapped=j.products.map(function(p){
             return {id:p.id, c:p.cat, t:p.type||'simple', name:p.name, desc:p.descr||'',
                     sz:p.sizes||null, price:p.price, img:p.img||'pizza-card', tag:p.tag||'',
@@ -1278,6 +1280,8 @@
     var ov=$('#optOv'), optQtyEl=$('#optQty'), optPriceEl=$('#optPrice');
     var optState=null;
     function openOptions(p){
+      // veiligheidsnet: pizza zonder (volledige) maten → gewoon aan basisprijs toevoegen i.p.v. crashen
+      if(p.t==='pizza' && (!p.sz || p.sz.length<3)){ addToCart(p.name, [], '', (p.sz&&p.sz[0])||p.price, 1); toast(); return; }
       optState={p:p, qty:1};
       $('#optImg').style.backgroundImage='url('+imgUrl(p.img)+')';
       $('#optName').textContent=p.name; $('#optDesc').textContent=p.desc;
@@ -1506,8 +1510,17 @@
     $('#coForm').addEventListener('submit',function(e){
       e.preventDefault();
       var f=e.target;
+      function orderError(msg){
+        var frm=$('#coForm'), el=$('#coErr');
+        if(!el){ el=document.createElement('p'); el.id='coErr'; el.style.cssText='color:var(--coral);font-weight:800;text-align:center;margin:.5rem 0';
+          var sb=frm.querySelector('[type="submit"]'); frm.insertBefore(el, sb); }
+        el.textContent=msg; el.style.display='block';
+      }
+      var ce=$('#coErr'); if(ce) ce.style.display='none';
       if(mode==='leveren' && !f.adres.value.trim()){ f.adres.focus(); return; }
       var sub=subtotal();
+      // minimum bij levering ook hier afdwingen (mode kan in de checkout gewijzigd zijn)
+      if(mode==='leveren' && sub<MIN_ORDER){ orderError('Minimum voor levering is '+fmt(MIN_ORDER)+' — voeg nog '+fmt(MIN_ORDER-sub)+' toe of kies afhalen.'); return; }
       var addr=[ f.adres?f.adres.value.trim():'', f.postcode?f.postcode.value.trim():'', f.gemeente?f.gemeente.value.trim():'' ]
                  .filter(Boolean).join(', ');
       var timeField=$('#coTimeField');
@@ -1526,16 +1539,18 @@
         closeOv(coOv); re(); confOv.classList.add('open'); confOv.setAttribute('aria-hidden','false');
         cart=[]; renderCart();
       }
-      var localNum='LM-'+String(Date.now()).slice(-6);
       var localEta=mode==='leveren'?'35–50 min':'20–30 min';
       var btn=f.querySelector('[type="submit"]'); if(btn) btn.disabled=true;
-      // Bestelling naar de database (verschijnt op kassa, keuken en in rapporten)
-      if(window.fetch){
-        fetch('api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-          .then(function(r){ return r.ok?r.json():null; })
-          .then(function(j){ if(btn)btn.disabled=false; showConfirm(j&&j.no?j.no:localNum, j&&j.eta?j.eta:localEta); })
-          .catch(function(){ if(btn)btn.disabled=false; showConfirm(localNum,localEta); });
-      } else { showConfirm(localNum,localEta); }
+      if(!window.fetch){ if(btn)btn.disabled=false; orderError('Bestellen vereist een internetverbinding.'); return; }
+      // Bestelling naar de database (verschijnt op kassa, keuken en in rapporten).
+      // Bij een fout NIET doen alsof de bestelling gelukt is — de klant moet het weten.
+      fetch('api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+        .then(function(r){ return r.text().then(function(t){ var j={}; try{ j=t?JSON.parse(t):{}; }catch(e){} return {ok:r.ok,j:j}; }); })
+        .then(function(res){ if(btn)btn.disabled=false;
+          if(res.ok && res.j && res.j.no){ showConfirm(res.j.no, res.j.eta||localEta); }
+          else { orderError((res.j&&res.j.error)||'Bestelling kon niet geplaatst worden. Probeer opnieuw.'); }
+        })
+        .catch(function(){ if(btn)btn.disabled=false; orderError('Geen verbinding met de server. Probeer opnieuw.'); });
     });
 
     /* ---------- BEVESTIGING ---------- */

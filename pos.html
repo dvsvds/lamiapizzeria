@@ -507,6 +507,10 @@
   var DRINK_CATS={drink:1};
   function vatRate(cat){ if(DRINK_CATS[cat]) return 0.21; return (state.type==='terplaatse')?0.12:0.06; }
 
+  // true zodra de kassa een geldige sessie heeft (via 🌐 Online / PIN). Enkel dan
+  // worden afgerekende bonnen centraal doorgestuurd (server weigert POS zonder login).
+  var serverSession=false;
+
   /* =============================================================
      2. STATE + PERSISTENTIE
      ============================================================= */
@@ -528,8 +532,8 @@
     seq=load(LS.seq,{date:'',n:0});
     if(seq.date!==today()){ seq={date:today(),n:0}; save(LS.seq,seq); }
   }
-  function nextOrderNo(){ seq.n++; seq.date=today(); save(LS.seq,seq); return seq.n; }
-  function currentOrderNo(){ return seq.n+1; }
+  function nextOrderNo(){ if(seq.date!==today()){ seq={date:today(),n:0}; } seq.n++; seq.date=today(); save(LS.seq,seq); return seq.n; }
+  function currentOrderNo(){ return (seq.date!==today()?0:seq.n)+1; }
 
   /* =============================================================
      3. HELPERS
@@ -585,6 +589,8 @@
      ============================================================= */
   function pick(p){
     if(p.t==='simple'){ addLine(p, [], p.price, ''); toast(p.name+' toegevoegd'); return; }
+    // veiligheidsnet: pizza zonder (volledige) maten → direct aan basisprijs, niet crashen
+    if(p.t==='pizza' && (!p.sz || p.sz.length<3)){ addLine(p, [], (p.sz&&p.sz[0])||p.price, ''); toast(p.name+' toegevoegd'); return; }
     openOptions(p);
   }
 
@@ -656,23 +662,25 @@
   /* =============================================================
      6. BON (TICKET)
      ============================================================= */
-  function lineKey(pid,opts,note){ return pid+'|'+opts.join(',')+'|'+note; }
+  function lineKey(pid,opts,note,unit){ return pid+'|'+opts.join(',')+'|'+note+'|'+unit; }
   function addLine(p, opts, unit, note, qty){
     qty=qty||1;
-    var key=lineKey(p.id,opts,note);
+    var key=lineKey(p.id,opts,note,unit);
     for(var i=0;i<state.lines.length;i++){
       if(state.lines[i].key===key){ state.lines[i].qty+=qty; renderTicket(); saveCart(); return; }
     }
     state.lines.push({key:key,pid:p.id,cat:p.c,name:p.name,opts:opts,note:note,unit:unit,qty:qty});
     renderTicket(); saveCart();
   }
+  function clearIfEmpty(){ if(!state.lines.length){ state.discount={pct:0,eur:0}; state.table=''; } }
   function setQty(i,delta){
     var l=state.lines[i]; if(!l) return;
     l.qty+=delta;
     if(l.qty<=0) state.lines.splice(i,1);
+    clearIfEmpty();  // leeg mandje → korting/tafel niet laten doorlopen naar de volgende klant
     renderTicket(); saveCart();
   }
-  function removeLine(i){ state.lines.splice(i,1); renderTicket(); saveCart(); }
+  function removeLine(i){ state.lines.splice(i,1); clearIfEmpty(); renderTicket(); saveCart(); }
 
   function totals(){
     var sub=0, vat={};
@@ -827,7 +835,7 @@
   var payMethod='cash', tender=0, payTotals=null;
   function openPay(){
     if(!state.lines.length) return;
-    payTotals=totals(); payMethod='cash'; tender=0;
+    payTotals=totals(); payMethod='cash'; tender=0; tenderStr='';  // reset ingevoerde cijfers van vorige bon
     $('#payTotal').textContent=euro(payTotals.total);
     $('#pmTabs').querySelectorAll('button').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-m')==='cash'); });
     showPayPane();
@@ -917,9 +925,9 @@
   // Afgerekende bon naar de centrale database sturen (best effort — de kassa
   // werkt gewoon door als de server even niet bereikbaar is; alles staat ook lokaal).
   function postSaleToServer(sale, no){
-    if(!window.fetch) return;
+    if(!window.fetch || !serverSession) return;  // enkel doorsturen als de kassa is ingelogd
     try{
-      fetch('api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      fetch('api/orders',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({
         source:'pos', no:'K-'+String(no).padStart(4,'0'),
         type:sale.type, table:sale.table,
         items:sale.lines.map(function(l){return {name:l.name,opts:l.opts,note:l.note,unit:l.unit,qty:l.qty};}),
@@ -1111,6 +1119,7 @@
       .then(function(r){ return r.ok?r.json():null; })
       .then(function(j){
         if(!j||!j.products||!j.products.length) return;
+        if(j.config && typeof j.config.deliveryFee==='number') DELIVERY_FEE=j.config.deliveryFee; // levering in sync met server/webshop
         CATS.length=0; CATS.push({c:'all',label:'Alles',color:'#e6b24c'});
         DRINK_CATS={};
         (j.categories||[]).forEach(function(c){
@@ -1169,7 +1178,7 @@
     function removeWebOrder(id){ if(webOrders[id]){ delete webOrders[id]; renderOnline(); } }
 
     var pactx;
-    function beepPos(){ try{ pactx=pactx||new (window.AudioContext||window.webkitAudioContext)(); var o=pactx.createOscillator(),g=pactx.createGain(); o.connect(g);g.connect(pactx.destination);o.type='sine';o.frequency.value=760;g.gain.setValueAtTime(0.0001,pactx.currentTime);g.gain.exponentialRampToValueAtTime(0.1,pactx.currentTime+0.02);g.gain.exponentialRampToValueAtTime(0.0001,pactx.currentTime+0.3);o.start();o.stop(pactx.currentTime+0.31);}catch(e){} }
+    function beepPos(){ try{ pactx=pactx||new (window.AudioContext||window.webkitAudioContext)(); if(pactx.state==='suspended') pactx.resume(); var o=pactx.createOscillator(),g=pactx.createGain(); o.connect(g);g.connect(pactx.destination);o.type='sine';o.frequency.value=760;g.gain.setValueAtTime(0.0001,pactx.currentTime);g.gain.exponentialRampToValueAtTime(0.1,pactx.currentTime+0.02);g.gain.exponentialRampToValueAtTime(0.0001,pactx.currentTime+0.3);o.start();o.stop(pactx.currentTime+0.31);}catch(e){} }
 
     function loadInitial(){
       return fetch('api/admin/orders?active=1',{credentials:'same-origin'}).then(function(r){
@@ -1186,7 +1195,7 @@
       esPos.addEventListener('order',function(ev){ try{ addWebOrder(JSON.parse(ev.data),true); }catch(e){} });
       esPos.addEventListener('status',function(ev){ try{ var d=JSON.parse(ev.data); if(d.status!=='nieuw') removeWebOrder(d.id); }catch(e){} });
     }
-    function activate(){ return loadInitial().then(function(ok){ if(ok){ onlineAuthed=true; connectSSE(); } return ok; }).catch(function(){ return false; }); }
+    function activate(){ return loadInitial().then(function(ok){ if(ok){ onlineAuthed=true; serverSession=true; connectSSE(); } return ok; }).catch(function(){ return false; }); }
 
     $('#btnOnline').onclick=function(){
       if(onlineAuthed){ openOv('#ovOnline'); return; }
@@ -1201,7 +1210,7 @@
       var o=webOrders[id]; if(!o) return;
       if(state.lines.length && !confirm('Huidige bon vervangen door online bestelling '+(o.no||'')+'?')) return;
       state.lines=(o.items||[]).map(function(l){
-        return {key:l.name+'|'+(l.opts||[]).join(',')+'|'+(l.note||''), pid:'web', cat:l.cat||'', name:l.name, opts:l.opts||[], note:l.note||'', unit:l.unit, qty:l.qty};
+        return {key:lineKey('web',l.opts||[],l.note||'',l.unit), pid:'web', cat:l.cat||'', name:l.name, opts:l.opts||[], note:l.note||'', unit:l.unit, qty:l.qty};
       });
       state.type=o.type||'afhalen'; state.discount={pct:0,eur:0}; state.table='';
       $('#otype').querySelectorAll('button').forEach(function(x){x.classList.toggle('active',x.getAttribute('data-type')===state.type);});

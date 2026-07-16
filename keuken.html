@@ -177,8 +177,10 @@
     var id=+b.getAttribute('data-adv'), to=b.getAttribute('data-to');
     // optimistisch
     if(orders[id]){ if(to==='afgehaald') delete orders[id]; else orders[id].status=to; render(); }
+    // bij mislukking (bv. verlopen sessie) terug in sync met de server
     fetch('api/admin/orders/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status:to})})
-      .catch(function(){});
+      .then(function(r){ if(!r.ok){ if(r.status===401) showLogin(); else resync(); } })
+      .catch(function(){ resync(); });
   });
 
   /* ---------- geluid ---------- */
@@ -187,6 +189,7 @@
     if(!soundOn) return;
     try{
       actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+      if(actx.state==='suspended') actx.resume(); // browsers starten audio 'suspended' tot een interactie
       var o=actx.createOscillator(), g=actx.createGain();
       o.connect(g); g.connect(actx.destination); o.type='sine'; o.frequency.value=880;
       g.gain.setValueAtTime(0.0001,actx.currentTime); g.gain.exponentialRampToValueAtTime(0.12,actx.currentTime+0.02);
@@ -195,14 +198,28 @@
     }catch(e){}
   }
   $('#btnSound').onclick=function(){ soundOn=!soundOn; this.textContent=soundOn?'🔔':'🔕'; this.classList.toggle('sound-off',!soundOn); if(soundOn) beep(); };
+  // audio ontgrendelen bij de eerste aanraking/klik (voor onaangeraakte keukenschermen)
+  ['click','touchstart','keydown'].forEach(function(ev){ document.addEventListener(ev,function unlock(){ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); }catch(e){} }, {once:true}); });
 
   /* ---------- live verbinding ---------- */
   function setConn(on){ var c=$('#conn'); c.className='conn '+(on?'on':'off'); $('#connTxt').textContent=on?'live':'offline'; }
+  function checkSession(){ fetch('api/session',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){ if(!j||!j.authed) showLogin(); }).catch(function(){}); }
+  // haal de actuele bestellingen op (ook na een herverbinding, zodat niets gemist wordt)
+  function resync(){
+    return fetch('api/admin/orders?active=1',{credentials:'same-origin'}).then(function(r){
+      if(r.status===401){ showLogin(); return null; }
+      return r.json();
+    }).then(function(j){
+      if(!j) return;
+      orders={}; (j.orders||[]).forEach(function(o){ orders[o.id]=o; });
+      render();
+    }).catch(function(){});
+  }
   function connect(){
     if(es) es.close();
     es=new EventSource('api/events');
-    es.onopen=function(){ setConn(true); };
-    es.onerror=function(){ setConn(false); }; // EventSource probeert vanzelf opnieuw
+    es.onopen=function(){ setConn(true); resync(); };  // her-synchroniseren bij (her)verbinden
+    es.onerror=function(){ setConn(false); checkSession(); }; // sessie verlopen? → login
     es.addEventListener('order',function(ev){
       var o=JSON.parse(ev.data); if(o.status==='afgehaald') return;
       var isNew=!orders[o.id]; orders[o.id]=o; if(isNew){ flash[o.id]=true; beep(); }
@@ -217,14 +234,7 @@
   }
 
   function loadInitial(){
-    return fetch('api/admin/orders?active=1',{credentials:'same-origin'}).then(function(r){
-      if(r.status===401){ showLogin(); return null; }
-      return r.json();
-    }).then(function(j){
-      if(!j) return;
-      orders={}; (j.orders||[]).forEach(function(o){ orders[o.id]=o; });
-      render(); connect();
-    });
+    return resync().then(function(){ connect(); });
   }
 
   /* ---------- login ---------- */
