@@ -109,6 +109,10 @@
   .toast{position:fixed;left:50%;bottom:1.4rem;transform:translateX(-50%) translateY(20px);background:var(--gold);color:#241708;padding:.7rem 1.3rem;border-radius:999px;font-weight:800;box-shadow:var(--sh);opacity:0;pointer-events:none;transition:.25s;z-index:300}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   @media(max-width:560px){ .row{grid-template-columns:1fr auto auto;} .row .price{grid-column:1;grid-row:2} }
+  .colorrow{display:flex;flex-wrap:wrap;gap:.4rem}
+  .cswatch{display:inline-flex;flex-direction:column;align-items:center;gap:.2rem;border:1px solid var(--line-2);background:var(--ink);border-radius:9px;padding:.4rem .5rem;font-size:.66rem;font-weight:800;color:var(--muted);min-width:52px}
+  .cswatch .dot{width:20px;height:20px;border-radius:6px;border:1px solid rgba(255,255,255,.25)}
+  .cswatch.on{border-color:var(--cream);color:var(--cream)}
 </style>
 </head>
 <body>
@@ -176,6 +180,7 @@
       <option value="drinks">Drank</option>
       <option value="promo-card">Promo</option>
     </select></div>
+    <div class="fld"><label>Kassa-kleur (optioneel)</label><div class="colorrow" id="fColors"></div></div>
   </div>
   <div class="mfoot">
     <button class="del" id="prodDel" style="display:none">Verwijder</button>
@@ -319,6 +324,21 @@
     $('#fSizesWrap').classList.toggle('show',isPizza);
     $('#lblPrice').textContent=isPizza?'Referentieprijs (€)':'Prijs (€)';
   }
+  // vaste kleuren met betekenis voor de kassa (Geen = categoriekleur)
+  var COLOR_PRESETS=[
+    {label:'Geen', v:''}, {label:'Vis', v:'#4f93c4'}, {label:'Veggie', v:'#5aa469'},
+    {label:'Vlees', v:'#d9483b'}, {label:'Kip', v:'#e0a33f'}, {label:'Pittig', v:'#e0533f'},
+    {label:'Kaas', v:'#e6c34c'}, {label:'Zee', v:'#46b0a4'}
+  ];
+  var prodColor='';
+  function renderColors(){
+    $('#fColors').innerHTML=COLOR_PRESETS.map(function(c){
+      var on=(prodColor||'')===c.v;
+      var dot=c.v?('background:'+c.v):'background:transparent;border-style:dashed';
+      return '<button type="button" class="cswatch'+(on?' on':'')+'" data-c="'+c.v+'"><span class="dot" style="'+dot+'"></span>'+c.label+'</button>';
+    }).join('');
+  }
+  $('#fColors').addEventListener('click',function(e){ var b=e.target.closest('[data-c]'); if(!b) return; prodColor=b.getAttribute('data-c'); renderColors(); });
   function openProduct(id){
     var p=id?prodById(id):null; editingProd=p;
     $('#prodTitle').textContent=p?'Product bewerken':'Nieuw product';
@@ -329,6 +349,7 @@
     $('#fPrice').value=p?p.price:''; $('#fTag').value=p?(p.tag||''):'';
     var sz=p&&p.sizes?p.sizes:[]; $('#fS').value=sz[0]!=null?sz[0]:''; $('#fM').value=sz[1]!=null?sz[1]:''; $('#fL').value=sz[2]!=null?sz[2]:'';
     $('#fImg').value=p&&p.img?p.img:'pizza-card';
+    prodColor=p&&p.color?p.color:''; renderColors();
     availState=p?p.available:true; $('#fAvail').classList.toggle('on',availState); $('#fAvailTxt').textContent=availState?'Ja':'Nee';
     $('#prodDel').style.display=p?'':'none';
     syncSizes(); open('#ovProd'); setTimeout(function(){$('#fName').focus();},60);
@@ -343,7 +364,7 @@
       sizes=[s,m,l];
     }
     var body={ cat:$('#fCat').value, type:type, name:$('#fName').value.trim(), descr:$('#fDesc').value.trim(),
-      price:parseFloat($('#fPrice').value), sizes:sizes, tag:$('#fTag').value.trim(), img:$('#fImg').value, available:availState };
+      price:parseFloat($('#fPrice').value), sizes:sizes, tag:$('#fTag').value.trim(), img:$('#fImg').value, color:prodColor, available:availState };
     if(!body.name) return prodError('Naam is verplicht.');
     if(isNaN(body.price)) return prodError('Vul een geldige prijs in.');
     var isNew=!editingProd;

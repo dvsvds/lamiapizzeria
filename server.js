@@ -75,7 +75,8 @@ db.exec(
   '  available INTEGER NOT NULL DEFAULT 1,' +
   '  sort INTEGER DEFAULT 0,' +
   "  img TEXT DEFAULT ''," +
-  '  meta TEXT' +                               // promo-samenstelling (JSON): pizzas/drink/side
+  '  meta TEXT,' +                              // promo-samenstelling (JSON): pizzas/drink/side
+  '  color TEXT' +                              // kleur van het kassakaartje (hex) of NULL
   ');'
 );
 db.exec(
@@ -125,7 +126,10 @@ function imgForCat(cat) { return CAT_IMG[cat] || 'pizza-card'; }
   if (!has('orders', 'tbl')) db.exec('ALTER TABLE orders ADD COLUMN tbl TEXT');
   if (!has('orders', 'vat')) db.exec('ALTER TABLE orders ADD COLUMN vat TEXT');
   if (!has('products', 'meta')) db.exec('ALTER TABLE products ADD COLUMN meta TEXT');
+  if (!has('products', 'color')) db.exec('ALTER TABLE products ADD COLUMN color TEXT');
 })();
+// optionele hex-kleur, of null als er geen ingesteld is
+function optColor(c) { return (typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c)) ? c : null; }
 
 // categorie → soort (food/drink), voor het juiste BTW-tarief
 function catKind(catId) {
@@ -175,7 +179,7 @@ function rowToProduct(r) {
   var out = {
     id: r.id, cat: r.cat, type: r.type, name: r.name, descr: r.descr,
     price: r.price, sizes: r.sizes ? JSON.parse(r.sizes) : null,
-    tag: r.tag || '', img: r.img || '', available: !!r.available, sort: r.sort
+    tag: r.tag || '', img: r.img || '', color: r.color || null, available: !!r.available, sort: r.sort
   };
   if (r.meta) { try { Object.assign(out, JSON.parse(r.meta)); } catch (e) {} } // promo: pizzas/drink/side
   return out;
@@ -458,10 +462,10 @@ async function handleApi(req, res, urlPath) {
         if (err) return sendJson(res, 400, { error: err });
         var nid = (nb.id && !db.prepare('SELECT 1 FROM products WHERE id=?').get(nb.id)) ? nb.id : genId(nb.cat);
         var maxSort = db.prepare('SELECT COALESCE(MAX(sort),0)+1 AS s FROM products').get().s;
-        db.prepare('INSERT INTO products (id,cat,type,name,descr,price,sizes,tag,available,sort,img) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
+        db.prepare('INSERT INTO products (id,cat,type,name,descr,price,sizes,tag,available,sort,img,color) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
           .run(nid, nb.cat, nb.type || 'simple', nb.name.trim(), nb.descr || '', parseFloat(nb.price),
                (nb.sizes && nb.sizes.length) ? JSON.stringify(nb.sizes) : null, nb.tag || '',
-               nb.available === false ? 0 : 1, maxSort, nb.img || imgForCat(nb.cat));
+               nb.available === false ? 0 : 1, maxSort, nb.img || imgForCat(nb.cat), optColor(nb.color));
         return sendJson(res, 200, { product: rowToProduct(db.prepare('SELECT * FROM products WHERE id=?').get(nid)) });
       }
       if (method === 'PUT' && id) {
@@ -469,10 +473,10 @@ async function handleApi(req, res, urlPath) {
         if (!db.prepare('SELECT 1 FROM products WHERE id=?').get(id)) return sendJson(res, 404, { error: 'Niet gevonden' });
         var e2 = validProduct(ub);
         if (e2) return sendJson(res, 400, { error: e2 });
-        db.prepare('UPDATE products SET cat=?,type=?,name=?,descr=?,price=?,sizes=?,tag=?,available=?,img=? WHERE id=?')
+        db.prepare('UPDATE products SET cat=?,type=?,name=?,descr=?,price=?,sizes=?,tag=?,available=?,img=?,color=? WHERE id=?')
           .run(ub.cat, ub.type || 'simple', ub.name.trim(), ub.descr || '', parseFloat(ub.price),
                (ub.sizes && ub.sizes.length) ? JSON.stringify(ub.sizes) : null, ub.tag || '',
-               ub.available === false ? 0 : 1, ub.img || imgForCat(ub.cat), id);
+               ub.available === false ? 0 : 1, ub.img || imgForCat(ub.cat), optColor(ub.color), id);
         return sendJson(res, 200, { product: rowToProduct(db.prepare('SELECT * FROM products WHERE id=?').get(id)) });
       }
       if (method === 'DELETE' && id) {
