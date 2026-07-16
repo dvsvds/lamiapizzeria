@@ -1517,7 +1517,17 @@
         el.textContent=msg; el.style.display='block';
       }
       var ce=$('#coErr'); if(ce) ce.style.display='none';
-      if(mode==='leveren' && !f.adres.value.trim()){ f.adres.focus(); return; }
+      if(mode==='leveren'){
+        var miss=[];
+        if(!f.adres || !f.adres.value.trim()) miss.push({el:f.adres,lbl:'adres'});
+        if(!f.postcode || !f.postcode.value.trim()) miss.push({el:f.postcode,lbl:'postcode'});
+        if(!f.gemeente || !f.gemeente.value.trim()) miss.push({el:f.gemeente,lbl:'gemeente'});
+        if(miss.length){
+          orderError('Vul je volledige leveradres in ('+miss.map(function(m){return m.lbl;}).join(', ')+') zodat we kunnen bezorgen.');
+          if(miss[0].el) miss[0].el.focus();
+          return;
+        }
+      }
       var sub=subtotal();
       // minimum bij levering ook hier afdwingen (mode kan in de checkout gewijzigd zijn)
       if(mode==='leveren' && sub<MIN_ORDER){ orderError('Minimum voor levering is '+fmt(MIN_ORDER)+' — voeg nog '+fmt(MIN_ORDER-sub)+' toe of kies afhalen.'); return; }
