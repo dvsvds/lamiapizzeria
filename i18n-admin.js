@@ -230,7 +230,10 @@
     ['Subtotaal', 'Subtotal'], ['Leveringskosten', 'Delivery fee'], ['waarvan', 'of which'], ['stuk', 'each'],
     ['Tafel', 'Table'], ['afgerekende', 'settled'], ['afgerekend', 'settled'],
     ['geparkeerd', 'parked'], ['geopend', 'opened'], ['toegevoegd', 'added'],
-    ['Sessie sinds openen', 'Session since opening'], ['Wisselgeld', 'Change'], ['Ontvangen', 'Received']
+    ['Sessie sinds openen', 'Session since opening'], ['Wisselgeld', 'Change'], ['Ontvangen', 'Received'],
+    // pizza-toppings (kassa)
+    ['Extra kaas', 'Extra cheese'], ['Rode ui', 'Red onion'], ['Champignons', 'Mushrooms'], ['Olijven', 'Olives'],
+    ['Ananas', 'Pineapple'], ['Gehakt', 'Minced meat'], ['Spek', 'Bacon'], ['Kip', 'Chicken'], ['Paprika', 'Bell pepper']
   ].map(function (p) { return [new RegExp('\\b' + p[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g'), p[1]]; });
 
   var NORM = {};
