@@ -131,6 +131,17 @@ function imgForCat(cat) { return CAT_IMG[cat] || 'pizza-card'; }
 // optionele hex-kleur, of null als er geen ingesteld is
 function optColor(c) { return (typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c)) ? c : null; }
 
+// automatische kassakleur op basis van ingrediënten (vis/kip/pittig/vlees/veggie)
+function classifyColor(name, descr, cat) {
+  var t = ((name || '') + ' ' + (descr || '')).toLowerCase();
+  if (/tonijn|tuna|ansjovis|anchov|scampi|zeevruchten|frutti di mare|fruits de mer|de mer|calamari|visfilet|\bvis\b|fish/.test(t)) return '#4f93c4'; // vis/zee → blauw
+  if (/jalape|pittig|\bhot\b|arrabbiata|diavolo|spicy|pikant/.test(t)) return '#e0533f';                                                          // pittig → rood
+  if (/\bkip\b|chicken|pollo|shawarma|shoarma/.test(t)) return '#e0a33f';                                                                         // kip → oranje
+  if (/pepperoni|salami|\bham\b|spek|kofta|kafta|meatball|bacon|\bbbq\b|gehakt|worst|merguez|bickey|\bburger\b|\bvlees\b/.test(t)) return '#b5563a'; // vlees → bruin
+  if (cat === 'pizza' || cat === 'pasta') return '#5aa469';                                                                                       // overige pizza/pasta → veggie groen
+  return null; // andere categorieën → categoriekleur
+}
+
 // categorie → soort (food/drink), voor het juiste BTW-tarief
 function catKind(catId) {
   if (!catId) return 'food';
@@ -168,6 +179,17 @@ function seedIfEmpty() {
   console.log('  ↳ database gevuld met ' + catalogue.PRODUCTS.length + ' producten in ' + catalogue.CATEGORIES.length + ' categorieën');
 }
 seedIfEmpty();
+
+// Eenmalig: geef elk product een standaard kassakleur op basis van de ingrediënten.
+// Raakt kleuren die je zelf al hebt ingesteld niet aan; draait maar één keer.
+(function seedColorsOnce() {
+  if (db.prepare('SELECT value FROM settings WHERE key=?').get('colors_v1')) return;
+  var upd = db.prepare('UPDATE products SET color=? WHERE id=?');
+  db.prepare('SELECT id,name,descr,cat,color FROM products').all().forEach(function (r) {
+    if (!r.color) { var c = classifyColor(r.name, r.descr, r.cat); if (c) upd.run(c, r.id); }
+  });
+  db.prepare('INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)').run('colors_v1', '1');
+})();
 
 function currentPin() {
   var row = db.prepare('SELECT value FROM settings WHERE key = ?').get('admin_pin');
