@@ -1119,11 +1119,10 @@
 <script>
 (function(){
   var pop=document.getElementById('promoPop'); if(!pop) return;
-  var KEY='lm_promo_seen', today='';
-  try{ today=new Date().toDateString(); if(localStorage.getItem(KEY)===today) return; }catch(e){}
-  var day=new Date().getDay(); // 0=zo .. 6=za
+  var KEY='lm_promo_seen';
+  try{ if(sessionStorage.getItem(KEY)) return; }catch(e){}
   var P={
-    deals:{ic:'🍕',nl:['Afhaaldeals','8 afhaaldeals vanaf € 21 — van 2 large pizza’s tot een familiedeal. Enkel voor afhaal.'],en:['Takeaway deals','8 takeaway deals from €21 — from 2 large pizzas to a family deal. Pickup only.']}
+    deals:{ic:'🛵',nl:['Levering met 30% korting','Bestel online voor levering en krijg 30% korting op je bestelling. 🛵'],en:['Delivery with 30% off','Order online for delivery and get 30% off your order. 🛵']}
   };
   var pick=P.deals;
   function fill(){
@@ -1135,7 +1134,7 @@
   }
   fill();
   var lt=document.getElementById('langToggle'); if(lt) lt.addEventListener('click',function(){ setTimeout(fill,0); });
-  function seen(){ try{ localStorage.setItem(KEY,today);}catch(e){} }
+  function seen(){ try{ sessionStorage.setItem(KEY,'1');}catch(e){} }
   function hide(){ pop.classList.remove('show'); seen(); }
   document.getElementById('ppClose').addEventListener('click',hide);
   var btn=document.getElementById('ppBtn'), onOrder=!!document.getElementById('catFilter2');
