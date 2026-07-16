@@ -234,7 +234,8 @@
   function api(method,url,body){
     return fetch(url,{method:method,headers:body?{'Content-Type':'application/json'}:undefined,
       body:body?JSON.stringify(body):undefined,credentials:'same-origin'})
-      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,status:r.status,data:j}; }); });
+      .then(function(r){ return r.text().then(function(t){ var j={}; try{ j=t?JSON.parse(t):{}; }catch(e){} return {ok:r.ok,status:r.status,data:j}; }); })
+      .catch(function(){ return {ok:false,status:0,data:{error:'Geen verbinding met de server'}}; });
   }
 
   var CATS=[], PRODS=[], filterCat='all', term='';
@@ -252,6 +253,8 @@
     var sel=$('#catFilter'); var cur=sel.value;
     sel.innerHTML='<option value="all">Alle categorieën</option>'+
       CATS.map(function(c){return '<option value="'+c.id+'">'+esc(c.label)+'</option>';}).join('');
+    // gekozen filter kan verdwenen zijn (categorie verwijderd) → terug naar 'alle'
+    if(cur!=='all' && !CATS.some(function(c){return c.id===cur;})){ cur='all'; filterCat='all'; }
     sel.value=cur||'all';
     var fc=$('#fCat'); fc.innerHTML=CATS.map(function(c){return '<option value="'+c.id+'">'+esc(c.label)+'</option>';}).join('');
   }
@@ -271,7 +274,7 @@
     CATS.forEach(function(c){
       var items=shown.filter(function(p){return p.cat===c.id;});
       if(!items.length) return;
-      html+='<div class="catblock"><h2><span class="swatch" style="background:'+(c.color||'#e6b24c')+'"></span>'+
+      html+='<div class="catblock"><h2><span class="swatch" style="background:'+esc(c.color||'#e6b24c')+'"></span>'+
         esc(c.label)+' <span class="count">'+items.length+'</span>'+
         '<button class="editcat" data-editcat="'+c.id+'">bewerk</button></h2>';
       items.forEach(function(p){

@@ -54,7 +54,7 @@
     'subtotaal': 'Subtotal', 'korting': 'Discount', 'leveringskosten': 'Delivery fee', 'totaal': 'Total',
     '🗑 wissen': '🗑 Clear', '% korting': '% Discount', '🅿️ parkeren': '🅿️ Park', 'afrekenen': 'Checkout',
     'toevoegen': 'Add', 'opties': 'options', 'formaat': 'Size', 'extra toppings': 'Extra toppings',
-    'saus': 'Sauce', 'extra': 'Extra', 'opmerking': 'Note', 'verwijder': 'remove',
+    'saus': 'Sauce', 'extra': 'Extra', 'opmerking': 'Note',
     'geparkeerde bons': 'Parked orders', 'geen geparkeerde bons.': 'No parked orders.',
     'openen': 'Open', '🌐 online bestellingen': '🌐 Online orders', 'online bestellingen': 'Online orders',
     'geen nieuwe online bestellingen.': 'No new online orders.', 'laad in kassa': 'Load into register', 'afvinken': 'Dismiss',
@@ -222,15 +222,16 @@
     'Visfilet op een stokje': 'Fish fillet on a stick', 'Waterijs / kinderijs': "Water ice / kids' ice"
   });
 
-  // Losse woorden binnen samengestelde/dynamische teksten (hele woorden, veilig UI-jargon)
+  // Losse woorden binnen samengestelde/dynamische teksten. Bewust beperkt tot
+  // duidelijk UI-jargon dat NIET in product-/categorienamen voorkomt, zodat je
+  // eigen menudata nooit gewijzigd wordt. Regexes worden één keer voorgecompileerd.
   var WORDS = [
     ['producten', 'products'], ['categorieën', 'categories'], ['artikels', 'items'], ['artikel', 'item'],
-    ['Subtotaal', 'Subtotal'], ['Totaal', 'Total'], ['Korting', 'Discount'], ['Leveringskosten', 'Delivery fee'],
-    ['waarvan', 'of which'], ['stuk', 'each'], ['Tafel', 'Table'], ['afgerekende', 'settled'],
-    ['afgerekend', 'settled'], ['geparkeerd', 'parked'], ['geopend', 'opened'], ['toegevoegd', 'added'],
-    ['Sessie sinds openen', 'Session since opening'], ['Wisselgeld', 'Change'], ['Ontvangen', 'Received'],
-    ['Leveren', 'Delivery'], ['Afhalen', 'Takeaway']
-  ];
+    ['Subtotaal', 'Subtotal'], ['Leveringskosten', 'Delivery fee'], ['waarvan', 'of which'], ['stuk', 'each'],
+    ['Tafel', 'Table'], ['afgerekende', 'settled'], ['afgerekend', 'settled'],
+    ['geparkeerd', 'parked'], ['geopend', 'opened'], ['toegevoegd', 'added'],
+    ['Sessie sinds openen', 'Session since opening'], ['Wisselgeld', 'Change'], ['Ontvangen', 'Received']
+  ].map(function (p) { return [new RegExp('\\b' + p[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g'), p[1]]; });
 
   var NORM = {};
   Object.keys(DICT).forEach(function (k) { NORM[k.trim().toLowerCase()] = DICT[k]; });
@@ -244,12 +245,9 @@
     return lead + v + trail;
   }
   function trWords(s) {
-    var out = s, changed = false;
-    for (var i = 0; i < WORDS.length; i++) {
-      var re = new RegExp('\\b' + WORDS[i][0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g');
-      if (re.test(out)) { out = out.replace(re, WORDS[i][1]); changed = true; }
-    }
-    return changed ? out : null;
+    var out = s;
+    for (var i = 0; i < WORDS.length; i++) out = out.replace(WORDS[i][0], WORDS[i][1]);
+    return out === s ? null : out;
   }
 
   function translateTextNode(t) {
@@ -268,6 +266,12 @@
     var n, nodes = [];
     while ((n = walker.nextNode())) nodes.push(n);
     nodes.forEach(translateTextNode);
+    // ook de attributen van het root-element zelf (querySelectorAll matcht 'el' niet)
+    if (el.hasAttribute) {
+      ['placeholder', 'title', 'aria-label'].forEach(function (a) {
+        if (el.hasAttribute(a)) { var v = trPhrase(el.getAttribute(a)); if (v !== null) el.setAttribute(a, v); }
+      });
+    }
     var attrs = el.querySelectorAll ? el.querySelectorAll('[placeholder],[title],[aria-label]') : [];
     [].forEach.call(attrs, function (e) {
       ['placeholder', 'title', 'aria-label'].forEach(function (a) {
