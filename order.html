@@ -396,6 +396,14 @@
   .promo-pop .pp-text{color:var(--muted);font-size:.86rem;line-height:1.38;margin-bottom:.85rem}
   .promo-pop .pp-btn{display:block;width:100%;text-align:center;background:var(--yellow);color:#1a1206;font-weight:800;text-transform:uppercase;letter-spacing:.03em;font-size:.83rem;padding:.62rem;border-radius:10px;border:0;cursor:pointer;text-decoration:none}
   .promo-pop .pp-btn:hover{background:#ffd83a}
+  .promo-pop .pp-list{margin:.1rem 0 .9rem;max-height:232px;overflow-y:auto;display:flex;flex-direction:column;gap:.45rem;-webkit-overflow-scrolling:touch}
+  .promo-pop .pp-sub{font-family:'Anton',sans-serif;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-size:.72rem;margin:.4rem 0 .1rem}
+  .promo-pop .pp-deal{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;border-bottom:1px solid var(--line);padding-bottom:.4rem}
+  .promo-pop .pp-deal b{color:var(--cream);font-size:.85rem;display:block}
+  .promo-pop .pp-deal small{color:var(--muted-2);font-size:.72rem;line-height:1.25;display:block}
+  .promo-pop .pp-price{color:var(--yellow);font-weight:800;white-space:nowrap;font-size:.9rem;flex:none}
+  .promo-pop .pp-hl{background:rgba(230,178,76,.12);border:1px solid var(--line);border-radius:10px;padding:.5rem .65rem;border-bottom:0}
+  .promo-pop .pp-hl b{color:var(--yellow)}
   @media(max-width:560px){.promo-pop{left:12px;right:12px;width:auto;bottom:86px}}
 
   footer{background:var(--footer-bg);color:var(--muted-2);padding:3rem 0 2rem;text-align:center;border-top:1px solid var(--line)}
@@ -976,6 +984,7 @@
   <button class="pp-close" id="ppClose" aria-label="Sluiten">✕</button>
   <div class="pp-head"><span class="pp-ic" id="ppIc">🔥</span><div class="pp-title" id="ppTitle">Onze promo's</div></div>
   <div class="pp-text" id="ppText"></div>
+  <div class="pp-list" id="ppList"></div>
   <a class="pp-btn" id="ppBtn" href="order.html">Bestel nu →</a>
 </div>
 <script>
@@ -983,15 +992,28 @@
   var pop=document.getElementById('promoPop'); if(!pop) return;
   var KEY='lm_promo_seen';
   try{ if(sessionStorage.getItem(KEY)) return; }catch(e){}
-  var P={
-    deals:{ic:'🛵',nl:['Levering met 30% korting','Bestel online voor levering en krijg 30% korting op je bestelling. 🛵'],en:['Delivery with 30% off','Order online for delivery and get 30% off your order. 🛵']}
-  };
-  var pick=P.deals;
+  var HEAD={ic:'🍕',nl:['Onze promo\'s','Alle huidige acties:'],en:['Our deals','All current offers:']};
+  var DELIVERY={nl:['🛵 Levering','30% korting op je hele bestelling'],en:['🛵 Delivery','30% off your whole order']};
+  var DEALS=[
+    {n:'Familiedeal',ne:'Family deal',dn:'3 large pizza\'s + looksaus + 1,5L',de:'3 large pizzas + garlic sauce + 1.5L',p:40},
+    {n:'Duo Large',ne:'Duo Large',dn:'2 large pizza\'s',de:'2 large pizzas',p:21},
+    {n:'Duo Medium',ne:'Duo Medium',dn:'2 medium pizza\'s + 2 looksaus',de:'2 medium pizzas + 2 garlic sauces',p:21},
+    {n:'Trio + Wings',ne:'Trio + Wings',dn:'3 medium pizza\'s + 3 looksaus + 12 wings',de:'3 medium pizzas + 3 garlic sauces + 12 wings',p:45},
+    {n:'Solo Large',ne:'Solo Large',dn:'1 large pizza + 2 looksaus + 2 frisdrank + mozzarellastokjes',de:'1 large pizza + 2 garlic sauces + 2 sodas + mozzarella sticks',p:21},
+    {n:'Small Party',ne:'Small Party',dn:'4 small pizza\'s + 4 looksaus + 4 frisdrank',de:'4 small pizzas + 4 garlic sauces + 4 sodas',p:50},
+    {n:'Duo Deluxe',ne:'Duo Deluxe',dn:'2 medium pizza\'s + 2 looksaus + 1,5L',de:'2 medium pizzas + 2 garlic sauces + 1.5L',p:26},
+    {n:'Pasta Deal',ne:'Pasta Deal',dn:'2 pasta\'s (kip of scampi) + 1 looksaus',de:'2 pastas (chicken or scampi) + 1 garlic sauce',p:26}
+  ];
+  function esc2(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function fill(){
-    var en=document.documentElement.getAttribute('data-lang')==='en', t=en?pick.en:pick.nl;
-    document.getElementById('ppIc').textContent=pick.ic;
-    document.getElementById('ppTitle').textContent=t[0];
-    document.getElementById('ppText').textContent=t[1];
+    var en=document.documentElement.getAttribute('data-lang')==='en';
+    document.getElementById('ppIc').textContent=HEAD.ic;
+    document.getElementById('ppTitle').textContent=en?HEAD.en[0]:HEAD.nl[0];
+    document.getElementById('ppText').textContent=en?HEAD.en[1]:HEAD.nl[1];
+    var h='<div class="pp-deal pp-hl"><div><b>'+(en?DELIVERY.en[0]:DELIVERY.nl[0])+'</b><small>'+(en?DELIVERY.en[1]:DELIVERY.nl[1])+'</small></div><span class="pp-price">−30%</span></div>';
+    h+='<div class="pp-sub">'+(en?'🥡 Takeaway deals (pickup only)':'🥡 Afhaaldeals (enkel afhaal)')+'</div>';
+    DEALS.forEach(function(d){ h+='<div class="pp-deal"><div><b>'+esc2(en?d.ne:d.n)+'</b><small>'+esc2(en?d.de:d.dn)+'</small></div><span class="pp-price">€ '+d.p+'</span></div>'; });
+    var lst=document.getElementById('ppList'); if(lst) lst.innerHTML=h;
     document.getElementById('ppBtn').textContent=en?'Order now →':'Bestel nu →';
   }
   fill();
