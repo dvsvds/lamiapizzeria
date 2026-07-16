@@ -33,7 +33,7 @@ var DB_PATH = path.join(DATA_DIR, 'lamia.db');
 var PORT = parseInt(process.env.PORT || '3000', 10);
 var ADMIN_PIN = String(process.env.ADMIN_PIN || '1234');
 var SESSION_HOURS = 12;
-var DELIVERY_FEE = parseFloat(process.env.DELIVERY_FEE || '3.00'); // leveringskosten
+var DELIVERY_FEE = parseFloat(process.env.DELIVERY_FEE || '0.00'); // leveringskosten (vervangen door 30% korting bij levering)
 var MIN_ORDER = parseFloat(process.env.MIN_ORDER || '20.00');      // minimum bestelbedrag (levering)
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -402,7 +402,7 @@ async function handleApi(req, res, urlPath) {
     if (priceError) return sendJson(res, 400, { error: 'Ongeldige prijs voor ' + priceError });
     subtotal = Math.round(subtotal * 100) / 100;
     // korting en betaalinfo enkel voor de (ingelogde) kassa
-    var discount = (source === 'pos') ? Math.round(Math.max(0, Math.min(parseFloat(ob.discount) || 0, subtotal)) * 100) / 100 : 0;
+    var discount = (source === 'pos') ? Math.round(Math.max(0, Math.min(parseFloat(ob.discount) || 0, subtotal)) * 100) / 100 : (type === 'leveren' ? Math.round(subtotal * 0.30 * 100) / 100 : 0);
     var delivery = type === 'leveren' ? DELIVERY_FEE : 0;
     var total = Math.round((subtotal - discount + delivery) * 100) / 100;
     // status = keukenvoortgang (nieuw→bereiden→klaar→afgehaald), los van betaling.
