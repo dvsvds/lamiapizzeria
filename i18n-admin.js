@@ -93,6 +93,135 @@
     'desserts': 'Desserts', 'ijs': 'Ice cream', 'drankjes': 'Drinks', "promo's": 'Deals'
   };
 
+  // Menu-omschrijvingen (volledige zinnen) — sleutel = exacte NL-tekst
+  Object.assign(DICT, {
+    'Tomaat, mozzarella, basilicum': 'Tomato, mozzarella, basil',
+    'Tomatensaus, mozzarella': 'Tomato sauce, mozzarella',
+    'Pepperoni, salami, hete honing': 'Pepperoni, salami, hot honey',
+    'Pepperoni, ham, spek': 'Pepperoni, ham, bacon',
+    'Ham, ananas, rode ui': 'Ham, pineapple, red onion',
+    'Kip, ananas, hete honing': 'Chicken, pineapple, hot honey',
+    'Pittige rosa, mozzarella, parmezaan': 'Spicy rosé, mozzarella, parmesan',
+    'Kaas, vleessaus, paprika': 'Cheese, meat sauce, bell pepper',
+    'Kip, paprika, zwarte olijven, geitenkaas': 'Chicken, bell pepper, black olives, goat cheese',
+    'Kip, jalapeño, paprika, corn': 'Chicken, jalapeño, bell pepper, corn',
+    'Merguez, pepperoni, meatballs': 'Merguez, pepperoni, meatballs',
+    'Kip, basilicumpesto, tomaten': 'Chicken, basil pesto, tomatoes',
+    'Rode ui, champignons, paprika, olijven': 'Red onion, mushrooms, bell pepper, olives',
+    'Kofta (gehakt), spek, paprika': 'Kofta (minced meat), bacon, bell pepper',
+    'Verse tomaat, ricotta, spinazie': 'Fresh tomato, ricotta, spinach',
+    'Tonijn, zwarte olijven, rode ui': 'Tuna, black olives, red onion',
+    'Kip, champignons, kerriesaus': 'Chicken, mushrooms, curry sauce',
+    'Kip, pepperoni, jalapeños, BBQ-saus': 'Chicken, pepperoni, jalapeños, BBQ sauce',
+    'Tonijn, jalapeños, ananas': 'Tuna, jalapeños, pineapple',
+    'Ham, ananas, corn': 'Ham, pineapple, corn',
+    'Champignons, parmezaan': 'Mushrooms, parmesan',
+    'Kip, ananas, BBQ-saus': 'Chicken, pineapple, BBQ sauce',
+    'Merguez, paprika, champignons': 'Merguez, bell pepper, mushrooms',
+    'Gorgonzola, kip, rode ui, pittige saus': 'Gorgonzola, chicken, red onion, spicy sauce',
+    'Rode ui, paprika, BBQ-saus': 'Red onion, bell pepper, BBQ sauce',
+    'BBQ-kip, spek, ananas': 'BBQ chicken, bacon, pineapple',
+    'Kip, spinazie, ricotta, knoflook-roomsaus': 'Chicken, spinach, ricotta, garlic cream sauce',
+    'Paprika, rode ui, verse knoflook': 'Bell pepper, red onion, fresh garlic',
+    'Kip, feta, zwarte olijven, oregano': 'Chicken, feta, black olives, oregano',
+    'Cheddar, spek, kofta (gehakt)': 'Cheddar, bacon, kofta (minced meat)',
+    'Salami, jalapeño': 'Salami, jalapeño',
+    'Kip, spinazie, paprika': 'Chicken, spinach, bell pepper',
+    'Mozzarella, ricotta, gorgonzola, goudse kaas': 'Mozzarella, ricotta, gorgonzola, gouda cheese',
+    'Spek, champignons, parmezaan, roomsaus': 'Bacon, mushrooms, parmesan, cream sauce',
+    'Ansjovis, rode ui, zwarte olijven': 'Anchovies, red onion, black olives',
+    'Salami, ham, paprika, champignons': 'Salami, ham, bell pepper, mushrooms',
+    'Kerstomaten, parmezaan, rucola': 'Cherry tomatoes, parmesan, rocket',
+    'Paprika, rode ui, kaas, BBQ-saus': 'Bell pepper, red onion, cheese, BBQ sauce',
+    'Mozzarella, rode ui': 'Mozzarella, red onion',
+    'Rode ui, zwarte olijven, zeevruchten': 'Red onion, black olives, seafood',
+    'Dubbelgevouwen deeg, mozzarella, provolone': 'Folded dough, mozzarella, provolone',
+    'Met ricotta, uit de steenoven': 'With ricotta, from the stone oven',
+    'Champignons, tagliatelle': 'Mushrooms, tagliatelle',
+    'Parmezaan, penne': 'Parmesan, penne',
+    'Champignons, penne': 'Mushrooms, penne',
+    'Spinazie, tagliatelle': 'Spinach, tagliatelle',
+    'Pittige tomatensaus, knoflook': 'Spicy tomato sauce, garlic',
+    'Tomatensaus, parmezaan': 'Tomato sauce, parmesan',
+    'Champignons, mozzarella, alfredosaus': 'Mushrooms, mozzarella, alfredo sauce',
+    'Groenten, creamy saus': 'Vegetables, creamy sauce',
+    'Kaassaus, ham': 'Cheese sauce, ham',
+    'Maïs, paprika, kaas, bbq saus': 'Corn, bell pepper, cheese, BBQ sauce',
+    'Champignons, diavolosaus': 'Mushrooms, diavolo sauce',
+    'Ricotta, spinazie, roomsaus': 'Ricotta, spinach, cream sauce',
+    'Met salade, komkommer, tomaat & saus': 'With salad, cucumber, tomato & sauce',
+    'Friet, kaas, salade & saus': 'Fries, cheese, salad & sauce',
+    'Vers gebakken': 'Freshly baked',
+    'Krokante kipfilet': 'Crispy chicken fillet',
+    'Pikant of BBQ': 'Spicy or BBQ',
+    'Met dip': 'With dip',
+    'Pittig': 'Spicy',
+    'Gefrituurd': 'Deep-fried',
+    'Mexicaans': 'Mexican',
+    'Klassieker': 'Classic',
+    'Vegetarisch': 'Vegetarian',
+    'Kruidige soep': 'Spiced soup',
+    'Pikante worst': 'Spicy sausage',
+    'Huisgemaakt met mascarpone': 'Homemade with mascarpone',
+    'Romig': 'Creamy',
+    'Warme chocoladebrownie': 'Warm chocolate brownie',
+    'Diverse smaken': 'Various flavours',
+    'Rijk aan chocolade': 'Rich in chocolate',
+    'Vraag naar onze suggestie': 'Ask for our suggestion',
+    'Amerikaans roomijs': 'American ice cream',
+    'Premium roomijs': 'Premium ice cream',
+    'Italiaans roomijs': 'Italian ice cream',
+    'Nogger, Calippo & meer': 'Nogger, Calippo & more',
+    'Frisdrank': 'Soft drink',
+    'Plat': 'Still',
+    'Sprankelend': 'Sparkling',
+    'Fruitig': 'Fruity',
+    'Energydrink': 'Energy drink',
+    'Plat water': 'Still water',
+    'Bruiswater': 'Sparkling water',
+    'Water': 'Water',
+    'Zuiveldrank': 'Dairy drink',
+    'IJskoffie': 'Iced coffee',
+    'Vers sap': 'Fresh juice',
+    "3 large pizza's + 3 looksaus + 1,5L frisdrank": '3 large pizzas + 3 garlic sauce + 1.5L soft drink',
+    "2 large pizza's": '2 large pizzas',
+    "2 medium pizza's + 2 looksaus": '2 medium pizzas + 2 garlic sauce',
+    "3 medium pizza's + 3 looksaus + 12 wings": '3 medium pizzas + 3 garlic sauce + 12 wings',
+    "1 large pizza + 2 looksaus + 2 frisdrank + mozzarellastokjes": '1 large pizza + 2 garlic sauce + 2 soft drinks + mozzarella sticks',
+    "4 small pizza's + 4 looksaus + 4 frisdrank": '4 small pizzas + 4 garlic sauce + 4 soft drinks',
+    "2 medium pizza's + 2 looksaus + 1,5L frisdrank": '2 medium pizzas + 2 garlic sauce + 1.5L soft drink',
+    "2 pasta's (kip of scampi) + 1 looksaus": '2 pastas (chicken or scampi) + 1 garlic sauce'
+  });
+
+  // Nederlandse productnamen (Italiaanse/eigennamen blijven staan)
+  Object.assign(DICT, {
+    'Broodje Calamari': 'Calamari sandwich', 'Broodje Falafel': 'Falafel sandwich',
+    'Broodje Kafta': 'Kafta sandwich', 'Broodje Kip': 'Chicken sandwich',
+    'Broodje Merguez': 'Merguez sandwich', 'Broodje Mexicano': 'Mexicano sandwich',
+    'Broodje Shoarma': 'Shawarma sandwich', 'Broodje Visfilet': 'Fish fillet sandwich',
+    'Calamari (7 st.)': 'Calamari (7 pcs)', 'Chicken Taquito (2 st.)': 'Chicken Taquito (2 pcs)',
+    'Crispy Kipburger': 'Crispy Chicken Burger', 'Curry Kip': 'Curry Chicken',
+    'BBQ Kip': 'BBQ Chicken', 'BBQ Kip Pasta': 'BBQ Chicken Pasta',
+    'Falafel (4 st.)': 'Falafel (4 pcs)', 'Familiedeal': 'Family Deal',
+    'Frieten Groot': 'Fries Large', 'Frieten Klein': 'Fries Small', 'Hot Kip': 'Hot Chicken',
+    "IJsje (Ben & Jerry's)": "Ice cream (Ben & Jerry's)", 'Jalapeño Kaas (5 st.)': 'Jalapeño Cheese (5 pcs)',
+    'Kaaskroket (2 st.)': 'Cheese croquette (2 pcs)', 'Kapsalon Kip': 'Kapsalon Chicken',
+    'Kapsalon Visfilet': 'Kapsalon Fish fillet', 'Kapsalon Vlees': 'Kapsalon Meat',
+    'Kass & Ham': 'Cheese & Ham', 'Keftaburger': 'Kefta Burger',
+    'Kip Curry Pasta': 'Chicken Curry Pasta', 'Kip Nuggets (5 st.)': 'Chicken Nuggets (5 pcs)',
+    'Kip Roomsaus': 'Chicken Cream Sauce', 'Kiptenders (3 st.)': 'Chicken Tenders (3 pcs)',
+    'Knoflookbrood & Kaas': 'Garlic Bread & Cheese',
+    'Lookbrood Cream Spinazie & Kaas': 'Garlic Bread Cream Spinach & Cheese',
+    'Lookbrood Ham & Kaas': 'Garlic Bread Ham & Cheese', 'Lookbrood Kaas': 'Garlic Bread Cheese',
+    'Lookbrood Pepperoni & Kaas': 'Garlic Bread Pepperoni & Cheese',
+    'Lookbrood Pesto & Kaas': 'Garlic Bread Pesto & Cheese',
+    'Moroccan Harira (soep)': 'Moroccan Harira (soup)', 'Mozzarellastokjes (5 st.)': 'Mozzarella Sticks (5 pcs)',
+    'Ravioli Ricotta & Spinazie': 'Ravioli Ricotta & Spinach',
+    'Scampi Basilicumroomsaus': 'Scampi Basil Cream Sauce', 'Scampi Roomsaus': 'Scampi Cream Sauce',
+    'Speciaal Nagerecht': 'Special Dessert', "Verse jus d'orange": 'Fresh orange juice',
+    'Visfilet op een stokje': 'Fish fillet on a stick', 'Waterijs / kinderijs': "Water ice / kids' ice"
+  });
+
   // Losse woorden binnen samengestelde/dynamische teksten (hele woorden, veilig UI-jargon)
   var WORDS = [
     ['producten', 'products'], ['categorieën', 'categories'], ['artikels', 'items'], ['artikel', 'item'],
@@ -103,9 +232,12 @@
     ['Leveren', 'Delivery'], ['Afhalen', 'Takeaway']
   ];
 
+  var NORM = {};
+  Object.keys(DICT).forEach(function (k) { NORM[k.trim().toLowerCase()] = DICT[k]; });
+
   function trPhrase(s) {
     var k = s.trim().toLowerCase();
-    var v = DICT[k];
+    var v = NORM[k];
     if (v == null) return null;
     // behoud voor- en na-spaties van het originele tekstknooppunt
     var lead = s.match(/^\s*/)[0], trail = s.match(/\s*$/)[0];
