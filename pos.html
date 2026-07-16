@@ -541,6 +541,7 @@
   var $=function(s,r){return (r||document).querySelector(s);};
   function euro(n){ return '€ '+(Math.round(n*100)/100).toFixed(2).replace('.',','); }
   function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function hexRgb(h){ h=String(h||'').replace('#',''); if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; if(h.length<6) return null; var n=parseInt(h.slice(0,6),16); return isNaN(n)?null:((n>>16&255)+','+(n>>8&255)+','+(n&255)); }
   function toast(msg){ var t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove('show');},1500); }
   function prod(id){ for(var i=0;i<PRODUCTS.length;i++) if(PRODUCTS[i].id===id) return PRODUCTS[i]; return null; }
 
@@ -572,9 +573,11 @@
     });
     if(!list.length){ gridEl.innerHTML='<div class="empty">Geen producten gevonden.</div>'; return; }
     list.forEach(function(p){
-      var col=(CATMAP[p.c]||{}).color||'var(--gold)';
+      var col=p.color||(CATMAP[p.c]||{}).color||'var(--gold)';
       var el=document.createElement('button');
       el.className='pcard'; el.style.setProperty('--cc',col);
+      // eigen productkleur → het hele vakje getint (achtergrond + rand)
+      if(p.color){ var rgb=hexRgb(p.color); if(rgb){ el.style.background='rgba('+rgb+',.16)'; el.style.borderColor='rgba('+rgb+',.55)'; } }
       var needOpt=(p.t==='pizza'||p.t==='drink'||p.t==='pasta');
       el.innerHTML=(needOpt?'<span class="opt-flag">opties</span>':'')+
         '<div><div class="pn">'+esc(p.name)+'</div><div class="pd">'+esc(p.desc)+'</div></div>'+
@@ -1131,7 +1134,7 @@
         CATS.forEach(function(x){ CATMAP[x.c]=x; });
         PRODUCTS.length=0;
         Array.prototype.push.apply(PRODUCTS, j.products.map(function(p){
-          return {id:p.id, c:p.cat, t:p.type||'simple', name:p.name, desc:p.descr||'', sz:p.sizes||null, price:p.price, tag:p.tag||''};
+          return {id:p.id, c:p.cat, t:p.type||'simple', name:p.name, desc:p.descr||'', sz:p.sizes||null, price:p.price, tag:p.tag||'', color:p.color||''};
         }));
         if(!CATS.some(function(x){return x.c===activeCat;})) activeCat='all';
         renderTabs(); renderGrid();
