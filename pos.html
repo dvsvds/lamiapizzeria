@@ -378,6 +378,8 @@
   var PASTA_SAUCE=[{k:'Zoals op de kaart',p:0},{k:'Extra pittig',p:0},{k:'Extra romig',p:0}];
   var DRINK_SIZES=[{k:'Blik 33cl',d:0},{k:'Fles 50cl',d:0.5},{k:'Fles 1,5L',d:1.5}];
   var DELIVERY_FEE=3.00;
+  var PIZZA_SURCHARGE=5;        // extra per pizza bij levering (zelfde als de website)
+  var DELIVERY_DISCOUNT=0.30;   // 30% korting op de hele levering (zelfde als de website)
 
   var PRODUCTS=[
     {id:'pz01',c:'pizza',t:'pizza',name:'Margherita',desc:'Tomaat, mozzarella, basilicum',sz:[8,9,10],price:9},
@@ -526,7 +528,7 @@
      ============================================================= */
   var LS={cart:'lamia_pos_cart',parked:'lamia_pos_parked',sales:'lamia_pos_sales',
           seq:'lamia_pos_seq',theme:'lamia_pos_theme',closed:'lamia_pos_closed'};
-  var state={ lines:[], type:'afhalen', table:'', discount:{pct:0,eur:0}, cust:{name:'',phone:'',address:''} };
+  var state={ lines:[], type:'afhalen', table:'', discount:{pct:0,eur:0}, cust:{name:'',phone:'',address:''}, prepriced:false };
   var parked=[], sales=[], seq={date:'',n:0};
 
   function today(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -537,7 +539,7 @@
 
   function initState(){
     var c=load(LS.cart,null);
-    if(c&&c.lines){ state=c; if(!state.discount) state.discount={pct:0,eur:0}; if(!state.cust) state.cust={name:'',phone:'',address:''}; }
+    if(c&&c.lines){ state=c; if(!state.discount) state.discount={pct:0,eur:0}; if(!state.cust) state.cust={name:'',phone:'',address:''}; if(typeof state.prepriced!=='boolean') state.prepriced=false; }
     parked=load(LS.parked,[]);
     sales=load(LS.sales,[]);
     seq=load(LS.seq,{date:'',n:0});
@@ -686,7 +688,7 @@
     state.lines.push({key:key,pid:p.id,cat:p.c,name:p.name,opts:opts,note:note,unit:unit,qty:qty});
     renderTicket(); saveCart();
   }
-  function clearIfEmpty(){ if(!state.lines.length){ state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; } }
+  function clearIfEmpty(){ if(!state.lines.length){ state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; } }
   function setQty(i,delta){
     var l=state.lines[i]; if(!l) return;
     l.qty+=delta;
@@ -696,28 +698,29 @@
   }
   function removeLine(i){ state.lines.splice(i,1); clearIfEmpty(); renderTicket(); saveCart(); }
 
+  // effectieve stukprijs: pizza's krijgen bij levering +€5 (zoals de website).
+  // Al-geprijsde (van de website geladen) bons hebben die toeslag al in de prijs → niet nog eens.
+  function effUnit(l){ return l.unit + ((state.type==='leveren' && l.cat==='pizza' && !state.prepriced) ? PIZZA_SURCHARGE : 0); }
+  function r2(n){ return Math.round(n*100)/100; }
   function totals(){
     var sub=0, vat={};
-    state.lines.forEach(function(l){
-      var lt=l.unit*l.qty; sub+=lt;
-    });
-    // korting evenredig verdelen voor btw
-    var disc=0;
-    if(state.discount.pct>0) disc=sub*state.discount.pct/100;
-    else if(state.discount.eur>0) disc=Math.min(state.discount.eur,sub);
-    var afterDisc=sub-disc;
-    var delivery=(state.type==='leveren'&&state.lines.length)?DELIVERY_FEE:0;
-    // BTW per tarief op afterDisc (evenredig) + levering (6%)
+    state.lines.forEach(function(l){ sub+=effUnit(l)*l.qty; });
+    // 30% leveringskorting (zoals de website) + eventuele handmatige korting
+    var delivDisc=(state.type==='leveren'&&state.lines.length)?r2(sub*DELIVERY_DISCOUNT):0;
+    var manualDisc=0;
+    if(state.discount.pct>0) manualDisc=sub*state.discount.pct/100;
+    else if(state.discount.eur>0) manualDisc=state.discount.eur;
+    var disc=Math.min(sub, r2(delivDisc+manualDisc));
+    manualDisc=r2(Math.max(0, disc-delivDisc));
+    var afterDisc=r2(sub-disc);
+    // BTW per tarief op afterDisc (evenredig)
     var factor=sub>0?afterDisc/sub:0;
     state.lines.forEach(function(l){
-      var lt=l.unit*l.qty*factor;
+      var lt=effUnit(l)*l.qty*factor;
       var r=vatRate(l.cat);
-      var v=lt-lt/(1+r);
-      vat[r]=(vat[r]||0)+v;
+      vat[r]=(vat[r]||0)+(lt-lt/(1+r));
     });
-    if(delivery){ var rv=0.06; vat[rv]=(vat[rv]||0)+(delivery-delivery/(1+rv)); }
-    var total=afterDisc+delivery;
-    return {sub:sub,disc:disc,delivery:delivery,total:total,vat:vat};
+    return {sub:sub,disc:disc,delivDisc:delivDisc,manualDisc:manualDisc,delivery:0,total:afterDisc,vat:vat};
   }
 
   var metaEl=$('#tkMeta'), linesEl=$('#lines'), totEl=$('#tkTot');
@@ -752,8 +755,8 @@
            '<div class="info"><div class="ln">'+esc(l.name)+'</div>'+
              (l.opts.length?'<div class="lo">'+esc(l.opts.join(' · '))+'</div>':'')+
              (l.note?'<div class="lnote">✎ '+esc(l.note)+'</div>':'')+
-             '<div class="lo">'+euro(l.unit)+' / stuk</div></div>'+
-           '<div class="amt">'+euro(l.unit*l.qty)+'<span class="rm" data-a="rm" data-i="'+i+'">verwijder</span></div></div>';
+             '<div class="lo">'+euro(effUnit(l))+' / stuk</div></div>'+
+           '<div class="amt">'+euro(effUnit(l)*l.qty)+'<span class="rm" data-a="rm" data-i="'+i+'">verwijder</span></div></div>';
       });
       linesEl.innerHTML=h;
     }
@@ -763,8 +766,8 @@
       if(t.vat[r]>0.0001) vh+='<div class="trow"><span>waarvan BTW '+(r*100)+'%</span><span>'+euro(t.vat[r])+'</span></div>';
     });
     var html='<div class="trow"><span>Subtotaal</span><span>'+euro(t.sub)+'</span></div>';
-    if(t.disc>0) html+='<div class="trow disc"><span>Korting'+(state.discount.pct>0?' ('+state.discount.pct+'%)':'')+'</span><span>– '+euro(t.disc)+'</span></div>';
-    if(t.delivery>0) html+='<div class="trow"><span>Leveringskosten</span><span>'+euro(t.delivery)+'</span></div>';
+    if(t.delivDisc>0) html+='<div class="trow disc"><span>Korting levering (30%)</span><span>– '+euro(t.delivDisc)+'</span></div>';
+    if(t.manualDisc>0) html+='<div class="trow disc"><span>Korting'+(state.discount.pct>0?' ('+state.discount.pct+'%)':'')+'</span><span>– '+euro(t.manualDisc)+'</span></div>';
     html+=vh;
     html+='<div class="trow big"><span>Totaal</span><span>'+euro(t.total)+'</span></div>';
     totEl.innerHTML=html;
@@ -791,7 +794,7 @@
   });
   $('#btnClear').onclick=function(){
     if(!state.lines.length) return;
-    if(confirm('Huidige bon wissen?')){ state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; renderTicket(); saveCart(); }
+    if(confirm('Huidige bon wissen?')){ state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; renderTicket(); saveCart(); }
   };
 
   // Korting
@@ -820,7 +823,7 @@
     if(label===null) return;
     parked.push({id:Date.now(),label:label||def,ts:new Date().toISOString(),state:JSON.parse(JSON.stringify(state))});
     save(LS.parked,parked);
-    state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; renderTicket(); saveCart();
+    state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; renderTicket(); saveCart();
     toast('Bon geparkeerd');
   };
   function openParked(){
@@ -842,7 +845,7 @@
       var id=+lo.getAttribute('data-load'), idx=parked.findIndex(function(x){return x.id===id;});
       if(idx<0) return;
       if(state.lines.length && !confirm('Huidige bon vervangen door de geparkeerde bon?')) return;
-      state=parked[idx].state; if(!state.discount) state.discount={pct:0,eur:0}; if(!state.cust) state.cust={name:'',phone:'',address:''};
+      state=parked[idx].state; if(!state.discount) state.discount={pct:0,eur:0}; if(!state.cust) state.cust={name:'',phone:'',address:''}; if(typeof state.prepriced!=='boolean') state.prepriced=false;
       parked.splice(idx,1); save(LS.parked,parked);
       $('#otype').querySelectorAll('button').forEach(function(x){x.classList.toggle('active',x.getAttribute('data-type')===state.type);});
       renderTicket(); saveCart(); closeOv('#ovPark'); toast('Bon geopend');
@@ -934,15 +937,15 @@
     var sale={
       no:no, ts:new Date().toISOString(), type:state.type, table:state.table,
       cust:JSON.parse(JSON.stringify(state.cust||{name:'',phone:'',address:''})),
-      lines:state.lines.map(function(l){return {name:l.name,cat:l.cat,opts:l.opts.slice(),note:l.note,unit:l.unit,qty:l.qty,total:l.unit*l.qty};}),
-      sub:t.sub, disc:t.disc, discount:JSON.parse(JSON.stringify(state.discount)), delivery:t.delivery, total:t.total, vat:t.vat, pay:pay
+      lines:state.lines.map(function(l){return {name:l.name,cat:l.cat,opts:l.opts.slice(),note:l.note,unit:effUnit(l),qty:l.qty,total:effUnit(l)*l.qty};}),
+      sub:t.sub, disc:t.disc, delivDisc:t.delivDisc, manualDisc:t.manualDisc, discount:JSON.parse(JSON.stringify(state.discount)), delivery:t.delivery, total:t.total, vat:t.vat, pay:pay
     };
     sales.push(sale); save(LS.sales,sales);
     postSaleToServer(sale, no);
     buildReceipt(sale);
     closeOv('#ovPay');
     // reset bon
-    state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; renderTicket(); saveCart();
+    state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; renderTicket(); saveCart();
     toast('Bon #'+no+' afgerekend');
     setTimeout(function(){ window.print(); }, 120);
   }
@@ -955,7 +958,8 @@
       fetch('api/orders',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({
         source:'pos', no:'K-'+String(no).padStart(4,'0'),
         type:sale.type, table:sale.table,
-        items:sale.lines.map(function(l){return {name:l.name,opts:l.opts,note:l.note,unit:l.unit,qty:l.qty};}),
+        customer:{ name:(sale.cust&&sale.cust.name)||'', phone:(sale.cust&&sale.cust.phone)||'', address:(sale.cust&&sale.cust.address)||'' },
+        items:sale.lines.map(function(l){return {name:l.name,cat:l.cat,opts:l.opts,note:l.note,unit:l.unit,qty:l.qty};}),
         discount:sale.disc, pay:sale.pay
       })}).catch(function(){});
     }catch(e){}
@@ -993,7 +997,9 @@
     });
     h+='</table><hr><table>';
     h+='<tr><td>Subtotaal</td><td class="rt">'+euro(sale.sub)+'</td></tr>';
-    if(sale.disc>0) h+='<tr><td>Korting</td><td class="rt">-'+euro(sale.disc)+'</td></tr>';
+    if(sale.delivDisc>0) h+='<tr><td>Korting levering (30%)</td><td class="rt">-'+euro(sale.delivDisc)+'</td></tr>';
+    if(sale.manualDisc>0) h+='<tr><td>Korting</td><td class="rt">-'+euro(sale.manualDisc)+'</td></tr>';
+    else if(!sale.delivDisc && sale.disc>0) h+='<tr><td>Korting</td><td class="rt">-'+euro(sale.disc)+'</td></tr>';
     if(sale.delivery>0) h+='<tr><td>Levering</td><td class="rt">'+euro(sale.delivery)+'</td></tr>';
     h+='<tr><td class="big">TOTAAL</td><td class="rt big">'+euro(sale.total)+'</td></tr>';
     h+='</table><hr><table>';
@@ -1251,6 +1257,7 @@
       });
       state.type=o.type||'afhalen'; state.discount={pct:0,eur:0}; state.table='';
       state.cust={name:o.cust_name||'',phone:o.cust_phone||'',address:o.cust_address||''};
+      state.prepriced=true; // website heeft de leveringsprijs (toeslag) al verrekend
       $('#otype').querySelectorAll('button').forEach(function(x){x.classList.toggle('active',x.getAttribute('data-type')===state.type);});
       renderTicket(); saveCart();
       ackOrder(id); closeOv('#ovOnline'); toast('Online bestelling geladen — reken af');
