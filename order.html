@@ -1039,7 +1039,7 @@
     }
     dots(i); slide();
     if(advanceT){ clearTimeout(advanceT); advanceT=null; }
-    if(i===0){ advanceT=setTimeout(function(){ show(1); }, 4000); }
+    advanceT=setTimeout(function(){ show(i===0?1:0); }, 4000);  // blijven afwisselen tot de klant wegdrukt
   }
   function seen(){ try{ sessionStorage.setItem(KEY,'1');}catch(e){} }
   function hide(){ if(advanceT)clearTimeout(advanceT); pop.classList.remove('show'); seen(); }
@@ -1260,7 +1260,7 @@
         var el=document.createElement('div'); el.className='prod-card';
         el.innerHTML='<div class="pc-img" style="background-image:url('+imgUrl(p.img)+')">'+(p.tag?'<span class="pc-tag">'+p.tag+'</span>':'')+'</div>'+
           '<div class="pc-body"><div class="pc-name">'+esc(p.name)+'</div><div class="pc-desc">'+esc(p.desc)+'</div>'+
-          '<div class="pc-foot"><span class="pc-price">'+fmt(p.c==='pizza'&&mode==='leveren'?p.price+PIZZA_SURCHARGE:p.price)+'</span>'+
+          '<div class="pc-foot"><span class="pc-price">'+fmt(surCat(p.c)&&mode==='leveren'?p.price+PIZZA_SURCHARGE:p.price)+'</span>'+
           '<button type="button" class="btn btn-primary pc-add" data-id="'+p.id+'">Toevoegen</button></div></div>';
         grid.appendChild(el);
       });
@@ -1281,7 +1281,7 @@
       popGrid.innerHTML='';
       PRODUCTS.filter(function(p){return p.tag;}).forEach(function(p){
         var el=document.createElement('div'); el.className='prod-card';
-        el.innerHTML='<div class="pc-img" style="background-image:url('+imgUrl(p.img)+')"><span class="pc-tag">'+p.tag+'</span></div><div class="pc-body"><div class="pc-name">'+esc(p.name)+'</div><div class="pc-desc">'+esc(p.desc)+'</div><div class="pc-foot"><span class="pc-price">'+fmt(p.price)+'</span><button type="button" class="btn btn-primary pc-add" data-id="'+p.id+'">Toevoegen</button></div></div>';
+        el.innerHTML='<div class="pc-img" style="background-image:url('+imgUrl(p.img)+')"><span class="pc-tag">'+p.tag+'</span></div><div class="pc-body"><div class="pc-name">'+esc(p.name)+'</div><div class="pc-desc">'+esc(p.desc)+'</div><div class="pc-foot"><span class="pc-price">'+fmt(surCat(p.c)&&mode==='leveren'?p.price+PIZZA_SURCHARGE:p.price)+'</span><button type="button" class="btn btn-primary pc-add" data-id="'+p.id+'">Toevoegen</button></div></div>';
         popGrid.appendChild(el);
       });
       re();
@@ -1337,7 +1337,7 @@
       var body=$('#optBody'), h='';
       if(p.t==='pizza'){
         h+='<div class="opt-grp"><h4>Formaat</h4><div class="opt-seg" data-role="size">'+
-           p.sz.map(function(pr,i){return '<button type="button" data-i="'+i+'" class="'+(i===1?'on':'')+'">'+SIZE_LABELS[i]+' · '+fmt(pr)+'</button>';}).join('')+'</div></div>';
+           p.sz.map(function(pr,i){return '<button type="button" data-i="'+i+'" class="'+(i===1?'on':'')+'">'+SIZE_LABELS[i]+' · '+fmt(mode==='leveren'?pr+PIZZA_SURCHARGE:pr)+'</button>';}).join('')+'</div></div>';
         h+='<div class="opt-grp"><h4>Extra toppings</h4><div class="opt-chips" data-role="extra">'+
            PIZZA_EXTRAS.map(function(x,i){return '<label class="opt-chip"><input type="checkbox" data-i="'+i+'"> '+x.k+' <b>+'+fmt(x.p).replace('€ ','€')+'</b></label>';}).join('')+'</div></div>';
       } else if(p.t==='pasta'){
@@ -1378,7 +1378,7 @@
       });}
       return {opts:opts, unit:price};
     }
-    function optPrice(){var r=readOpts();optPriceEl.textContent=fmt(r.unit*optState.qty);}
+    function optPrice(){var r=readOpts();var ex=(mode==='leveren'&&surCat(optState.p.c))?PIZZA_SURCHARGE:0;optPriceEl.textContent=fmt((r.unit+ex)*optState.qty);}
     $('#optMinus').addEventListener('click',function(){optState.qty=Math.max(1,optState.qty-1);optQtyEl.textContent=optState.qty;optPrice();});
     $('#optPlus').addEventListener('click',function(){optState.qty++;optQtyEl.textContent=optState.qty;optPrice();});
     $('#optAdd').addEventListener('click',function(){
@@ -1397,7 +1397,8 @@
       renderCart();
     }
     var cartLines=$('#cartLines'), toCk=$('#toCheckout');
-    function effUnit(l){return l.unit + (mode==='leveren' && l.cat==='pizza' ? PIZZA_SURCHARGE : 0);}
+    function surCat(c){return c==='pizza'||c==='pasta';}   // pizza + pasta krijgen leverings-opslag
+    function effUnit(l){return l.unit + (mode==='leveren' && surCat(l.cat) ? PIZZA_SURCHARGE : 0);}
     function subtotal(){return cart.reduce(function(s,l){return s+effUnit(l)*l.qty;},0);}
     function discountAmt(){return mode==='leveren' ? Math.round(subtotal()*DELIVERY_DISCOUNT*100)/100 : 0;}
     function orderTotal(){return Math.round((subtotal()-discountAmt())*100)/100;}
@@ -1451,6 +1452,8 @@
       });
       renderCart();
       cards(curFilter);
+      fillPop();
+      if(window.__pbUpd) window.__pbUpd();
     }
     // koppel de bovenste "Bezorgen/Afhalen"-balk aan de mandjesmodus
     document.querySelectorAll('.ob-toggle button[data-mode]').forEach(function(b){
@@ -1757,7 +1760,7 @@
       function chosen(){return INGR.filter(function(i){return sel[i.id];});}
       function upd(){
         var ch=chosen(), total=curSize.p+ch.reduce(function(s,i){return s+topPrice(i);},0);
-        $('#pbPrice').textContent=pf(total);
+        $('#pbPrice').textContent=pf(mode==='leveren'?total+PIZZA_SURCHARGE:total);
         $('#pbChosen').textContent=(curSize.k+' pizza')+(ch.length?' · '+ch.map(function(i){return i.name;}).join(', '):' (nog geen toppings)');
       }
       $('#pbAdd').addEventListener('click',function(){
@@ -1768,6 +1771,7 @@
         panel.querySelectorAll('.pb-chip.on').forEach(function(c){c.classList.remove('on');});
         pizza.classList.remove('has-sauce','has-cheese','has-oil'); toppings.innerHTML=''; upd(); toast();
       });
+      window.__pbUpd=upd;
       upd();
     })();
   })();

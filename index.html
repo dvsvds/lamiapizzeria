@@ -1176,7 +1176,7 @@
     }
     dots(i); slide();
     if(advanceT){ clearTimeout(advanceT); advanceT=null; }
-    if(i===0){ advanceT=setTimeout(function(){ show(1); }, 4000); }
+    advanceT=setTimeout(function(){ show(i===0?1:0); }, 4000);  // blijven afwisselen tot de klant wegdrukt
   }
   function seen(){ try{ sessionStorage.setItem(KEY,'1');}catch(e){} }
   function hide(){ if(advanceT)clearTimeout(advanceT); pop.classList.remove('show'); seen(); }
