@@ -383,28 +383,34 @@
     border:0;cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none}
   .fab:hover{transform:translateY(-2px);background:#f0c467}
   /* ---- Promo-melding (pop-up bericht) ---- */
-  .promo-pop{position:fixed;left:18px;bottom:18px;z-index:80;width:min(340px,calc(100vw - 100px));
-    background:linear-gradient(180deg,#1d1613,#141010);border:1px solid var(--line);border-radius:16px;
-    box-shadow:0 20px 52px rgba(0,0,0,.55);padding:1.05rem 1.1rem 1.1rem;
-    transform:translateY(26px);opacity:0;pointer-events:none;transition:transform .35s cubic-bezier(.4,0,.2,1),opacity .35s}
-  .promo-pop.show{transform:none;opacity:1;pointer-events:auto}
-  .promo-pop .pp-close{position:absolute;top:.5rem;right:.6rem;background:none;border:0;color:var(--muted-2);font-size:1.15rem;line-height:1;cursor:pointer}
+  /* Promo-melding: gecentreerde pop-up die inschuift (2 meldingen na elkaar) */
+  .promo-pop{position:fixed;inset:0;z-index:210;display:none;align-items:center;justify-content:center;padding:1rem;
+    background:rgba(10,7,6,.74);backdrop-filter:blur(4px)}
+  .promo-pop.show{display:flex}
+  .promo-pop .pp-card{position:relative;width:100%;max-width:420px;max-height:88vh;overflow-y:auto;
+    background:linear-gradient(180deg,#1d1613,#141010);border:1px solid var(--line);border-radius:18px;
+    padding:1.5rem 1.35rem 1.35rem;box-shadow:0 30px 80px rgba(0,0,0,.6);-webkit-overflow-scrolling:touch}
+  .promo-pop .pp-card.pp-in{animation:promoSlide .5s cubic-bezier(.34,1.56,.64,1) both}
+  @keyframes promoSlide{from{transform:translateY(-64px) scale(.95);opacity:0}to{transform:none;opacity:1}}
+  .promo-pop .pp-close{position:absolute;top:.7rem;right:.95rem;background:none;border:0;color:var(--muted-2);font-size:1.35rem;line-height:1;cursor:pointer;z-index:1}
   .promo-pop .pp-close:hover{color:var(--coral)}
-  .promo-pop .pp-head{display:flex;align-items:center;gap:.55rem;margin-bottom:.5rem;padding-right:1rem}
-  .promo-pop .pp-ic{font-size:1.55rem;flex:none}
-  .promo-pop .pp-title{font-family:'Anton',sans-serif;text-transform:uppercase;color:var(--yellow);font-size:1.05rem;letter-spacing:.02em;line-height:1.05}
-  .promo-pop .pp-text{color:var(--muted);font-size:.86rem;line-height:1.38;margin-bottom:.85rem}
-  .promo-pop .pp-btn{display:block;width:100%;text-align:center;background:var(--yellow);color:#1a1206;font-weight:800;text-transform:uppercase;letter-spacing:.03em;font-size:.83rem;padding:.62rem;border-radius:10px;border:0;cursor:pointer;text-decoration:none}
+  .promo-pop .pp-head{display:flex;align-items:center;gap:.65rem;margin-bottom:.6rem;padding-right:1.3rem}
+  .promo-pop .pp-ic{font-size:2rem;flex:none}
+  .promo-pop .pp-title{font-family:'Anton',sans-serif;text-transform:uppercase;color:var(--yellow);font-size:1.35rem;letter-spacing:.02em;line-height:1.05}
+  .promo-pop .pp-text{color:var(--muted);font-size:.9rem;line-height:1.4;margin-bottom:1rem}
+  .promo-pop .pp-dots{display:flex;justify-content:center;gap:.45rem;margin:.1rem 0 1rem}
+  .promo-pop .pp-dot{width:7px;height:7px;border-radius:50%;background:var(--line);transition:background .2s}
+  .promo-pop .pp-dot.on{background:var(--yellow)}
+  .promo-pop .pp-btn{display:block;width:100%;text-align:center;background:var(--yellow);color:#1a1206;font-weight:800;text-transform:uppercase;letter-spacing:.03em;font-size:.86rem;padding:.72rem;border-radius:11px;border:0;cursor:pointer;text-decoration:none}
   .promo-pop .pp-btn:hover{background:#ffd83a}
-  .promo-pop .pp-list{margin:.1rem 0 .9rem;max-height:232px;overflow-y:auto;display:flex;flex-direction:column;gap:.45rem;-webkit-overflow-scrolling:touch}
-  .promo-pop .pp-sub{font-family:'Anton',sans-serif;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-size:.72rem;margin:.4rem 0 .1rem}
-  .promo-pop .pp-deal{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;border-bottom:1px solid var(--line);padding-bottom:.4rem}
-  .promo-pop .pp-deal b{color:var(--cream);font-size:.85rem;display:block}
-  .promo-pop .pp-deal small{color:var(--muted-2);font-size:.72rem;line-height:1.25;display:block}
-  .promo-pop .pp-price{color:var(--yellow);font-weight:800;white-space:nowrap;font-size:.9rem;flex:none}
-  .promo-pop .pp-hl{background:rgba(230,178,76,.12);border:1px solid var(--line);border-radius:10px;padding:.5rem .65rem;border-bottom:0}
+  .promo-pop .pp-list{margin:.1rem 0 1rem;max-height:42vh;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem;-webkit-overflow-scrolling:touch}
+  .promo-pop .pp-sub{font-family:'Anton',sans-serif;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-size:.75rem;margin:.3rem 0 .1rem}
+  .promo-pop .pp-deal{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;border-bottom:1px solid var(--line);padding-bottom:.45rem}
+  .promo-pop .pp-deal b{color:var(--cream);font-size:.88rem;display:block}
+  .promo-pop .pp-deal small{color:var(--muted-2);font-size:.74rem;line-height:1.25;display:block}
+  .promo-pop .pp-price{color:var(--yellow);font-weight:800;white-space:nowrap;font-size:.92rem;flex:none}
+  .promo-pop .pp-hl{background:rgba(230,178,76,.12);border:1px solid var(--line);border-radius:11px;padding:.6rem .7rem;border-bottom:0}
   .promo-pop .pp-hl b{color:var(--yellow)}
-  @media(max-width:560px){.promo-pop{left:12px;right:12px;width:auto;bottom:86px}}
 
   footer{background:var(--footer-bg);color:var(--muted-2);padding:3rem 0 2rem;text-align:center;border-top:1px solid var(--line)}
   footer .logo{justify-content:center;margin-bottom:1rem}
@@ -981,19 +987,20 @@
 <div class="cart-backdrop" id="cartBackdrop"></div>
 <!-- Promo-melding -->
 <div class="promo-pop" id="promoPop" role="dialog" aria-label="Promotie">
-  <button class="pp-close" id="ppClose" aria-label="Sluiten">✕</button>
-  <div class="pp-head"><span class="pp-ic" id="ppIc">🔥</span><div class="pp-title" id="ppTitle">Onze promo's</div></div>
-  <div class="pp-text" id="ppText"></div>
-  <div class="pp-list" id="ppList"></div>
-  <a class="pp-btn" id="ppBtn" href="order.html">Bestel nu →</a>
+  <div class="pp-card" id="ppCard">
+    <button class="pp-close" id="ppClose" aria-label="Sluiten">✕</button>
+    <div class="pp-head"><span class="pp-ic" id="ppIc">🔥</span><div class="pp-title" id="ppTitle"></div></div>
+    <div class="pp-text" id="ppText"></div>
+    <div class="pp-list" id="ppList" style="display:none"></div>
+    <div class="pp-dots" id="ppDots"></div>
+    <a class="pp-btn" id="ppBtn" href="order.html">Bestel nu →</a>
+  </div>
 </div>
 <script>
 (function(){
   var pop=document.getElementById('promoPop'); if(!pop) return;
   var KEY='lm_promo_seen';
   try{ if(sessionStorage.getItem(KEY)) return; }catch(e){}
-  var HEAD={ic:'🍕',nl:['Onze promo\'s','Alle huidige acties:'],en:['Our deals','All current offers:']};
-  var DELIVERY={nl:['🛵 Levering','30% korting op je hele bestelling'],en:['🛵 Delivery','30% off your whole order']};
   var DEALS=[
     {n:'Familiedeal',ne:'Family deal',dn:'3 large pizza\'s + looksaus + 1,5L',de:'3 large pizzas + garlic sauce + 1.5L',p:40},
     {n:'Duo Large',ne:'Duo Large',dn:'2 large pizza\'s',de:'2 large pizzas',p:21},
@@ -1005,32 +1012,48 @@
     {n:'Pasta Deal',ne:'Pasta Deal',dn:'2 pasta\'s (kip of scampi) + 1 looksaus',de:'2 pastas (chicken or scampi) + 1 garlic sauce',p:26}
   ];
   function esc2(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-  function fill(){
-    var en=document.documentElement.getAttribute('data-lang')==='en';
-    document.getElementById('ppIc').textContent=HEAD.ic;
-    document.getElementById('ppTitle').textContent=en?HEAD.en[0]:HEAD.nl[0];
-    document.getElementById('ppText').textContent=en?HEAD.en[1]:HEAD.nl[1];
-    var h='<div class="pp-deal pp-hl"><div><b>'+(en?DELIVERY.en[0]:DELIVERY.nl[0])+'</b><small>'+(en?DELIVERY.en[1]:DELIVERY.nl[1])+'</small></div><span class="pp-price">−30%</span></div>';
-    h+='<div class="pp-sub">'+(en?'🥡 Takeaway deals (pickup only)':'🥡 Afhaaldeals (enkel afhaal)')+'</div>';
-    DEALS.forEach(function(d){ h+='<div class="pp-deal"><div><b>'+esc2(en?d.ne:d.n)+'</b><small>'+esc2(en?d.de:d.dn)+'</small></div><span class="pp-price">€ '+d.p+'</span></div>'; });
-    var lst=document.getElementById('ppList'); if(lst) lst.innerHTML=h;
-    document.getElementById('ppBtn').textContent=en?'Order now →':'Bestel nu →';
+  function en(){return document.documentElement.getAttribute('data-lang')==='en';}
+  function dealsHtml(e){
+    var h='<div class="pp-sub">'+(e?'🥡 Takeaway deals (pickup only)':'🥡 Afhaaldeals (enkel afhaal)')+'</div>';
+    DEALS.forEach(function(d){ h+='<div class="pp-deal"><div><b>'+esc2(e?d.ne:d.n)+'</b><small>'+esc2(e?d.de:d.dn)+'</small></div><span class="pp-price">€ '+d.p+'</span></div>'; });
+    return h;
   }
-  fill();
-  var lt=document.getElementById('langToggle'); if(lt) lt.addEventListener('click',function(){ setTimeout(fill,0); });
+  function slide(){ var c=document.getElementById('ppCard'); if(!c) return; c.classList.remove('pp-in'); void c.offsetWidth; c.classList.add('pp-in'); }
+  function dots(i){ var d=document.getElementById('ppDots'); if(d) d.innerHTML='<span class="pp-dot'+(i===0?' on':'')+'"></span><span class="pp-dot'+(i===1?' on':'')+'"></span>'; }
+  var idx=0, advanceT=null;
+  function show(i){
+    idx=i; var e=en();
+    var ic=document.getElementById('ppIc'),ti=document.getElementById('ppTitle'),tx=document.getElementById('ppText'),ls=document.getElementById('ppList'),bt=document.getElementById('ppBtn');
+    if(i===0){
+      ic.textContent='🛵';
+      ti.textContent=e?'Delivery with 30% off':'Levering met 30% korting';
+      tx.textContent=e?'Order online for delivery and get 30% off your whole order.':'Bestel online voor levering en krijg 30% korting op je hele bestelling.';
+      ls.style.display='none'; ls.innerHTML='';
+      bt.textContent=e?'View the deals →':'Bekijk de promo\'s →';
+    } else {
+      ic.textContent='🍕';
+      ti.textContent=e?'Our deals':'Onze promo\'s';
+      tx.textContent=e?'All current takeaway deals:':'Alle huidige afhaaldeals:';
+      ls.style.display=''; ls.innerHTML=dealsHtml(e);
+      bt.textContent=e?'Order now →':'Bestel nu →';
+    }
+    dots(i); slide();
+    if(advanceT){ clearTimeout(advanceT); advanceT=null; }
+    if(i===0){ advanceT=setTimeout(function(){ show(1); }, 4000); }
+  }
   function seen(){ try{ sessionStorage.setItem(KEY,'1');}catch(e){} }
-  function hide(){ pop.classList.remove('show'); seen(); }
+  function hide(){ if(advanceT)clearTimeout(advanceT); pop.classList.remove('show'); seen(); }
   document.getElementById('ppClose').addEventListener('click',hide);
-  var btn=document.getElementById('ppBtn'), onOrder=!!document.getElementById('catFilter2');
-  if(onOrder){
-    btn.setAttribute('href','#bestellen');
-    btn.addEventListener('click',function(e){
-      var f=document.querySelector('#catFilter2 .cf[data-c="promo"]');
-      if(f){ e.preventDefault(); f.click(); var cf=document.getElementById('catFilter2'); if(cf) cf.scrollIntoView({behavior:'smooth'}); }
-      hide();
-    });
-  } else { btn.addEventListener('click',seen); }
-  setTimeout(function(){ pop.classList.add('show'); seen(); }, 1200);
+  pop.addEventListener('click',function(ev){ if(ev.target===pop) hide(); });
+  document.addEventListener('keydown',function(ev){ if(ev.key==='Escape' && pop.classList.contains('show')) hide(); });
+  var onOrder=!!document.getElementById('catFilter2');
+  document.getElementById('ppBtn').addEventListener('click',function(ev){
+    if(idx===0){ ev.preventDefault(); show(1); return; }
+    if(onOrder){ ev.preventDefault(); var f=document.querySelector('#catFilter2 .cf[data-c="promo"]'); if(f){ f.click(); var cf=document.getElementById('catFilter2'); if(cf) cf.scrollIntoView({behavior:'smooth'}); } hide(); }
+    else { seen(); }
+  });
+  var lt=document.getElementById('langToggle'); if(lt) lt.addEventListener('click',function(){ setTimeout(function(){ show(idx); },0); });
+  setTimeout(function(){ pop.classList.add('show'); show(0); seen(); }, 900);
 })();
 </script>
 <button type="button" class="fab" id="cartFab" aria-label="Bekijk mandje">🍕 Bestel nu</button>
