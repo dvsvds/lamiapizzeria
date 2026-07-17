@@ -153,6 +153,22 @@ function vatRateFor(kind, type) { return kind === 'drink' ? 0.21 : (type === 'te
 // enkel een geldige hex-kleur toelaten (voorkomt HTML-injectie via het kleurveld)
 function hexColor(c) { return (typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c)) ? c : '#e6b24c'; }
 
+/* ---- openingsuren (Europe/Brussels), sluit om 02:00 (na middernacht) ---- */
+var OPEN_MIN = { 0: 14 * 60, 1: 11 * 60 + 30, 2: 11 * 60 + 30, 3: 11 * 60 + 30, 4: 11 * 60 + 30, 5: 11 * 60 + 30, 6: 14 * 60 }; // per weekdag (0=zo)
+var CLOSE_MIN = 2 * 60; // 02:00 de volgende ochtend
+function belgiumNow(d) {
+  var f = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Brussels', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  var p = {};
+  f.formatToParts(d || new Date()).forEach(function (x) { p[x.type] = x.value; });
+  var wd = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[p.weekday];
+  return { dow: wd, min: parseInt(p.hour, 10) * 60 + parseInt(p.minute, 10) };
+}
+function isOpenNow(d) {
+  var b = belgiumNow(d);
+  if (b.min < CLOSE_MIN) return true;      // nog open van de vorige dag (sluit pas om 02:00)
+  return b.min >= OPEN_MIN[b.dow];         // vanaf de openingstijd van vandaag tot middernacht
+}
+
 /* ---- eerste keer: vul de database met de canonieke kaart ---- */
 function seedIfEmpty() {
   var count = db.prepare('SELECT COUNT(*) AS n FROM products').get().n;
@@ -366,7 +382,7 @@ async function handleApi(req, res, urlPath) {
   if (seg[0] === 'menu' && method === 'GET') {
     var cats = allCategories();
     var prods = allProducts().filter(function (p) { return p.available; });
-    return sendJson(res, 200, { categories: cats, products: prods, config: { deliveryFee: DELIVERY_FEE, minOrder: MIN_ORDER } });
+    return sendJson(res, 200, { categories: cats, products: prods, config: { deliveryFee: DELIVERY_FEE, minOrder: MIN_ORDER, open: isOpenNow() } });
   }
 
   /* ---------- publiek: bestelling plaatsen (webshop) ---------- */
@@ -378,6 +394,10 @@ async function handleApi(req, res, urlPath) {
     // Alleen een ingelogde kassa mag een POS-bon (met betaalinfo/eigen nummer) plaatsen.
     // De publieke webshop kan enkel gewone webbestellingen aanmaken.
     var source = (isAuthed(req) && ob.source === 'pos') ? 'pos' : 'web';
+    // buiten de openingsuren mag de webshop niet bestellen; de kassa (ingelogd personeel) wel
+    if (source === 'web' && !isOpenNow()) {
+      return sendJson(res, 403, { error: 'We zijn momenteel gesloten. Online bestellen kan tijdens de openingsuren: ma–vr vanaf 11:30, za–zo vanaf 14:00, elke dag tot 02:00.', closed: true });
+    }
     var subtotal = 0;
     var priceError = null;
     var items = rawItems.slice(0, 100).map(function (it) {
