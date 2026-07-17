@@ -1078,6 +1078,18 @@
     var PIZZA_SURCHARGE  = 5;     // extra prijs per pizza bij levering
     var DELIVERY_DISCOUNT = 0.30; // korting op de hele bestelling bij levering
 
+    /* openingsuren (Europe/Brussels), sluit om 02:00 — bestellen kan enkel tijdens de uren */
+    var OPEN_MIN={0:14*60,1:11*60+30,2:11*60+30,3:11*60+30,4:11*60+30,5:11*60+30,6:14*60}, CLOSE_MIN=2*60;
+    function shopOpen(){
+      try{
+        var f=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Brussels',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+        var p={}; f.formatToParts(new Date()).forEach(function(x){p[x.type]=x.value;});
+        var wd={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6}[p.weekday];
+        var min=parseInt(p.hour,10)*60+parseInt(p.minute,10);
+        return (min<CLOSE_MIN) || (min>=OPEN_MIN[wd]);
+      }catch(e){ return true; } // bij twijfel niet blokkeren; de server bewaakt het sowieso
+    }
+
     // ---- Opties (herbruikbaar) ----
     var SIZE_LABELS = ['Small','Medium','Large'];
     var PIZZA_EXTRAS= [{k:'Extra kaas',p:1.5},{k:'Champignons',p:1},{k:'Pepperoni',p:1},{k:'Rode ui',p:1},{k:'Olijven',p:1},{k:'Jalapeño',p:1}];
@@ -1420,7 +1432,11 @@
       $('#ctDel').textContent='− '+fmt(discountAmt());
       $('#ctTotal').textContent=fmt(orderTotal());
       var min=$('#cartMin');
-      if(mode==='leveren' && sub>0 && sub<MIN_ORDER){
+      if(!shopOpen()){
+        min.style.display='block';
+        min.textContent='We zijn momenteel gesloten. Bestellen kan tijdens de openingsuren (ma–vr vanaf 11:30, za–zo vanaf 14:00, tot 02:00).';
+        toCk.disabled=true; toCk.textContent='Gesloten — bestellen kan straks';
+      } else if(mode==='leveren' && sub>0 && sub<MIN_ORDER){
         min.style.display='block';
         min.textContent='Minimum voor levering is € 20 — nog '+fmt(MIN_ORDER-sub)+' te gaan (of kies afhalen).';
         toCk.disabled=true; toCk.textContent='Nog '+fmt(MIN_ORDER-sub)+' tot minimum';
@@ -1572,6 +1588,7 @@
         el.textContent=msg; el.style.display='block';
       }
       var ce=$('#coErr'); if(ce) ce.style.display='none';
+      if(!shopOpen()){ orderError('We zijn momenteel gesloten. Online bestellen kan tijdens de openingsuren: ma–vr vanaf 11:30, za–zo vanaf 14:00, elke dag tot 02:00.'); return; }
       if(mode==='leveren'){
         var miss=[];
         if(!f.adres || !f.adres.value.trim()) miss.push({el:f.adres,lbl:'adres'});
