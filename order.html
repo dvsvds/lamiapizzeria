@@ -1412,10 +1412,10 @@
         min.style.display='block';
         min.textContent='We zijn momenteel gesloten. Bestellen kan tijdens de openingsuren (ma–vr vanaf 11:30, za–zo vanaf 14:00, tot 02:00).';
         toCk.disabled=true; toCk.textContent='Gesloten — bestellen kan straks';
-      } else if(mode==='leveren' && sub>0 && sub<MIN_ORDER){
+      } else if(mode==='leveren' && sub>0 && orderTotal()<MIN_ORDER){
         min.style.display='block';
-        min.textContent='Minimum voor levering is € 20 — nog '+fmt(MIN_ORDER-sub)+' te gaan (of kies afhalen).';
-        toCk.disabled=true; toCk.textContent='Nog '+fmt(MIN_ORDER-sub)+' tot minimum';
+        min.textContent='Minimum voor levering is '+fmt(MIN_ORDER)+' na korting — nog '+fmt(MIN_ORDER-orderTotal())+' te gaan (of kies afhalen).';
+        toCk.disabled=true; toCk.textContent='Nog '+fmt(MIN_ORDER-orderTotal())+' tot minimum';
       } else {
         min.style.display='none';
         toCk.disabled=cart.length===0; toCk.textContent='Bestelling afronden →';
@@ -1487,7 +1487,7 @@
     var coOv=$('#coOv'), authOv=$('#authOv'), acctOv=$('#acctOv'), acct=null;
     function openOv(o){o.classList.add('open');o.setAttribute('aria-hidden','false');}
     // 'Bestelling afronden' toont eerst de gast/account-keuze
-    toCk.addEventListener('click',function(){ if(!cart.length || (mode==='leveren' && subtotal()<MIN_ORDER)) return; closeCart(); openOv(authOv); });
+    toCk.addEventListener('click',function(){ if(!cart.length || (mode==='leveren' && orderTotal()<MIN_ORDER)) return; closeCart(); openOv(authOv); });
     if(authOv){
       $('#authX').addEventListener('click',function(){closeOv(authOv);});
       authOv.addEventListener('click',function(e){if(e.target===authOv)closeOv(authOv);});
@@ -1575,8 +1575,8 @@
         }
       }
       var sub=subtotal();
-      // minimum bij levering ook hier afdwingen (mode kan in de checkout gewijzigd zijn)
-      if(mode==='leveren' && sub<MIN_ORDER){ orderError('Minimum voor levering is '+fmt(MIN_ORDER)+' — voeg nog '+fmt(MIN_ORDER-sub)+' toe of kies afhalen.'); return; }
+      // minimum bij levering geldt op het te betalen bedrag (na 30% korting)
+      if(mode==='leveren' && orderTotal()<MIN_ORDER){ orderError('Minimum voor levering is '+fmt(MIN_ORDER)+' na korting — voeg nog '+fmt(MIN_ORDER-orderTotal())+' toe of kies afhalen.'); return; }
       var addr=[ f.adres?f.adres.value.trim():'', f.postcode?f.postcode.value.trim():'', f.gemeente?f.gemeente.value.trim():'' ]
                  .filter(Boolean).join(', ');
       var timeField=$('#coTimeField');
