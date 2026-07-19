@@ -1245,7 +1245,10 @@
     function cards(filter){
       curFilter=filter;
       grid.innerHTML='';
-      PRODUCTS.filter(function(p){return filter==='all'||p.c===filter;}).forEach(function(p){
+      PRODUCTS.filter(function(p){
+        if(mode==='leveren' && p.c==='promo') return false; // promo's gelden enkel bij afhalen
+        return filter==='all'||p.c===filter;
+      }).forEach(function(p){
         var el=document.createElement('div'); el.className='prod-card';
         el.innerHTML='<div class="pc-img" style="background-image:url('+imgUrl(p.img)+')">'+(p.tag?'<span class="pc-tag">'+p.tag+'</span>':'')+'</div>'+
           '<div class="pc-body"><div class="pc-name">'+esc(p.name)+'</div><div class="pc-desc">'+esc(p.desc)+'</div>'+
@@ -1260,6 +1263,7 @@
       var b=e.target.closest('.pc-add'); if(!b) return;
       var p=PRODUCTS.filter(function(x){return x.id===b.getAttribute('data-id');})[0];
       if(!p) return;
+      if(mode==='leveren' && p.c==='promo'){ toast('Promo’s gelden enkel bij afhalen.'); return; }
       if(p.t==='simple'){ addToCart(p.name, [], '', p.price, 1, p.c); toast(); }
       else openOptions(p);
     });
@@ -1268,7 +1272,7 @@
     function fillPop(){
       if(!popGrid) return;
       popGrid.innerHTML='';
-      PRODUCTS.filter(function(p){return p.tag;}).forEach(function(p){
+      PRODUCTS.filter(function(p){return p.tag && !(mode==='leveren' && p.c==='promo');}).forEach(function(p){
         var el=document.createElement('div'); el.className='prod-card';
         el.innerHTML='<div class="pc-img" style="background-image:url('+imgUrl(p.img)+')"><span class="pc-tag">'+p.tag+'</span></div><div class="pc-body"><div class="pc-name">'+esc(p.name)+'</div><div class="pc-desc">'+esc(p.desc)+'</div><div class="pc-foot"><span class="pc-price">'+fmt(p.price)+'</span><button type="button" class="btn btn-primary pc-add" data-id="'+p.id+'">Toevoegen</button></div></div>';
         popGrid.appendChild(el);
@@ -1276,7 +1280,7 @@
       re();
     }
     if(popGrid){
-      popGrid.addEventListener('click',function(e){var b=e.target.closest('.pc-add');if(!b)return;var p=PRODUCTS.filter(function(x){return x.id===b.getAttribute('data-id');})[0];if(!p)return;if(p.t==='simple'){addToCart(p.name,[],'',p.price,1,p.c);toast();}else openOptions(p);});
+      popGrid.addEventListener('click',function(e){var b=e.target.closest('.pc-add');if(!b)return;var p=PRODUCTS.filter(function(x){return x.id===b.getAttribute('data-id');})[0];if(!p)return;if(mode==='leveren'&&p.c==='promo'){toast('Promo’s gelden enkel bij afhalen.');return;}if(p.t==='simple'){addToCart(p.name,[],'',p.price,1,p.c);toast();}else openOptions(p);});
     }
     fillPop();
 
@@ -1436,6 +1440,12 @@
     });
     function setMode(m){
       mode=m;
+      // promo's gelden enkel bij afhalen — bij overschakelen naar levering uit het mandje halen
+      if(m==='leveren'){
+        var had=cart.length;
+        cart=cart.filter(function(l){return l.cat!=='promo';});
+        if(cart.length!==had) toast('Promo’s gelden enkel bij afhalen en zijn uit je mandje gehaald.');
+      }
       [].forEach.call(document.querySelectorAll('.cart-mode .cm'),function(c){c.classList.toggle('on',c.getAttribute('data-mode')===m);});
       // houd de bovenbalk (Bezorgen/Afhalen) in sync met de mandjesmodus
       document.querySelectorAll('.ob-toggle button[data-mode]').forEach(function(b){
@@ -1444,6 +1454,7 @@
       });
       renderCart();
       cards(curFilter);
+      fillPop();
     }
     // koppel de bovenste "Bezorgen/Afhalen"-balk aan de mandjesmodus
     document.querySelectorAll('.ob-toggle button[data-mode]').forEach(function(b){
@@ -1574,6 +1585,7 @@
           return;
         }
       }
+      if(mode==='leveren' && cart.some(function(l){return l.cat==='promo';})){ orderError('Promo’s kunnen enkel afgehaald worden. Verwijder de promo of kies afhalen.'); return; }
       var sub=subtotal();
       // minimum bij levering geldt op het te betalen bedrag (na 30% korting)
       if(mode==='leveren' && orderTotal()<MIN_ORDER){ orderError('Minimum voor levering is '+fmt(MIN_ORDER)+' na korting — voeg nog '+fmt(MIN_ORDER-orderTotal())+' toe of kies afhalen.'); return; }
@@ -1619,9 +1631,9 @@
 
     // kleine "toegevoegd"-feedback
     var toastEl;
-    function toast(){
+    function toast(msg){
       if(!toastEl){toastEl=document.createElement('div');toastEl.className='toast';document.body.appendChild(toastEl);}
-      toastEl.textContent='Toegevoegd aan mandje ✓'; toastEl.classList.add('show');
+      toastEl.textContent=msg||'Toegevoegd aan mandje ✓'; toastEl.classList.add('show');
       clearTimeout(toastEl._t); toastEl._t=setTimeout(function(){toastEl.classList.remove('show');},1500);
     }
 
