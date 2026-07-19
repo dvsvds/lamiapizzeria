@@ -580,6 +580,7 @@
     gridEl.innerHTML='';
     var term=searchTerm.trim().toLowerCase();
     var list=PRODUCTS.filter(function(p){
+      if(state.type==='leveren'&&p.c==='promo') return false; // promo's gelden enkel bij afhalen
       if(activeCat!=='all'&&p.c!==activeCat) return false;
       if(term&&(p.name+' '+p.desc).toLowerCase().indexOf(term)<0) return false;
       return true;
@@ -604,6 +605,7 @@
      5. PRODUCT KIEZEN → direct toevoegen of opties
      ============================================================= */
   function pick(p){
+    if(state.type==='leveren'&&p.c==='promo'){ toast('Promo’s gelden enkel bij afhalen'); return; }
     if(p.t==='simple'){ addLine(p, [], p.price, ''); toast(p.name+' toegevoegd'); return; }
     // veiligheidsnet: pizza zonder (volledige) maten → direct aan basisprijs, niet crashen
     if(p.t==='pizza' && (!p.sz || p.sz.length<3)){ addLine(p, [], (p.sz&&p.sz[0])||p.price, ''); toast(p.name+' toegevoegd'); return; }
@@ -790,7 +792,13 @@
     var b=e.target.closest('button'); if(!b) return;
     state.type=b.getAttribute('data-type');
     $('#otype').querySelectorAll('button').forEach(function(x){x.classList.toggle('active',x===b);});
-    renderTicket(); saveCart();
+    // promo's gelden enkel bij afhalen — bij overschakelen naar levering uit de bon halen
+    if(state.type==='leveren'){
+      var had=state.lines.length;
+      state.lines=state.lines.filter(function(l){return l.cat!=='promo';});
+      if(state.lines.length!==had) toast('Promo’s gelden enkel bij afhalen — uit de bon gehaald');
+    }
+    renderGrid(); renderTicket(); saveCart();
   });
   $('#btnClear').onclick=function(){
     if(!state.lines.length) return;
