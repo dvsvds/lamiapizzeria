@@ -400,11 +400,13 @@ async function handleApi(req, res, urlPath) {
     }
     var subtotal = 0;
     var priceError = null;
+    var hasPromo = false;
     var items = rawItems.slice(0, 100).map(function (it) {
       var qty = Math.max(1, parseInt(it.qty, 10) || 1);
       var unit = Math.max(0, parseFloat(it.unit) || 0);
       var name = String(it.name || '').slice(0, 120);
       var prod = db.prepare('SELECT cat, price, sizes FROM products WHERE name=?').get(name);
+      if ((prod && prod.cat === 'promo') || it.cat === 'promo') hasPromo = true;
       // webshop: prijs valideren tegen de kaart (voorkomt gemanipuleerde lage prijzen)
       if (source === 'web' && prod) {
         var minPrice = prod.sizes ? Math.min.apply(null, JSON.parse(prod.sizes)) : prod.price;
@@ -420,6 +422,10 @@ async function handleApi(req, res, urlPath) {
       };
     });
     if (priceError) return sendJson(res, 400, { error: 'Ongeldige prijs voor ' + priceError });
+    // promo's gelden enkel bij afhalen; de webshop mag ze niet bij een levering plaatsen
+    if (source === 'web' && type === 'leveren' && hasPromo) {
+      return sendJson(res, 400, { error: 'Promo’s kunnen enkel afgehaald worden, niet geleverd.' });
+    }
     subtotal = Math.round(subtotal * 100) / 100;
     // korting en betaalinfo enkel voor de (ingelogde) kassa
     var discount = (source === 'pos') ? Math.round(Math.max(0, Math.min(parseFloat(ob.discount) || 0, subtotal)) * 100) / 100 : (type === 'leveren' ? Math.round(subtotal * 0.30 * 100) / 100 : 0);
