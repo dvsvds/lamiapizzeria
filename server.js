@@ -425,6 +425,10 @@ async function handleApi(req, res, urlPath) {
     var discount = (source === 'pos') ? Math.round(Math.max(0, Math.min(parseFloat(ob.discount) || 0, subtotal)) * 100) / 100 : (type === 'leveren' ? Math.round(subtotal * 0.30 * 100) / 100 : 0);
     var delivery = type === 'leveren' ? DELIVERY_FEE : 0;
     var total = Math.round((subtotal - discount + delivery) * 100) / 100;
+    // minimum bij levering geldt op het te betalen bedrag (na korting); enkel de webshop afdwingen
+    if (source === 'web' && type === 'leveren' && total < MIN_ORDER) {
+      return sendJson(res, 400, { error: 'Minimum voor levering is € ' + MIN_ORDER.toFixed(2).replace('.', ',') + ' na korting.' });
+    }
     // status = keukenvoortgang (nieuw→bereiden→klaar→afgehaald), los van betaling.
     var status = 'nieuw';
 
