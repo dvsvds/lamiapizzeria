@@ -359,7 +359,13 @@ function serveStatic(req, res, urlPath) {
   }
   fs.stat(file, function (err, st) {
     if (err || !st.isFile()) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Niet gevonden'); }
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
+    // pagina's en code niet cachen → na een update toont de kassa/terminal meteen de nieuwste versie.
+    // afbeeldingen/fonts mogen kort gecachet worden (schelen bandbreedte, veranderen zelden).
+    var noCache = (ext === '.html' || ext === '.js' || ext === '.css');
+    res.writeHead(200, {
+      'Content-Type': MIME[ext] || 'application/octet-stream',
+      'Cache-Control': noCache ? 'no-cache, no-store, must-revalidate' : 'public, max-age=3600'
+    });
     fs.createReadStream(file).pipe(res);
   });
 }
