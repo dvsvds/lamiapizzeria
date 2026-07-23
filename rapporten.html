@@ -82,6 +82,7 @@
   <div class="brand"><span class="mark">📊</span><span><b>La Mia Pizzeria</b><small>Rapporten</small></span></div>
   <span class="spacer"></span>
   <a class="tbtn" href="beheer.html">Beheer</a>
+  <button class="tbtn" id="btnPin">🔑 PIN wijzigen</button>
   <button class="tbtn" id="btnTheme">🌙</button>
   <button class="tbtn" id="btnLogout">Uitloggen</button>
 </header>
@@ -108,7 +109,7 @@
 <div class="login" id="login" style="display:none">
   <div class="box">
     <div class="mark">📊</div><h2>Rapporten</h2>
-    <p>Log in met je PIN.</p>
+    <p>Enkel voor de manager. Geef de manager-PIN in om de omzet te bekijken.</p>
     <input id="loginPin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="off">
     <button id="loginBtn">Inloggen</button>
     <div class="lerr" id="loginErr"></div>
@@ -219,13 +220,19 @@
   /* login */
   function showLogin(){ $('#login').style.display='flex'; setTimeout(function(){$('#loginPin').focus();},60); }
   function doLogin(){
-    fetch('api/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:$('#loginPin').value})})
+    fetch('api/report-login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:$('#loginPin').value})})
       .then(function(r){ return r.json().then(function(j){return {ok:r.ok,j:j};}); })
       .then(function(x){ if(x.ok){ $('#login').style.display='none'; $('#loginPin').value=''; setRange('today'); } else { $('#loginErr').textContent=(x.j&&x.j.error)||'Verkeerde PIN'; } });
   }
   $('#loginBtn').onclick=doLogin;
   $('#loginPin').addEventListener('keydown',function(e){ if(e.key==='Enter') doLogin(); });
-  $('#btnLogout').onclick=function(){ fetch('api/logout',{method:'POST',credentials:'same-origin'}).then(showLogin); };
+  $('#btnLogout').onclick=function(){ fetch('api/report-logout',{method:'POST',credentials:'same-origin'}).then(showLogin); };
+  $('#btnPin').onclick=function(){
+    var np=prompt('Nieuwe manager-PIN (4 tot 8 cijfers):'); if(np===null) return;
+    fetch('api/report-pin',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:np})})
+      .then(function(r){ return r.json().then(function(j){return {ok:r.ok,j:j};}); })
+      .then(function(x){ alert(x.ok?'Manager-PIN gewijzigd.':((x.j&&x.j.error)||'Kon PIN niet wijzigen.')); });
+  };
 
   var themeBtn=$('#btnTheme');
   function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); themeBtn.textContent=t==='light'?'☀️':'🌙'; try{localStorage.setItem('lamia_rap_theme',t);}catch(e){} }
