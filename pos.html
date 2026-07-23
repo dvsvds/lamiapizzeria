@@ -1077,7 +1077,15 @@
     b._report=r;
     openOv('#ovReport');
   }
-  $('#btnReport').onclick=openReport;
+  // de dagomzet zit achter de manager-PIN (zelfde als de rapportenpagina)
+  $('#btnReport').onclick=function(){
+    var pin=prompt('Manager-PIN voor de dagomzet:'); if(pin===null) return;
+    if(!window.fetch){ toast('Geen verbinding'); return; }
+    fetch('api/report-login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:pin})})
+      .then(function(r){ return r.ok; })
+      .then(function(ok){ if(ok) openReport(); else toast('Verkeerde PIN'); })
+      .catch(function(){ toast('Geen verbinding — PIN kan niet gecontroleerd worden'); });
+  };
 
   function buildReportReceipt(r,isZ){
     var d=new Date();
