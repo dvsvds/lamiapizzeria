@@ -1073,10 +1073,30 @@
       vr.forEach(function(rate){ if(r.vat[rate]>0.0001) h+='<tr><td>'+(rate*100)+'%</td><td>'+euro(r.vat[rate])+'</td></tr>'; });
       h+='</tbody></table>';
     }
+    // geschiedenis: alle afgerekende bons van de dag (nieuwste eerst), met herprint
+    if(sales.length){
+      var TYPEIC={terplaatse:'🍽',afhalen:'🥡',leveren:'🛵'};
+      h+='<h4 style="margin:1.1rem 0 .4rem">Bestellingen vandaag ('+sales.length+')</h4>';
+      h+='<table class="rep-tbl"><thead><tr><th>Bon</th><th>Tijd</th><th>Type</th><th class="rt">Bedrag</th><th></th></tr></thead><tbody>';
+      sales.forEach(function(s,i){
+        var t=new Date(s.ts), tm=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+        var pm=(s.pay&&s.pay.method)==='card'?'💳':((s.pay&&s.pay.method)==='split'?'🔀':'💵');
+        var who=(s.cust&&s.cust.name)?(' · '+esc(s.cust.name)):(s.table?(' · T'+esc(s.table)):'');
+        h+='<tr><td>#'+s.no+'</td><td>'+tm+'</td><td>'+(TYPEIC[s.type]||'')+' '+pm+who+'</td><td class="rt">'+euro(s.total)+'</td>'+
+           '<td class="rt"><button class="abtn" style="padding:.2rem .5rem;font-size:.72rem" data-reprint="'+i+'">🖨</button></td></tr>';
+      });
+      h+='</tbody></table>';
+    }
     b.innerHTML=h;
     b._report=r;
     openOv('#ovReport');
   }
+  // herdruk een eerdere bon uit de geschiedenis
+  $('#reportBody').addEventListener('click',function(e){
+    var rb=e.target.closest('[data-reprint]'); if(!rb) return;
+    var s=sales[+rb.getAttribute('data-reprint')]; if(!s) return;
+    buildReceipt(s); setTimeout(function(){ window.print(); }, 100);
+  });
   // de dagomzet zit achter de manager-PIN (zelfde als de rapportenpagina)
   $('#btnReport').onclick=function(){
     var pin=prompt('Manager-PIN voor de dagomzet:'); if(pin===null) return;
