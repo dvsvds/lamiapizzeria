@@ -852,7 +852,7 @@
         </div>
         <div class="cart-tot">
           <div class="ct-row"><span>Subtotaal</span><span id="ctSub">€ 0,00</span></div>
-          <div class="ct-row" id="ctDelRow" style="display:none"><span>Korting levering (30%)</span><span id="ctDel">€ 0,00</span></div>
+          <div class="ct-row" id="ctDelRow" style="display:none"><span>Levering</span><span id="ctDel"></span></div>
           <div class="ct-row ct-total"><span>Totaal</span><span id="ctTotal">€ 0,00</span></div>
         </div>
         <p class="min-note" id="cartMin"></p>
@@ -1020,26 +1020,17 @@
   }
   function slide(){ var c=document.getElementById('ppCard'); if(!c) return; c.classList.remove('pp-in'); void c.offsetWidth; c.classList.add('pp-in'); }
   function dots(i){ var d=document.getElementById('ppDots'); if(d) d.innerHTML='<span class="pp-dot'+(i===0?' on':'')+'"></span><span class="pp-dot'+(i===1?' on':'')+'"></span>'; }
-  var idx=0, advanceT=null;
-  function show(i){
-    idx=i; var e=en();
-    var ic=document.getElementById('ppIc'),ti=document.getElementById('ppTitle'),tx=document.getElementById('ppText'),ls=document.getElementById('ppList'),bt=document.getElementById('ppBtn');
-    if(i===0){
-      ic.textContent='🛵';
-      ti.textContent=e?'Delivery with 30% off':'Levering met 30% korting';
-      tx.textContent=e?'Order online for delivery and get 30% off your whole order.':'Bestel online voor levering en krijg 30% korting op je hele bestelling.';
-      ls.style.display='none'; ls.innerHTML='';
-      bt.textContent=e?'View the deals →':'Bekijk de promo\'s →';
-    } else {
-      ic.textContent='🍕';
-      ti.textContent=e?'Our deals':'Onze promo\'s';
-      tx.textContent=e?'All current takeaway deals:':'Alle huidige afhaaldeals:';
-      ls.style.display=''; ls.innerHTML=dealsHtml(e);
-      bt.textContent=e?'Order now →':'Bestel nu →';
-    }
-    dots(i); slide();
-    if(advanceT){ clearTimeout(advanceT); advanceT=null; }
-    advanceT=setTimeout(function(){ show(i===0?1:0); }, 4000);  // blijven afwisselen tot de klant wegdrukt
+  var idx=1, advanceT=null;
+  function show(){
+    var e=en();
+    var ic=document.getElementById('ppIc'),ti=document.getElementById('ppTitle'),tx=document.getElementById('ppText'),ls=document.getElementById('ppList'),bt=document.getElementById('ppBtn'),dd=document.getElementById('ppDots');
+    ic.textContent='🍕';
+    ti.textContent=e?'Our deals':'Onze promo\'s';
+    tx.textContent=e?'All current takeaway deals:':'Alle huidige afhaaldeals:';
+    ls.style.display=''; ls.innerHTML=dealsHtml(e);
+    bt.textContent=e?'Order now →':'Bestel nu →';
+    if(dd) dd.innerHTML='';
+    slide();
   }
   function seen(){ try{ sessionStorage.setItem(KEY,'1');}catch(e){} }
   function hide(){ if(advanceT)clearTimeout(advanceT); pop.classList.remove('show'); seen(); }
@@ -1048,12 +1039,11 @@
   document.addEventListener('keydown',function(ev){ if(ev.key==='Escape' && pop.classList.contains('show')) hide(); });
   var onOrder=!!document.getElementById('catFilter2');
   document.getElementById('ppBtn').addEventListener('click',function(ev){
-    if(idx===0){ ev.preventDefault(); show(1); return; }
     if(onOrder){ ev.preventDefault(); var f=document.querySelector('#catFilter2 .cf[data-c="promo"]'); if(f){ f.click(); var cf=document.getElementById('catFilter2'); if(cf) cf.scrollIntoView({behavior:'smooth'}); } hide(); }
     else { seen(); }
   });
-  var lt=document.getElementById('langToggle'); if(lt) lt.addEventListener('click',function(){ setTimeout(function(){ show(idx); },0); });
-  setTimeout(function(){ pop.classList.add('show'); show(0); seen(); }, 900);
+  var lt=document.getElementById('langToggle'); if(lt) lt.addEventListener('click',function(){ setTimeout(function(){ show(); },0); });
+  setTimeout(function(){ pop.classList.add('show'); show(); seen(); }, 900);
 })();
 </script>
 <button type="button" class="fab" id="cartFab" aria-label="Bekijk mandje">🍕 Bestel nu</button>
@@ -1072,11 +1062,10 @@
      =================================================================== */
   (function(){
     var IMG='images/';
-    var DELIVERY_FEE = 0;      // leveringskosten (0 = gratis, vervangen door 30% korting)
+    var DELIVERY_FEE = 0;      // geen aparte leveringskosten (opslag zit per product)
     var MIN_ORDER    = 20.00;  // minimum bestelbedrag (subtotaal)
     var BASE_PRICE   = 8.00;   // basisprijs 'stel je eigen pizza samen'
-    var PIZZA_SURCHARGE  = 5;     // extra prijs per pizza bij levering
-    var DELIVERY_DISCOUNT = 0.30; // korting op de hele bestelling bij levering
+    var DELIVERY_SURCHARGE = 1;   // bij levering is elk product €1 duurder (geen korting meer)
 
     /* openingsuren (Europe/Brussels), sluit om 02:00 — bestellen kan enkel tijdens de uren */
     var OPEN_MIN={0:14*60,1:11*60+30,2:11*60+30,3:11*60+30,4:11*60+30,5:11*60+30,6:14*60}, CLOSE_MIN=2*60;
@@ -1275,7 +1264,7 @@
         var el=document.createElement('div'); el.className='prod-card';
         el.innerHTML='<div class="pc-img" style="background-image:url('+imgUrl(p.img)+')">'+(p.tag?'<span class="pc-tag">'+p.tag+'</span>':'')+'</div>'+
           '<div class="pc-body"><div class="pc-name">'+esc(p.name)+'</div><div class="pc-desc">'+esc(p.desc)+'</div>'+
-          '<div class="pc-foot"><span class="pc-price">'+fmt(surCat(p.c)&&mode==='leveren'?p.price+PIZZA_SURCHARGE:p.price)+'</span>'+
+          '<div class="pc-foot"><span class="pc-price">'+fmt(surCat(p.c)&&mode==='leveren'?p.price+DELIVERY_SURCHARGE:p.price)+'</span>'+
           '<button type="button" class="btn btn-primary pc-add" data-id="'+p.id+'">Toevoegen</button></div></div>';
         grid.appendChild(el);
       });
@@ -1297,7 +1286,7 @@
       popGrid.innerHTML='';
       PRODUCTS.filter(function(p){return p.tag && !(mode==='leveren' && p.c==='promo');}).forEach(function(p){
         var el=document.createElement('div'); el.className='prod-card';
-        el.innerHTML='<div class="pc-img" style="background-image:url('+imgUrl(p.img)+')"><span class="pc-tag">'+p.tag+'</span></div><div class="pc-body"><div class="pc-name">'+esc(p.name)+'</div><div class="pc-desc">'+esc(p.desc)+'</div><div class="pc-foot"><span class="pc-price">'+fmt(surCat(p.c)&&mode==='leveren'?p.price+PIZZA_SURCHARGE:p.price)+'</span><button type="button" class="btn btn-primary pc-add" data-id="'+p.id+'">Toevoegen</button></div></div>';
+        el.innerHTML='<div class="pc-img" style="background-image:url('+imgUrl(p.img)+')"><span class="pc-tag">'+p.tag+'</span></div><div class="pc-body"><div class="pc-name">'+esc(p.name)+'</div><div class="pc-desc">'+esc(p.desc)+'</div><div class="pc-foot"><span class="pc-price">'+fmt(surCat(p.c)&&mode==='leveren'?p.price+DELIVERY_SURCHARGE:p.price)+'</span><button type="button" class="btn btn-primary pc-add" data-id="'+p.id+'">Toevoegen</button></div></div>';
         popGrid.appendChild(el);
       });
       re();
@@ -1353,7 +1342,7 @@
       var body=$('#optBody'), h='';
       if(p.t==='pizza'){
         h+='<div class="opt-grp"><h4>Formaat</h4><div class="opt-seg" data-role="size">'+
-           p.sz.map(function(pr,i){return '<button type="button" data-i="'+i+'" class="'+(i===1?'on':'')+'">'+SIZE_LABELS[i]+' · '+fmt(mode==='leveren'?pr+PIZZA_SURCHARGE:pr)+'</button>';}).join('')+'</div></div>';
+           p.sz.map(function(pr,i){return '<button type="button" data-i="'+i+'" class="'+(i===1?'on':'')+'">'+SIZE_LABELS[i]+' · '+fmt(mode==='leveren'?pr+DELIVERY_SURCHARGE:pr)+'</button>';}).join('')+'</div></div>';
         h+='<div class="opt-grp"><h4>Extra toppings</h4><div class="opt-chips" data-role="extra">'+
            PIZZA_EXTRAS.map(function(x,i){return '<label class="opt-chip"><input type="checkbox" data-i="'+i+'"> '+x.k+' <b>+'+fmt(x.p).replace('€ ','€')+'</b></label>';}).join('')+'</div></div>';
       } else if(p.t==='pasta'){
@@ -1394,7 +1383,7 @@
       });}
       return {opts:opts, unit:price};
     }
-    function optPrice(){var r=readOpts();var ex=(mode==='leveren'&&surCat(optState.p.c))?PIZZA_SURCHARGE:0;optPriceEl.textContent=fmt((r.unit+ex)*optState.qty);}
+    function optPrice(){var r=readOpts();var ex=(mode==='leveren'&&surCat(optState.p.c))?DELIVERY_SURCHARGE:0;optPriceEl.textContent=fmt((r.unit+ex)*optState.qty);}
     $('#optMinus').addEventListener('click',function(){optState.qty=Math.max(1,optState.qty-1);optQtyEl.textContent=optState.qty;optPrice();});
     $('#optPlus').addEventListener('click',function(){optState.qty++;optQtyEl.textContent=optState.qty;optPrice();});
     $('#optAdd').addEventListener('click',function(){
@@ -1413,11 +1402,11 @@
       renderCart();
     }
     var cartLines=$('#cartLines'), toCk=$('#toCheckout');
-    function surCat(c){return c==='pizza'||c==='pasta';}   // pizza + pasta krijgen leverings-opslag
-    function effUnit(l){return l.unit + (mode==='leveren' && surCat(l.cat) ? PIZZA_SURCHARGE : 0);}
+    function surCat(c){return true;}   // bij levering krijgt élk product de €1-opslag
+    function effUnit(l){return l.unit + (mode==='leveren' ? DELIVERY_SURCHARGE : 0);}
     function subtotal(){return cart.reduce(function(s,l){return s+effUnit(l)*l.qty;},0);}
-    function discountAmt(){return mode==='leveren' ? Math.round(subtotal()*DELIVERY_DISCOUNT*100)/100 : 0;}
-    function orderTotal(){return Math.round((subtotal()-discountAmt())*100)/100;}
+    function discountAmt(){return 0;}  // geen leveringskorting meer
+    function orderTotal(){return Math.round(subtotal()*100)/100;}
     function delFee(){return 0;}
     function renderCart(){
       if(!cart.length){ cartLines.innerHTML='<p class="cart-empty">Je mandje is leeg. Voeg iets toe uit het menu.</p>'; }
@@ -1432,8 +1421,7 @@
       }
       var sub=subtotal();
       $('#ctSub').textContent=fmt(sub);
-      $('#ctDelRow').style.display = mode==='leveren'?'flex':'none';
-      $('#ctDel').textContent='− '+fmt(discountAmt());
+      $('#ctDelRow').style.display='none';   // geen leveringskorting meer; de €1 zit in de stukprijs
       $('#ctTotal').textContent=fmt(orderTotal());
       var min=$('#cartMin');
       if(!shopOpen()){
@@ -1546,7 +1534,7 @@
       var sub=subtotal();
       $('#coReview').innerHTML=cart.map(function(l){return '<div class="cr"><span>'+l.qty+'× '+esc(l.name)+(l.opts.length?' <small>('+esc(l.opts.join(', '))+')</small>':'')+'</span><span>'+fmt(effUnit(l)*l.qty)+'</span></div>';}).join('')+
         '<div class="cr cr-sub"><span>Subtotaal</span><span>'+fmt(sub)+'</span></div>'+
-        (mode==='leveren'?'<div class="cr"><span>Korting levering (30%)</span><span>− '+fmt(discountAmt())+'</span></div>':'')+
+        (mode==='leveren'?'<div class="cr"><span>Levering</span><span>elk product +'+fmt(DELIVERY_SURCHARGE)+'</span></div>':'')+
         '<div class="cr cr-tot"><span>Totaal</span><span>'+fmt(orderTotal())+'</span></div>';
       re();
     }
@@ -1578,7 +1566,7 @@
       });
       L.push('');
       L.push('Subtotaal: '+fmt(sub));
-      if(mode==='leveren') L.push('Korting levering (30%): − '+fmt(discountAmt()));
+      if(mode==='leveren') L.push('(Levering: elk product +'+fmt(DELIVERY_SURCHARGE)+')');
       L.push('*Totaal: '+fmt(orderTotal())+'*');
       L.push('');
       L.push('*Klant:* '+((f.naam&&f.naam.value.trim())||'—'));
@@ -1612,7 +1600,7 @@
       }
       if(mode==='leveren' && cart.some(function(l){return l.cat==='promo';})){ orderError('Promo’s kunnen enkel afgehaald worden. Verwijder de promo of kies afhalen.'); return; }
       var sub=subtotal();
-      // minimum bij levering geldt op het te betalen bedrag (na 30% korting)
+      // minimum bij levering geldt op het te betalen bedrag (incl. €1 per product)
       if(mode==='leveren' && orderTotal()<MIN_ORDER){ orderError('Minimum voor levering is '+fmt(MIN_ORDER)+' na korting — voeg nog '+fmt(MIN_ORDER-orderTotal())+' toe of kies afhalen.'); return; }
       var addr=[ f.adres?f.adres.value.trim():'', f.postcode?f.postcode.value.trim():'', f.gemeente?f.gemeente.value.trim():'' ]
                  .filter(Boolean).join(', ');
@@ -1788,7 +1776,7 @@
       function chosen(){return INGR.filter(function(i){return sel[i.id];});}
       function upd(){
         var ch=chosen(), total=curSize.p+ch.reduce(function(s,i){return s+topPrice(i);},0);
-        $('#pbPrice').textContent=pf(mode==='leveren'?total+PIZZA_SURCHARGE:total);
+        $('#pbPrice').textContent=pf(mode==='leveren'?total+DELIVERY_SURCHARGE:total);
         $('#pbChosen').textContent=(curSize.k+' pizza')+(ch.length?' · '+ch.map(function(i){return i.name;}).join(', '):' (nog geen toppings)');
       }
       $('#pbAdd').addEventListener('click',function(){
