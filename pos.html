@@ -215,7 +215,7 @@
       font-family:'Courier New',monospace;font-size:15px;line-height:1.5;font-weight:700}
     #receipt .r-c{text-align:center}
     #receipt .r-b{font-weight:700}
-    #receipt .r-logo{display:block;margin:0 auto 4px;width:56mm;max-width:78%;height:auto;filter:grayscale(1) contrast(1.4) brightness(.85)}
+    #receipt .r-logo{display:block;margin:0 auto 4px;width:56mm;max-width:78%;height:auto;filter:grayscale(1) contrast(1.9) brightness(.72)}
     #receipt h3{font-size:24px;font-family:'Courier New',monospace;letter-spacing:1px;margin:2px 0}
     #receipt .r-sub{font-size:13px;font-weight:700}
     #receipt hr{border:0;border-top:1px dashed #000;margin:6px 0}
@@ -1092,7 +1092,7 @@
     var dt=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()+
            ' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
     var h='';
-    h+='<div class="r-c r-b"><h3>LA MIA PIZZERIA</h3>'+(isZ?'Z-RAPPORT (dag afgesloten)':'X-RAPPORT (tussentijds)')+'</div><hr>'+dt;
+    h+='<div class="r-c r-b"><img class="r-logo" src="images/logo.png" alt="La Mia Pizzeria"><h3>LA MIA PIZZERIA</h3>'+(isZ?'Z-RAPPORT (dag afgesloten)':'X-RAPPORT (tussentijds)')+'</div><hr>'+dt;
     h+='<hr><table>';
     h+='<tr><td>Aantal bons</td><td class="rt">'+r.count+'</td></tr>';
     h+='<tr><td class="big">OMZET</td><td class="rt big">'+euro(r.total)+'</td></tr>';
