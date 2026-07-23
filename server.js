@@ -164,9 +164,16 @@ function belgiumNow(d) {
   return { dow: wd, min: parseInt(p.hour, 10) * 60 + parseInt(p.minute, 10) };
 }
 function isOpenNow(d) {
-  var b = belgiumNow(d);
-  if (b.min < CLOSE_MIN) return true;      // nog open van de vorige dag (sluit pas om 02:00)
-  return b.min >= OPEN_MIN[b.dow];         // vanaf de openingstijd van vandaag tot middernacht
+  try {
+    var b = belgiumNow(d);
+    if (typeof b.dow !== 'number') return true;   // tijdzonedata onbetrouwbaar → niet blokkeren
+    if (b.min < CLOSE_MIN) return true;      // nog open van de vorige dag (sluit pas om 02:00)
+    return b.min >= OPEN_MIN[b.dow];         // vanaf de openingstijd van vandaag tot middernacht
+  } catch (e) {
+    // faalt de tijdzone/Intl (bv. ontbrekende locale-data), dan liever open dan de
+    // hele webshop platleggen — de bestelling gaat door.
+    return true;
+  }
 }
 
 /* ---- eerste keer: vul de database met de canonieke kaart ---- */
