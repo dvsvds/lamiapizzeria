@@ -451,14 +451,13 @@ async function handleApi(req, res, urlPath) {
       return sendJson(res, 400, { error: 'Promo’s kunnen enkel afgehaald worden, niet geleverd.' });
     }
     subtotal = Math.round(subtotal * 100) / 100;
-    // korting (handmatig) enkel voor de (ingelogde) kassa; webshop heeft geen leveringskorting meer
-    // (bij levering zit de €1-opslag al in de stukprijs die de client meestuurt)
-    var discount = (source === 'pos') ? Math.round(Math.max(0, Math.min(parseFloat(ob.discount) || 0, subtotal)) * 100) / 100 : 0;
+    // korting en betaalinfo enkel voor de (ingelogde) kassa
+    var discount = (source === 'pos') ? Math.round(Math.max(0, Math.min(parseFloat(ob.discount) || 0, subtotal)) * 100) / 100 : (type === 'leveren' ? Math.round(subtotal * 0.30 * 100) / 100 : 0);
     var delivery = type === 'leveren' ? DELIVERY_FEE : 0;
     var total = Math.round((subtotal - discount + delivery) * 100) / 100;
-    // minimum bij levering geldt op het te betalen bedrag; enkel de webshop afdwingen
+    // minimum bij levering geldt op het te betalen bedrag (na korting); enkel de webshop afdwingen
     if (source === 'web' && type === 'leveren' && total < MIN_ORDER) {
-      return sendJson(res, 400, { error: 'Minimum voor levering is € ' + MIN_ORDER.toFixed(2).replace('.', ',') + '.' });
+      return sendJson(res, 400, { error: 'Minimum voor levering is € ' + MIN_ORDER.toFixed(2).replace('.', ',') + ' na korting.' });
     }
     // status = keukenvoortgang (nieuw→bereiden→klaar→afgehaald), los van betaling.
     var status = 'nieuw';
