@@ -232,9 +232,10 @@
   themeBtn.onclick=function(){ applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'); };
   var st='dark'; try{st=localStorage.getItem('lamia_rap_theme')||'dark';}catch(e){} applyTheme(st);
 
-  fetch('api/session',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
-    if(j&&j.authed) setRange('today'); else showLogin();
-  }).catch(showLogin);
+  // De dagtotaal/rapporten vragen ALTIJD om de PIN — ook als er elders al een
+  // sessie is (bv. de kassa die online bestellingen toont). Zo kan niemand de
+  // omzet bekijken zonder de code in te geven.
+  showLogin();
 })();
 </script>
 <script src="i18n-admin.js"></script>
