@@ -196,6 +196,14 @@ function seedIfEmpty() {
 }
 seedIfEmpty();
 
+// Aparte manager-PIN voor de rapporten (los van de kassa-PIN). Eén keer instellen
+// als hij nog niet bestaat — ook op bestaande databases, zonder te overschrijven.
+(function seedReportPin() {
+  if (!db.prepare('SELECT value FROM settings WHERE key=?').get('report_pin')) {
+    db.prepare('INSERT INTO settings (key,value) VALUES (?,?)').run('report_pin', String(process.env.REPORT_PIN || '5678'));
+  }
+})();
+
 // Geef elk product een standaard kassakleur op basis van de ingrediënten.
 // Draait één keer per kleurversie. Kleuren van een vorige auto-versie worden
 // bijgewerkt naar het nieuwe schema; kleuren die je zélf hebt gekozen blijven staan.
@@ -215,6 +223,10 @@ seedIfEmpty();
 function currentPin() {
   var row = db.prepare('SELECT value FROM settings WHERE key = ?').get('admin_pin');
   return row ? String(row.value) : ADMIN_PIN;
+}
+function reportPin() {
+  var row = db.prepare('SELECT value FROM settings WHERE key = ?').get('report_pin');
+  return row ? String(row.value) : String(process.env.REPORT_PIN || '5678');
 }
 
 /* ---- rij → net JSON object ---- */
@@ -267,6 +279,11 @@ function parseCookies(req) {
 function isAuthed(req) {
   var token = parseCookies(req)['lamia_sess'];
   return !!verify(token);
+}
+// aparte manager-sessie voor de rapporten (eigen cookie + rol)
+function isManager(req) {
+  var p = verify(parseCookies(req)['lamia_mgr']);
+  return !!(p && p.role === 'mgr');
 }
 
 /* ============================================================================
@@ -505,11 +522,42 @@ async function handleApi(req, res, urlPath) {
     return sendJson(res, 200, { authed: false }, { 'Set-Cookie': 'lamia_sess=; HttpOnly; Path=/; Max-Age=0' });
   }
 
+  /* ---------- manager-sessie voor de rapporten (aparte PIN) ---------- */
+  if (seg[0] === 'report-login' && method === 'POST') {
+    var rlb = await readBody(req);
+    var rg = crypto.createHash('sha256').update(String(rlb.pin || '')).digest();
+    var rw = crypto.createHash('sha256').update(reportPin()).digest();
+    if (!crypto.timingSafeEqual(rg, rw)) return sendJson(res, 401, { error: 'Verkeerde PIN' });
+    var mtok = sign(JSON.stringify({ role: 'mgr', exp: Date.now() + SESSION_HOURS * 3600e3 }));
+    var msec = (req.headers['x-forwarded-proto'] === 'https') ? '; Secure' : '';
+    return sendJson(res, 200, { authed: true }, { 'Set-Cookie': 'lamia_mgr=' + mtok + '; HttpOnly; SameSite=Lax; Path=/' + msec + '; Max-Age=' + (SESSION_HOURS * 3600) });
+  }
+  if (seg[0] === 'report-session' && method === 'GET') {
+    return sendJson(res, 200, { authed: isManager(req) });
+  }
+  if (seg[0] === 'report-logout' && method === 'POST') {
+    return sendJson(res, 200, { authed: false }, { 'Set-Cookie': 'lamia_mgr=; HttpOnly; Path=/; Max-Age=0' });
+  }
+  if (seg[0] === 'report-pin' && method === 'POST') {
+    if (!isManager(req)) return sendJson(res, 401, { error: 'Manager-PIN vereist' });
+    var rpb = await readBody(req);
+    var rnp = String(rpb.pin || '').trim();
+    if (!/^[0-9]{4,8}$/.test(rnp)) return sendJson(res, 400, { error: 'PIN moet 4 tot 8 cijfers zijn' });
+    db.prepare('INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)').run('report_pin', rnp);
+    return sendJson(res, 200, { ok: true });
+  }
+
   /* ---------- beheer (auth vereist) ---------- */
   if (seg[0] === 'admin') {
-    if (!isAuthed(req)) return sendJson(res, 401, { error: 'Niet ingelogd' });
-    var kind = seg[1];        // 'products' | 'categories' | 'pin'
+    var kind = seg[1];        // 'products' | 'categories' | 'pin' | 'report' | 'export'
     var id = seg[2];
+    // rapporten & export: aparte manager-PIN (los van de kassa-PIN);
+    // de rest van het beheer blijft achter de gewone kassa-sessie.
+    if (kind === 'report' || kind === 'export') {
+      if (!isManager(req)) return sendJson(res, 401, { error: 'Manager-PIN vereist' });
+    } else if (!isAuthed(req)) {
+      return sendJson(res, 401, { error: 'Niet ingelogd' });
+    }
 
     if (kind === 'products') {
       if (method === 'GET') return sendJson(res, 200, { products: allProducts() });
