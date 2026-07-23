@@ -1110,8 +1110,7 @@
     $('#receipt').innerHTML=h;
   }
   $('#btnPrintReport').onclick=function(){ buildReportReceipt($('#reportBody')._report,false); setTimeout(function(){window.print();},100); };
-  $('#btnCloseDay').onclick=function(){
-    if(!sales.length){ toast('Nog geen verkoop vandaag'); return; }
+  function doCloseDay(){
     var r=reportData();
     if(!confirm('Dag afsluiten?\n\nOmzet: '+euro(r.total)+' over '+r.count+' bon(s).\nDe verkooplijst wordt gearchiveerd en op nul gezet.')) return;
     buildReportReceipt(r,true);
@@ -1123,6 +1122,16 @@
     closeOv('#ovReport'); renderTicket();
     toast('Dag afgesloten (Z-rapport)');
     setTimeout(function(){window.print();},120);
+  }
+  // dag afsluiten toont de omzet → ook achter de manager-PIN
+  $('#btnCloseDay').onclick=function(){
+    if(!sales.length){ toast('Nog geen verkoop vandaag'); return; }
+    var pin=prompt('Manager-PIN om de dag af te sluiten:'); if(pin===null) return;
+    if(!window.fetch){ toast('Geen verbinding'); return; }
+    fetch('api/report-login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:pin})})
+      .then(function(r){ return r.ok; })
+      .then(function(ok){ if(ok) doCloseDay(); else toast('Verkeerde PIN'); })
+      .catch(function(){ toast('Geen verbinding — PIN kan niet gecontroleerd worden'); });
   };
 
   /* =============================================================
