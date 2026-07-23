@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Mia Pizzeria — Startscherm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="images/logo.png">
+<style>
+  :root{
+    --bg:#141110; --ink:#1c1815; --panel:#221d19; --panel-2:#2a231e;
+    --line:#3a322b; --line-2:#4a4038;
+    --cream:#f4ece0; --muted:#b6a99c; --muted-2:#8c8073;
+    --gold:#e6b24c; --coral:#e0533f; --green:#5aa469; --red:#d9483b; --blue:#4f93c4;
+    --radius:16px; --sh:0 16px 40px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{min-height:100%}
+  body{font-family:'Manrope',"Segoe UI",Helvetica,Arial,sans-serif;background:
+    radial-gradient(1200px 600px at 50% -10%, #241c15 0%, var(--bg) 60%);
+    color:var(--cream);min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    padding:clamp(1.2rem,4vw,2.4rem);user-select:none;-webkit-user-select:none}
+  h1,h2,.font-disp{font-family:'Anton','Arial Narrow',Impact,sans-serif;font-weight:400;letter-spacing:.5px;text-transform:uppercase}
+
+  header{text-align:center;margin:.4rem 0 clamp(1.2rem,3.5vw,2.2rem)}
+  header img{height:clamp(84px,14vw,140px);width:auto;display:block;margin:0 auto .4rem}
+  header h1{font-size:clamp(1.5rem,4.5vw,2.4rem);color:var(--cream);line-height:1}
+  header p{color:var(--muted);margin-top:.35rem;font-weight:700;font-size:clamp(.8rem,2.2vw,1rem);text-transform:uppercase;letter-spacing:.14em}
+
+  .grid{width:100%;max-width:940px;display:grid;grid-template-columns:repeat(2,1fr);
+    gap:clamp(.8rem,2.4vw,1.4rem)}
+  .tile{position:relative;display:flex;flex-direction:column;gap:.35rem;text-decoration:none;color:var(--cream);
+    background:linear-gradient(180deg,var(--panel),var(--ink));border:1px solid var(--line);
+    border-radius:var(--radius);padding:clamp(1.1rem,3.2vw,1.8rem);min-height:clamp(130px,22vw,180px);
+    box-shadow:var(--sh);transition:transform .12s ease,border-color .12s ease,background .12s ease;overflow:hidden}
+  .tile::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--cc,var(--gold))}
+  .tile:hover,.tile:active{transform:translateY(-3px);border-color:var(--cc,var(--gold))}
+  .tile .ic{font-size:clamp(2rem,6vw,2.9rem);line-height:1}
+  .tile .t{font-family:'Anton','Arial Narrow',Impact,sans-serif;text-transform:uppercase;letter-spacing:.5px;
+    font-size:clamp(1.15rem,3.6vw,1.7rem);color:var(--cream)}
+  .tile .d{color:var(--muted);font-size:clamp(.78rem,2.1vw,.95rem);font-weight:600;line-height:1.35}
+  .tile .go{margin-top:auto;align-self:flex-start;color:var(--cc,var(--gold));font-weight:800;
+    font-size:clamp(.78rem,2.1vw,.92rem);text-transform:uppercase;letter-spacing:.08em}
+
+  /* website-tegel over de volle breedte */
+  .tile.wide{grid-column:1 / -1;flex-direction:row;align-items:center;gap:1rem;min-height:0;padding:clamp(.9rem,2.6vw,1.3rem) clamp(1.1rem,3.2vw,1.8rem)}
+  .tile.wide .ic{font-size:clamp(1.8rem,5vw,2.4rem)}
+  .tile.wide .txt{display:flex;flex-direction:column;gap:.15rem}
+  .tile.wide .go{margin:0 0 0 auto;align-self:center}
+
+  footer{margin-top:clamp(1.2rem,3.5vw,2rem);display:flex;gap:.7rem;flex-wrap:wrap;justify-content:center;align-items:center}
+  .fbtn{background:var(--panel);border:1px solid var(--line-2);color:var(--muted);border-radius:999px;
+    padding:.6rem 1.1rem;font-weight:800;font-size:.82rem;cursor:pointer;transition:.12s}
+  .fbtn:hover{color:var(--cream);border-color:var(--gold)}
+  .clock{color:var(--muted-2);font-weight:700;font-variant-numeric:tabular-nums;font-size:.9rem}
+
+  @media (max-width:560px){ .grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+  <header>
+    <img src="images/logo.png" alt="La Mia Pizzeria">
+    <h1>Startscherm</h1>
+    <p>Kies een onderdeel</p>
+  </header>
+
+  <main class="grid">
+    <a class="tile" href="pos.html" style="--cc:var(--gold)">
+      <div class="ic">🧾</div>
+      <div class="t">Kassa</div>
+      <div class="d">Bestellingen aanslaan en afrekenen</div>
+      <div class="go">Openen →</div>
+    </a>
+    <a class="tile" href="keuken.html" style="--cc:var(--coral)">
+      <div class="ic">👨‍🍳</div>
+      <div class="t">Keuken</div>
+      <div class="d">Live bestellingen voor de keuken</div>
+      <div class="go">Openen →</div>
+    </a>
+    <a class="tile" href="beheer.html" style="--cc:var(--blue)">
+      <div class="ic">⚙️</div>
+      <div class="t">Beheer</div>
+      <div class="d">Menu, prijzen en producten beheren</div>
+      <div class="go">Openen →</div>
+    </a>
+    <a class="tile" href="rapporten.html" style="--cc:var(--green)">
+      <div class="ic">📊</div>
+      <div class="t">Rapporten</div>
+      <div class="d">Omzet, btw en dagoverzichten</div>
+      <div class="go">Openen →</div>
+    </a>
+    <a class="tile wide" href="order.html" style="--cc:var(--red)">
+      <div class="ic">🌐</div>
+      <div class="txt">
+        <div class="t">Website / Bestellen</div>
+        <div class="d">De online bestelpagina voor klanten</div>
+      </div>
+      <div class="go">Openen →</div>
+    </a>
+  </main>
+
+  <footer>
+    <button class="fbtn" id="fs">⛶ Volledig scherm</button>
+    <span class="clock" id="clock">—</span>
+  </footer>
+
+  <script>
+    // volledig scherm (kioskgevoel op het kassascherm)
+    var fsBtn=document.getElementById('fs');
+    fsBtn.addEventListener('click',function(){
+      var el=document.documentElement;
+      if(!document.fullscreenElement){ (el.requestFullscreen||el.webkitRequestFullscreen||function(){}).call(el); }
+      else { (document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document); }
+    });
+    document.addEventListener('fullscreenchange',function(){
+      fsBtn.textContent=document.fullscreenElement?'⛶ Volledig scherm verlaten':'⛶ Volledig scherm';
+    });
+    // klok
+    var clk=document.getElementById('clock');
+    function tick(){
+      var d=new Date();
+      var days=['zo','ma','di','wo','do','vr','za'];
+      function p(n){return String(n).padStart(2,'0');}
+      clk.textContent=days[d.getDay()]+' '+p(d.getDate())+'/'+p(d.getMonth()+1)+' · '+p(d.getHours())+':'+p(d.getMinutes());
+    }
+    tick(); setInterval(tick,10000);
+  </script>
+</body>
+</html>
