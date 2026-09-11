@@ -595,7 +595,7 @@
       var needOpt=(p.t==='pizza'||p.t==='drink'||p.t==='pasta');
       el.innerHTML=(needOpt?'<span class="opt-flag">opties</span>':'')+
         '<div><div class="pn">'+esc(p.name)+'</div><div class="pd">'+esc(p.desc)+'</div></div>'+
-        '<div class="pp">'+euro(p.price)+'</div>';
+        '<div class="pp">'+euro(p.price+delvSur(p.c))+'</div>';
       el.onclick=function(){ pick(p); };
       gridEl.appendChild(el);
     });
@@ -620,7 +620,7 @@
     h+='<p class="hint" style="margin:-.3rem 0 1rem">'+esc(p.desc)+'</p>';
     if(p.t==='pizza'){
       h+='<div class="opt-group"><h4>Formaat</h4><div class="opt-row" data-g="size">';
-      p.sz.forEach(function(price,i){ h+='<button class="opt-pill'+(i===1?' on':'')+'" data-i="'+i+'">'+SIZE_LABELS[i]+' <small>'+euro(price)+'</small></button>'; });
+      p.sz.forEach(function(price,i){ h+='<button class="opt-pill'+(i===1?' on':'')+'" data-i="'+i+'">'+SIZE_LABELS[i]+' <small>'+euro(price+delvSur(p.c))+'</small></button>'; });
       h+='</div></div>';
       h+='<div class="opt-group"><h4>Extra toppings</h4><div class="opt-row" data-g="extras">';
       PIZZA_EXTRAS.forEach(function(x,i){ h+='<button class="opt-pill" data-i="'+i+'">'+esc(x.k)+' <small>+'+euro(x.p)+'</small></button>'; });
@@ -669,7 +669,7 @@
     else if(p.t==='pasta'){ if(optCtx.sauce>0) out.push(PASTA_SAUCE[optCtx.sauce].k); if(optCtx.extraKaas) out.push('+Extra kaas'); }
     return out;
   }
-  function updateOptPrice(){ $('#optPrice').textContent=euro(optUnitPrice()*optCtx.qty); }
+  function updateOptPrice(){ $('#optPrice').textContent=euro((optUnitPrice()+delvSur(optCtx.p.c))*optCtx.qty); }
   $('#optMinus').onclick=function(){ if(optCtx.qty>1){optCtx.qty--;$('#optQty').textContent=optCtx.qty;updateOptPrice();} };
   $('#optPlus').onclick=function(){ optCtx.qty++;$('#optQty').textContent=optCtx.qty;updateOptPrice(); };
   $('#optAdd').onclick=function(){
@@ -700,9 +700,11 @@
   }
   function removeLine(i){ state.lines.splice(i,1); clearIfEmpty(); renderTicket(); saveCart(); }
 
-  // effectieve stukprijs: pizza's krijgen bij levering +€5 (zoals de website).
+  // leveringstoeslag per categorie (pizza + pasta, zoals de website); 0 bij afhalen/ter plaatse
+  function delvSur(cat){ return (state.type==='leveren' && (cat==='pizza'||cat==='pasta')) ? PIZZA_SURCHARGE : 0; }
+  // effectieve stukprijs: pizza/pasta krijgen bij levering de toeslag (zoals de website).
   // Al-geprijsde (van de website geladen) bons hebben die toeslag al in de prijs → niet nog eens.
-  function effUnit(l){ return l.unit + ((state.type==='leveren' && l.cat==='pizza' && !state.prepriced) ? PIZZA_SURCHARGE : 0); }
+  function effUnit(l){ return l.unit + (state.prepriced ? 0 : delvSur(l.cat)); }
   function r2(n){ return Math.round(n*100)/100; }
   function totals(){
     var sub=0, vat={};
