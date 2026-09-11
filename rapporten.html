@@ -10,16 +10,18 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{
+  /* Licht thema = standaard (wit + rood), in lijn met de website */
+  :root,:root[data-theme="light"]{
+    --bg:#f4f1ee; --ink:#ffffff; --panel:#ffffff; --panel-2:#faf7f4;
+    --line:#e6ded7; --line-2:#d4c9c0; --cream:#1b1512; --muted:#60554f; --muted-2:#8b807a;
+    --gold:#a9741a; --coral:#c0291f; --green:#2f7d45; --red:#c6342b; --blue:#2f79ab;
+    --sh:0 16px 40px rgba(60,30,15,.14);
+  }
+  :root[data-theme="dark"]{
     --bg:#141110; --ink:#1c1815; --panel:#221d19; --panel-2:#2a231e;
     --line:#3a322b; --line-2:#4a4038; --cream:#f4ece0; --muted:#b6a99c; --muted-2:#8c8073;
     --gold:#e6b24c; --coral:#e0533f; --green:#5aa469; --red:#d9483b; --blue:#4f93c4;
     --sh:0 16px 40px rgba(0,0,0,.5);
-  }
-  :root[data-theme="light"]{
-    --bg:#f3ecde; --ink:#fbf6ec; --panel:#ffffff; --panel-2:#f7f0e3;
-    --line:#e2d6c1; --line-2:#d3c4a9; --cream:#241c14; --muted:#6b5c4d; --muted-2:#9a8a76;
-    --gold:#b0790c; --coral:#cf2f22; --green:#3f8a52; --red:#c0392b; --blue:#2f79ab;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   body{font-family:'Manrope',"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--cream);min-height:100vh}
@@ -237,7 +239,7 @@
   var themeBtn=$('#btnTheme');
   function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); themeBtn.textContent=t==='light'?'☀️':'🌙'; try{localStorage.setItem('lamia_rap_theme',t);}catch(e){} }
   themeBtn.onclick=function(){ applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'); };
-  var st='dark'; try{st=localStorage.getItem('lamia_rap_theme')||'dark';}catch(e){} applyTheme(st);
+  var st='light'; try{st=localStorage.getItem('lamia_rap_theme')||'light';}catch(e){} applyTheme(st);
 
   // De dagtotaal/rapporten vragen ALTIJD om de PIN — ook als er elders al een
   // sessie is (bv. de kassa die online bestellingen toont). Zo kan niemand de
