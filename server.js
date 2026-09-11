@@ -341,10 +341,11 @@ var MIME = {
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
   '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
   '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.webp': 'image/webp',
-  '.woff2': 'font/woff2', '.woff': 'font/woff'
+  '.woff2': 'font/woff2', '.woff': 'font/woff',
+  '.mp4': 'video/mp4', '.webm': 'video/webm'
 };
 // Enkel deze extensies zijn publiek serveerbaar (blokkeert .db, .key, .json, .md, Dockerfile, …)
-var SERVE_EXT = { '.html': 1, '.js': 1, '.css': 1, '.png': 1, '.jpg': 1, '.jpeg': 1, '.svg': 1, '.ico': 1, '.webp': 1, '.woff': 1, '.woff2': 1 };
+var SERVE_EXT = { '.html': 1, '.js': 1, '.css': 1, '.png': 1, '.jpg': 1, '.jpeg': 1, '.svg': 1, '.ico': 1, '.webp': 1, '.woff': 1, '.woff2': 1, '.mp4': 1, '.webm': 1 };
 // Deze mappen bevatten interne bestanden en worden nooit geserveerd
 var BLOCK_DIR = { data: 1, lib: 1, node_modules: 1, '.git': 1 };
 function serveStatic(req, res, urlPath) {
@@ -368,9 +369,36 @@ function serveStatic(req, res, urlPath) {
     // pagina's en code niet cachen → na een update toont de kassa/terminal meteen de nieuwste versie.
     // afbeeldingen/fonts mogen kort gecachet worden (schelen bandbreedte, veranderen zelden).
     var noCache = (ext === '.html' || ext === '.js' || ext === '.css');
+    var type = MIME[ext] || 'application/octet-stream';
+    var cache = noCache ? 'no-cache, no-store, must-revalidate' : 'public, max-age=3600';
+
+    // Video's worden met byte-ranges opgehaald. Safari en iOS weigeren een
+    // video af te spelen als de server daar niet met 206 op antwoordt.
+    var range = req.headers && req.headers.range;
+    var m = range && /^bytes=(\d*)-(\d*)$/.exec(range.trim());
+    if (m && (m[1] || m[2])) {
+      var start = m[1] ? parseInt(m[1], 10) : 0;
+      var end = m[2] ? parseInt(m[2], 10) : st.size - 1;
+      if (end > st.size - 1) end = st.size - 1;
+      if (isNaN(start) || isNaN(end) || start > end || start >= st.size) {
+        res.writeHead(416, { 'Content-Range': 'bytes */' + st.size });
+        return res.end();
+      }
+      res.writeHead(206, {
+        'Content-Type': type,
+        'Content-Length': end - start + 1,
+        'Content-Range': 'bytes ' + start + '-' + end + '/' + st.size,
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': cache
+      });
+      return fs.createReadStream(file, { start: start, end: end }).pipe(res);
+    }
+
     res.writeHead(200, {
-      'Content-Type': MIME[ext] || 'application/octet-stream',
-      'Cache-Control': noCache ? 'no-cache, no-store, must-revalidate' : 'public, max-age=3600'
+      'Content-Type': type,
+      'Content-Length': st.size,
+      'Accept-Ranges': 'bytes',
+      'Cache-Control': cache
     });
     fs.createReadStream(file).pipe(res);
   });

@@ -777,11 +777,12 @@
   /* ===================== Hero, filmisch en groter ===================== */
   .hero{padding:clamp(5rem,12vw,9rem) 0 clamp(4.5rem,10vw,7.5rem);
     background:
-      linear-gradient(rgba(28,18,14,.58),rgba(28,18,14,.72) 55%,rgba(28,18,14,.86)),
+      linear-gradient(rgba(28,18,14,.30),rgba(28,18,14,.40) 55%,rgba(28,18,14,.55)),
       url("images/hero.jpg") center 42%/cover no-repeat,
       #1c120e;}
   .hero h1{color:#fff;text-shadow:0 3px 26px rgba(0,0,0,.55)}
-  .hero .tagline,.hero p.lead{color:#f3e6da}
+  .hero .tagline,.hero p.lead{color:#f7ece2;text-shadow:0 1px 10px rgba(0,0,0,.65),0 0 24px rgba(0,0,0,.4)}
+  .hero .eyebrow{text-shadow:0 1px 8px rgba(0,0,0,.6)}
   .hero .eyebrow{color:#ffd36a}
   .hero .eyebrow::before,.hero .eyebrow::after{background:#ffd36a}
   .hero .rating-badge{background:rgba(255,255,255,.95);border-color:transparent;color:#4a3f38;box-shadow:0 8px 24px rgba(0,0,0,.28)}
@@ -796,7 +797,7 @@
     z-index:0;border:0;pointer-events:none;opacity:0;transition:opacity .8s ease}
   .hero-video.ready{opacity:1}
   .hero::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
-    background:linear-gradient(rgba(28,18,14,.58),rgba(28,18,14,.72) 55%,rgba(28,18,14,.86))}
+    background:linear-gradient(rgba(28,18,14,.30),rgba(28,18,14,.40) 55%,rgba(28,18,14,.55))}
   .hero::after{z-index:1}
   .hero .wrap{z-index:2}
   .hero .stamp{z-index:3}
@@ -933,6 +934,7 @@
 <section class="hero" id="top">
   <video class="hero-video" id="heroVideo" autoplay muted loop playsinline preload="metadata"
          poster="images/hero-poster.jpg" aria-hidden="true" tabindex="-1">
+    <source src="images/hero.webm" type="video/webm">
     <source src="images/hero.mp4" type="video/mp4">
   </video>
   <span class="stamp stamp-1" style="transform:rotate(-9deg)">Fresh dough daily</span>
