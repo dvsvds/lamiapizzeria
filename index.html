@@ -231,6 +231,12 @@
   .p-item .pd{font-size:.84rem;color:var(--muted);margin-top:.25rem}
   .hot{display:inline-block;font-size:.62rem;font-weight:800;color:#fff;background:var(--red);border-radius:5px;padding:.05rem .35rem;margin-left:.35rem;vertical-align:middle}
   .menu-note{text-align:center;margin-top:2.4rem;color:var(--muted);font-size:.92rem}
+  .halal-note{max-width:720px;margin:2.4rem auto 0;text-align:center;font-size:.95rem;color:var(--cream);
+    background:#f2f9f2;border:1px solid #cfe6d2;border-radius:12px;padding:.9rem 1.2rem}
+  .halal-note b{color:#226b28}
+  .halal-note+.menu-note{margin-top:1rem}
+  :root[data-theme="dark"] .halal-note{background:rgba(46,125,50,.12);border-color:rgba(90,164,105,.35)}
+  :root[data-theme="dark"] .halal-note b{color:#7fd487}
   .menu-note a{color:var(--gold);font-weight:700}
   /* full menu */
   .byo{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:1.5rem 1.7rem;margin-bottom:2.6rem;box-shadow:var(--sh-sm)}
@@ -1051,7 +1057,7 @@
     <div class="byo">
       <h3>🍕 Stel je eigen pizza samen</h3>
       <div class="byo-sizes"><span>Small <b>€ 8</b></span><span>Medium <b>€ 9</b></span><span>Large <b>€ 10</b></span></div>
-      <div class="byo-row"><b>Vleestoppings</b> <span class="pr">S € 1 / M-L € 1,5</span> · pepperoni, salami, ham, spek, kip, shoarma, kofta, ansjovis, tonijn, merguez</div>
+      <div class="byo-row"><b>Vleestoppings</b> <span class="pr">S € 1 / M-L € 1,5</span> · halal pepperoni, halal salami, halal ham, halal spek, kip, shoarma, kofta, ansjovis, tonijn, merguez</div>
       <div class="byo-row"><b>Groentetoppings</b> <span class="pr">S/M/L € 1</span> · rode ui, verse tomaat, champignons, zwarte olijven, ananas, jalapeño, spinazie, basilicumpesto, hete honing, corn, rucola</div>
       <div class="byo-row"><b>Extra kazen</b> <span class="pr">S € 1 / M-L € 1,5</span> · ricotta, parmezaan, feta, mozzarella, geitenkaas, goudse kaas, gorgonzola, gele cheddar</div>
     </div>
@@ -1061,41 +1067,41 @@
     <div class="m-legend">Prijzen: Small · Medium · Large</div>
     <div class="m-cols">
       <div class="m-row"><div><div class="m-name">Margarita</div><div class="m-desc">Tomatensaus, mozzarella</div></div><div class="m-price">8 · 9 · 10</div></div>
-      <div class="m-row"><div><div class="m-name">Pepperoni</div><div class="m-desc">Tomatensaus, mozzarella</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
-      <div class="m-row"><div><div class="m-name">Soprano <span class="pop">Populair</span></div><div class="m-desc">Pepperoni, salami, hete honing</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
-      <div class="m-row"><div><div class="m-name">Godfather <span class="pop">Populair</span></div><div class="m-desc">Pepperoni, ham, spek</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
-      <div class="m-row"><div><div class="m-name">Hawaiian</div><div class="m-desc">Ham, ananas, rode ui</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
+      <div class="m-row"><div><div class="m-name">Pepperoni</div><div class="m-desc">Tomatensaus, mozzarella, halal pepperoni</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
+      <div class="m-row"><div><div class="m-name">Soprano <span class="pop">Populair</span></div><div class="m-desc">Halal pepperoni, halal salami, hete honing</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
+      <div class="m-row"><div><div class="m-name">Godfather <span class="pop">Populair</span></div><div class="m-desc">Halal pepperoni, halal ham, halal spek</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
+      <div class="m-row"><div><div class="m-name">Hawaiian</div><div class="m-desc">Halal ham, ananas, rode ui</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Aloha Bay</div><div class="m-desc">Kip, ananas, hete honing</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Spicy Penne Pizza</div><div class="m-desc">Pittige rosa, mozzarella, parmezaan</div></div><div class="m-price">15 · 17 · 19</div></div>
       <div class="m-row"><div><div class="m-name">Bolognese</div><div class="m-desc">Kaas, vleessaus, paprika</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Luna</div><div class="m-desc">Kip, paprika, zwarte olijven, geitenkaas</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Mexican</div><div class="m-desc">Kip, jalapeño, paprika, corn</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
-      <div class="m-row"><div><div class="m-name">Bronx</div><div class="m-desc">Merguez, pepperoni, meatballs</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
+      <div class="m-row"><div><div class="m-name">Bronx</div><div class="m-desc">Merguez, halal pepperoni, meatballs</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Pollo</div><div class="m-desc">Kip, basilicumpesto, tomaten</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Veggie</div><div class="m-desc">Rode ui, champignons, paprika, zwarte olijven</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
-      <div class="m-row"><div><div class="m-name">Kofta</div><div class="m-desc">Kofta (gehakt), spek, paprika</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
+      <div class="m-row"><div><div class="m-name">Kofta</div><div class="m-desc">Kofta (gehakt), halal spek, paprika</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Italiano</div><div class="m-desc">Verse tomaat, ricotta, spinazie</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Tuna</div><div class="m-desc">Tonijn, zwarte olijven, rode ui</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Curry Kip</div><div class="m-desc">Kip, champignons, kerriesaus</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
-      <div class="m-row"><div><div class="m-name">Al Capone</div><div class="m-desc">Kip, pepperoni, jalapeños, BBQ-saus</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
+      <div class="m-row"><div><div class="m-name">Al Capone</div><div class="m-desc">Kip, halal pepperoni, jalapeños, BBQ-saus</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Gotti Tuna</div><div class="m-desc">Tonijn, jalapeños, ananas</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
-      <div class="m-row"><div><div class="m-name">Taxi Driver</div><div class="m-desc">Ham, ananas, corn</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
+      <div class="m-row"><div><div class="m-name">Taxi Driver</div><div class="m-desc">Halal ham, ananas, corn</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Funghi</div><div class="m-desc">Champignons, parmezaan</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">RT 66</div><div class="m-desc">Kip, ananas, BBQ-saus</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Marakesh</div><div class="m-desc">Merguez, paprika, champignons</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Hot Kip</div><div class="m-desc">Gorgonzola, kip, rode ui, pittige saus</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">BBQ Kip <span class="pop">Populair</span></div><div class="m-desc">Rode ui, paprika, BBQ-saus</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
-      <div class="m-row"><div><div class="m-name">Kip'n Bacon</div><div class="m-desc">BBQ-kip, spek, ananas</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
+      <div class="m-row"><div><div class="m-name">Kip'n Bacon</div><div class="m-desc">BBQ-kip, halal spek, ananas</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">La Mia Garlic <span class="pop">Populair</span></div><div class="m-desc">Kip, spinazie, ricotta, knoflook-roomsaus</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Shawarma</div><div class="m-desc">Paprika, rode ui, verse knoflook</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Greeko</div><div class="m-desc">Kip, feta, zwarte olijven, oregano</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
-      <div class="m-row"><div><div class="m-name">C &amp; B Burger</div><div class="m-desc">Cheddar, spek, kofta (gehakt)</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
-      <div class="m-row"><div><div class="m-name">Salami</div><div class="m-desc">Salami, jalapeño</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
+      <div class="m-row"><div><div class="m-name">C &amp; B Burger</div><div class="m-desc">Cheddar, halal spek, kofta (gehakt)</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
+      <div class="m-row"><div><div class="m-name">Salami</div><div class="m-desc">Halal salami, jalapeño</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">California</div><div class="m-desc">Kip, spinazie, paprika</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Quattro Formaggi <span class="pop">Populair</span></div><div class="m-desc">Mozzarella, ricotta, gorgonzola, goudse kaas</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
-      <div class="m-row"><div><div class="m-name">Carbonara</div><div class="m-desc">Spek, champignons, mozzarella, parmezaan, roomsaus</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
+      <div class="m-row"><div><div class="m-name">Carbonara</div><div class="m-desc">Halal spek, champignons, mozzarella, parmezaan, roomsaus</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Anchovies</div><div class="m-desc">Ansjovis, rode ui, zwarte olijven</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
-      <div class="m-row"><div><div class="m-name">4 Season</div><div class="m-desc">Salami, ham, paprika, champignons</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
+      <div class="m-row"><div><div class="m-name">4 Season</div><div class="m-desc">Halal salami, halal ham, paprika, champignons</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Rucola</div><div class="m-desc">Kerstomaten, parmezaan, rucola</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">BBQ Meatball &amp; Bacon</div><div class="m-desc">Paprika, rode ui, kaas, BBQ-saus</div></div><div class="m-price">11 · 12,50 · 13,50</div></div>
       <div class="m-row"><div><div class="m-name">Scampi</div><div class="m-desc">Mozzarella, rode ui</div></div><div class="m-price">11 · 12,50 · 14</div></div>
@@ -1116,7 +1122,7 @@
       <div class="m-row"><div><div class="m-name">Tagliatelle Meatballs</div><div class="m-desc">Tomatensaus, parmezaan</div></div><div class="m-price">€ 13</div></div>
       <div class="m-row"><div><div class="m-name">Pasta Funghi</div><div class="m-desc">Champignons, gesmolten mozzarella, alfredosaus</div></div><div class="m-price">€ 13</div></div>
       <div class="m-row"><div><div class="m-name">Creamy Veggie</div><div class="m-desc">Champignon, rode ui, paprika, spinazie, olijven, creamy saus</div></div><div class="m-price">€ 13</div></div>
-      <div class="m-row"><div><div class="m-name">Kass &amp; Ham</div><div class="m-desc">Kaassaus met stukjes ham</div></div><div class="m-price">€ 14</div></div>
+      <div class="m-row"><div><div class="m-name">Kass &amp; Ham</div><div class="m-desc">Kaassaus met stukjes halal ham</div></div><div class="m-price">€ 14</div></div>
       <div class="m-row"><div><div class="m-name">BBQ Kip Pasta</div><div class="m-desc">Maïs, paprika, rode ui, kaas, bbq creamy saus</div></div><div class="m-price">€ 14</div></div>
       <div class="m-row"><div><div class="m-name">Fruits de Mer Diavolo</div><div class="m-desc">Champignons, diavolosaus</div></div><div class="m-price">€ 15</div></div>
       <div class="m-row"><div><div class="m-name">Ravioli Ricotta &amp; Spinazie</div><div class="m-desc">Ricotta, spinazie, roomsaus</div></div><div class="m-price">€ 14</div></div>
@@ -1235,6 +1241,7 @@
       <div class="m-row"><div><div class="m-name">Grote fles 1,5L</div><div class="m-desc">Cola, Fanta …</div></div><div class="m-price">€ 4</div></div>
     </div>
         </details>
+    <p class="halal-note">🥩 <b>Al ons vlees is 100% halal.</b> Onze pepperoni, salami, ham en spek zijn halal varianten — we gebruiken geen varkensvlees, in geen enkel gerecht.</p>
     <p class="menu-note">Pizza's ook glutenvrij of veganistisch op aanvraag. Voedselallergie? Meld het ons even. Alle prijzen in euro; het menu kan wijzigen.</p>
   </div>
 </section>
