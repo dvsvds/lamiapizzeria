@@ -1285,14 +1285,17 @@
       esPos.addEventListener('order',function(ev){ try{ addWebOrder(JSON.parse(ev.data),true); }catch(e){} });
       esPos.addEventListener('status',function(ev){ try{ var d=JSON.parse(ev.data); if(d.status!=='nieuw') removeWebOrder(d.id); }catch(e){} });
     }
-    function activate(){ return loadInitial().then(function(ok){ if(ok){ onlineAuthed=true; serverSession=true; connectSSE(); } return ok; }).catch(function(){ return false; }); }
+    // kassa-rol activeren zonder PIN (geeft toegang tot online bestellingen + verkoop doorsturen)
+    function activate(){
+      return fetch('api/pos/hello',{method:'POST',credentials:'same-origin'})
+        .then(function(){ return loadInitial(); })
+        .then(function(ok){ if(ok){ onlineAuthed=true; serverSession=true; connectSSE(); } return ok; })
+        .catch(function(){ return false; });
+    }
 
     $('#btnOnline').onclick=function(){
       if(onlineAuthed){ openOv('#ovOnline'); return; }
-      var pin=prompt('PIN om online bestellingen te tonen:'); if(pin===null) return;
-      fetch('api/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:pin})})
-        .then(function(r){ return r.ok; }).then(function(ok){ if(!ok){ toast('Verkeerde PIN'); return; } activate().then(function(){ openOv('#ovOnline'); }); })
-        .catch(function(){ toast('Geen verbinding'); });
+      activate().then(function(ok){ if(ok){ openOv('#ovOnline'); } else { toast('Geen verbinding'); } });
     };
 
     function ackOrder(id){ fetch('api/admin/orders/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status:'bereiden'})}).catch(function(){}); removeWebOrder(id); }

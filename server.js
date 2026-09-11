@@ -292,6 +292,12 @@ function isManager(req) {
   var p = verify(parseCookies(req)['lamia_mgr']);
   return !!(p && p.role === 'mgr');
 }
+// kassa-rol: mag online bestellingen bekijken/afvinken en verkopen doorsturen,
+// maar NIET het beheer (menu/prijzen) of de rapporten. Vereist geen PIN.
+function isPos(req) {
+  var p = verify(parseCookies(req)['lamia_pos']);
+  return !!(p && p.role === 'pos');
+}
 
 /* ============================================================================
    HTTP HELPERS
@@ -423,7 +429,7 @@ async function handleApi(req, res, urlPath) {
     var type = ['afhalen', 'leveren', 'terplaatse'].indexOf(ob.type) >= 0 ? ob.type : 'afhalen';
     // Alleen een ingelogde kassa mag een POS-bon (met betaalinfo/eigen nummer) plaatsen.
     // De publieke webshop kan enkel gewone webbestellingen aanmaken.
-    var source = (isAuthed(req) && ob.source === 'pos') ? 'pos' : 'web';
+    var source = ((isAuthed(req) || isPos(req)) && ob.source === 'pos') ? 'pos' : 'web';
     // buiten de openingsuren mag de webshop niet bestellen; de kassa (ingelogd personeel) wel
     if (source === 'web' && !isOpenNow()) {
       return sendJson(res, 403, { error: 'We zijn momenteel gesloten. Online bestellen kan tijdens de openingsuren: ma–vr vanaf 11:30, za–zo vanaf 14:00, elke dag tot 02:00.', closed: true });
@@ -501,9 +507,16 @@ async function handleApi(req, res, urlPath) {
     return sendJson(res, 200, { no: no, id: oid, eta: eta, subtotal: subtotal, discount: discount, delivery: delivery, total: total });
   }
 
+  /* ---------- kassa-rol activeren (zonder PIN): online bestellingen bekijken ---------- */
+  if (seg[0] === 'pos' && seg[1] === 'hello' && method === 'POST') {
+    var ptok = sign(JSON.stringify({ role: 'pos', exp: Date.now() + 365 * 24 * 3600e3 }));
+    var psec = (req.headers['x-forwarded-proto'] === 'https') ? '; Secure' : '';
+    return sendJson(res, 200, { ok: true }, { 'Set-Cookie': 'lamia_pos=' + ptok + '; HttpOnly; SameSite=Lax; Path=/' + psec + '; Max-Age=' + (365 * 24 * 3600) });
+  }
+
   /* ---------- live updates (keukenscherm) ---------- */
   if (seg[0] === 'events' && method === 'GET') {
-    if (!isAuthed(req)) return sendJson(res, 401, { error: 'Niet ingelogd' });
+    if (!isAuthed(req) && !isPos(req)) return sendJson(res, 401, { error: 'Niet ingelogd' });
     res.writeHead(200, {
       'Content-Type': 'text/event-stream; charset=utf-8',
       'Cache-Control': 'no-cache, no-transform',
@@ -568,6 +581,9 @@ async function handleApi(req, res, urlPath) {
     // de rest van het beheer blijft achter de gewone kassa-sessie.
     if (kind === 'report' || kind === 'export') {
       if (!isManager(req)) return sendJson(res, 401, { error: 'Manager-PIN vereist' });
+    } else if (kind === 'orders') {
+      // online bestellingen bekijken/afvinken: kassa-rol (geen PIN) of beheer-sessie
+      if (!isAuthed(req) && !isPos(req)) return sendJson(res, 401, { error: 'Niet toegestaan' });
     } else if (!isAuthed(req)) {
       return sendJson(res, 401, { error: 'Niet ingelogd' });
     }
