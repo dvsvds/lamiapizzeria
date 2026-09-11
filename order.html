@@ -780,11 +780,12 @@
   /* ---- Bestel-hero: identiek aan de hero op de homepage ---- */
   .order-hero{padding:clamp(3.4rem,8vw,5.5rem) 0 clamp(2.6rem,6vw,4rem);border-bottom:0;
     background:
-      linear-gradient(rgba(28,18,14,.58),rgba(28,18,14,.72) 55%,rgba(28,18,14,.86)),
+      linear-gradient(rgba(28,18,14,.30),rgba(28,18,14,.40) 55%,rgba(28,18,14,.55)),
       url("images/hero.jpg") center 42%/cover no-repeat,
       #1c120e;}
   .order-hero h1{color:#fff;text-shadow:0 3px 26px rgba(0,0,0,.55)}
-  .order-hero p{color:#f3e6da}
+  .order-hero p{color:#f7ece2;text-shadow:0 1px 10px rgba(0,0,0,.65),0 0 24px rgba(0,0,0,.4)}
+  .order-hero .eyebrow{text-shadow:0 1px 8px rgba(0,0,0,.6)}
   .order-hero .eyebrow{color:#ffd36a}
   .order-hero .eyebrow::before,.order-hero .eyebrow::after{background:#ffd36a}
   .order-hero .stamp{color:var(--yellow);border-color:var(--yellow);background:rgba(20,17,16,.25);box-shadow:0 3px 12px rgba(0,0,0,.35)}
@@ -794,7 +795,7 @@
     z-index:0;border:0;pointer-events:none;opacity:0;transition:opacity .8s ease}
   .hero-video.ready{opacity:1}
   .order-hero::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
-    background:linear-gradient(rgba(28,18,14,.58),rgba(28,18,14,.72) 55%,rgba(28,18,14,.86))}
+    background:linear-gradient(rgba(28,18,14,.30),rgba(28,18,14,.40) 55%,rgba(28,18,14,.55))}
   .order-hero .wrap{z-index:2}
   .order-hero .stamp{z-index:3}
   @media(prefers-reduced-motion:reduce){.hero-video{display:none}}
@@ -933,6 +934,7 @@
 <section class="order-hero" id="top">
   <video class="hero-video" id="heroVideo" autoplay muted loop playsinline preload="metadata"
          poster="images/hero-poster.jpg" aria-hidden="true" tabindex="-1">
+    <source src="images/hero.webm" type="video/webm">
     <source src="images/hero.mp4" type="video/mp4">
   </video>
   <span class="stamp stamp-1" style="top:18%;left:6%;transform:rotate(-9deg)">Fresh dough daily</span>
