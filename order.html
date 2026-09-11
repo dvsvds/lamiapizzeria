@@ -765,7 +765,7 @@
     <div class="hero-badge"><img src="images/logo-badge.png" alt="La Mia Pizzeria — Pizza, Pasta &amp; More"></div>
     <span class="eyebrow">New York style · Antwerpen</span>
     <h1>Order your New York slice</h1>
-    <p>Kies je favoriet, stel je pizza samen en rond je bestelling snel af.</p>
+    <p>Kies je favoriet uit het menu en rond je bestelling snel af.</p>
   </div>
 </section>
 
@@ -793,30 +793,10 @@
     <div class="section-head">
       <span class="kicker">Bestel online</span>
       <h2>Online bestellen</h2>
-      <p>Stel je pizza samen of kies uit het menu, personaliseer en reken af. Betalen kan bij afhaling/levering.</p>
+      <p>Kies uit het menu, personaliseer en reken af. Betalen kan bij afhaling/levering.</p>
     </div>
 
-    <!-- Pizza builder -->
-    <h3 class="ob-heading">🍕 Stel je eigen pizza samen</h3>
-    <div class="pb" id="pizzaBuilder">
-      <div class="pb-stage">
-        <div class="pizza" id="pzPizza">
-          <div class="pz-base"></div>
-          <div class="pz-layer pz-sauce"></div>
-          <div class="pz-layer pz-cheese"></div>
-          <div class="pz-layer pz-oil"></div>
-          <div class="pz-toppings" id="pzToppings"></div>
-        </div>
-        <p class="pb-hint">Kies ingrediënten — ze verschijnen live op je pizza.</p>
-      </div>
-      <div class="pb-panel" id="pbPanel">
-        <div class="pb-summary">
-          <div class="pb-chosen" id="pbChosen">Nog geen ingrediënten gekozen.</div>
-          <div class="pb-total">Jouw pizza <span id="pbPrice">€ 8,00</span></div>
-          <button type="button" class="btn btn-primary pb-add" id="pbAdd">➕ Voeg toe aan mandje</button>
-        </div>
-      </div>
-    </div>
+    <!-- Pizza builder (voorlopig verborgen op verzoek – markup staat in git-historie om te herstellen) -->
 
     <!-- Categoriefilter -->
     <h3 class="ob-heading">🔥 Meest gekozen</h3>
@@ -1669,6 +1649,7 @@
        Pas ingrediënten/prijzen hieronder aan. Voegt een pizza toe aan hetzelfde mandje.
        =================================================================== */
     (function(){
+      if(!document.getElementById('pizzaBuilder')) return;   // pizzabouwer voorlopig verborgen
       // render: 'sauce'|'cheese'|'oil' = volledige laag ; 'scatter' = losse stukjes (bit=CSS-klasse, count=aantal)
       var INGR=[
         // Basis (volledige lagen)
@@ -1907,7 +1888,7 @@
     "beoordelingen samengebracht van google en uber eats.":"Ratings collected from Google and Uber Eats.",
     "lees alle reviews op google →":"Read all reviews on Google →","google-review":"Google review",
     "online bestellen":"Order online","🔥 meest gekozen":"🔥 Most popular","📋 menu":"📋 Menu","🥤 drankjes":"🥤 Drinks","🔥 promoties":"🔥 Deals",
-    "stel je pizza samen of kies uit het menu, personaliseer en reken af. betalen kan bij afhaling/levering.":"Build your own pizza or pick from the menu, customise and check out. Pay on pickup/delivery.",
+    "kies uit het menu, personaliseer en reken af. betalen kan bij afhaling/levering.":"Pick from the menu, customise and check out. Pay on pickup/delivery.",
     "kies ingrediënten — ze verschijnen live op je pizza.":"Pick ingredients — they appear live on your pizza.","jouw pizza":"Your pizza","nog geen ingrediënten gekozen.":"No ingredients selected yet.","➕ voeg toe aan mandje":"➕ Add to cart",
     "toevoegen":"Add","toevoegen ·":"Add ·","🛒 winkelmandje":"🛒 Cart","je mandje is leeg. voeg iets toe uit het menu.":"Your cart is empty. Add something from the menu.",
     "🛵 leveren":"🛵 Delivery","leveren":"Delivery","subtotaal":"Subtotal","leveringskosten":"Delivery fee","totaal":"Total","bestelling afronden →":"Checkout →",
@@ -1921,7 +1902,7 @@
     "populair":"Popular","aanrader":"Recommended","deal":"Deal",
     "met salade, komkommer, tomaat & saus":"With salad, cucumber, tomato & sauce","friet, kaas, salade & saus":"Fries, cheese, salad & sauce","vers gebakken":"Freshly baked",
     "krokante kipfilet":"Crispy chicken fillet","met dip":"With dip","pittig":"Spicy","gefrituurd":"Fried","vegetarisch":"Vegetarian","pikante worst":"Spicy sausage","kruidige soep":"Spicy soup","klassieker":"Classic","mexicaans":"Mexican","pikant of bbq":"Spicy or BBQ","diverse smaken":"Various flavours","romig":"Creamy","rijk aan chocolade":"Rich in chocolate","warme chocoladebrownie":"Warm chocolate brownie","huisgemaakt met mascarpone":"Homemade with mascarpone","frisdrank":"Soft drink","plat":"Still","sprankelend":"Sparkling",
-    "3 pizza’s + lookbrood + 1,5l drank":"3 pizzas + garlic bread + 1.5L drink","2 large pizza’s + lookbrood + 1,5l":"2 large pizzas + garlic bread + 1.5L","3 large pizza’s + mozzarella sticks + 1,5l":"3 large pizzas + mozzarella sticks + 1.5L","1 large pizza + mozzarella sticks + drankje":"1 large pizza + mozzarella sticks + drink","hoe wil je bestellen?":"How would you like to order?","bestellen als gast":"Order as guest","account aanmaken":"Create account","snel afrekenen zonder account.":"Fast checkout without an account.","handig voor de volgende keer.":"Handy for next time.","geen registratie nodig":"No registration needed","enkel je contactgegevens":"Only your contact details","meteen klaar":"Ready right away","sneller bestellen volgende keer":"Order faster next time","vorige bestellingen bekijken":"View past orders","favoriete pizza's bewaren":"Save favourite pizzas","adresgegevens opslaan":"Save address details","verder als gast →":"Continue as guest →","je bent niet verplicht een account te maken.":"You are not required to create an account.","naam":"Name","telefoon":"Phone","wachtwoord":"Password","account aanmaken & verder →":"Create account & continue →","← terug naar keuze":"← Back to choice","order your new york slice":"Order your New York slice","kies je pizza's":"Choose your pizzas","kies je drank":"Choose your drink","inclusief: lookbrood":"Included: Garlic bread","inclusief: mozzarella sticks":"Included: Mozzarella sticks","kies je favoriet, stel je pizza samen en rond je bestelling snel af.":"Pick your favourite, build your pizza and check out fast.","bestellen":"Order online",
+    "3 pizza’s + lookbrood + 1,5l drank":"3 pizzas + garlic bread + 1.5L drink","2 large pizza’s + lookbrood + 1,5l":"2 large pizzas + garlic bread + 1.5L","3 large pizza’s + mozzarella sticks + 1,5l":"3 large pizzas + mozzarella sticks + 1.5L","1 large pizza + mozzarella sticks + drankje":"1 large pizza + mozzarella sticks + drink","hoe wil je bestellen?":"How would you like to order?","bestellen als gast":"Order as guest","account aanmaken":"Create account","snel afrekenen zonder account.":"Fast checkout without an account.","handig voor de volgende keer.":"Handy for next time.","geen registratie nodig":"No registration needed","enkel je contactgegevens":"Only your contact details","meteen klaar":"Ready right away","sneller bestellen volgende keer":"Order faster next time","vorige bestellingen bekijken":"View past orders","favoriete pizza's bewaren":"Save favourite pizzas","adresgegevens opslaan":"Save address details","verder als gast →":"Continue as guest →","je bent niet verplicht een account te maken.":"You are not required to create an account.","naam":"Name","telefoon":"Phone","wachtwoord":"Password","account aanmaken & verder →":"Create account & continue →","← terug naar keuze":"← Back to choice","order your new york slice":"Order your New York slice","kies je pizza's":"Choose your pizzas","kies je drank":"Choose your drink","inclusief: lookbrood":"Included: Garlic bread","inclusief: mozzarella sticks":"Included: Mozzarella sticks","kies je favoriet uit het menu en rond je bestelling snel af.":"Pick your favourite from the menu and check out fast.","bestellen":"Order online",
     // visit
     "kom langs":"Visit us","bezoek & openingsuren":"Visit & opening hours",
     "je vindt ons in de abdijstraat in antwerpen-zuid (2020).":"Find us on Abdijstraat in Antwerp-South (2020).",
