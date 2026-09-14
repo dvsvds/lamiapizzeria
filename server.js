@@ -21,6 +21,7 @@
 'use strict';
 
 var http = require('node:http');
+var https = require('node:https');
 var fs = require('node:fs');
 var path = require('node:path');
 var crypto = require('node:crypto');
@@ -35,6 +36,7 @@ var ADMIN_PIN = String(process.env.ADMIN_PIN || '1234');
 var SESSION_HOURS = 12;
 var DELIVERY_FEE = parseFloat(process.env.DELIVERY_FEE || '0.00'); // leveringskosten (vervangen door 30% korting bij levering)
 var MIN_ORDER = parseFloat(process.env.MIN_ORDER || '20.00');      // minimum bestelbedrag (levering)
+var MOLLIE_API_KEY = String(process.env.MOLLIE_API_KEY || '');    // online betalen (Mollie); leeg = uit
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -127,6 +129,9 @@ function imgForCat(cat) { return CAT_IMG[cat] || 'pizza-card'; }
   if (!has('orders', 'vat')) db.exec('ALTER TABLE orders ADD COLUMN vat TEXT');
   if (!has('products', 'meta')) db.exec('ALTER TABLE products ADD COLUMN meta TEXT');
   if (!has('products', 'color')) db.exec('ALTER TABLE products ADD COLUMN color TEXT');
+  // online betaling (Mollie): betaalstatus + Mollie-betaal-id
+  if (!has('orders', 'pay_status')) db.exec("ALTER TABLE orders ADD COLUMN pay_status TEXT DEFAULT 'later'");
+  if (!has('orders', 'mollie_id')) db.exec('ALTER TABLE orders ADD COLUMN mollie_id TEXT');
 })();
 // optionele hex-kleur, of null als er geen ingesteld is
 function optColor(c) { return (typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c)) ? c : null; }
@@ -322,6 +327,48 @@ function readBody(req) {
   });
 }
 
+// ruwe body (voor de Mollie-webhook, die x-www-form-urlencoded stuurt: "id=tr_xxx")
+function readRaw(req) {
+  return new Promise(function (resolve) {
+    var chunks = [], size = 0;
+    req.on('data', function (c) { size += c.length; if (size < 1e5) chunks.push(c); });
+    req.on('end', function () { resolve(Buffer.concat(chunks).toString()); });
+    req.on('error', function () { resolve(''); });
+  });
+}
+// absolute basis-URL van de site (voor Mollie redirect/webhook), uit de request-headers
+function baseUrl(req) {
+  var proto = (req.headers['x-forwarded-proto'] || 'http').split(',')[0].trim();
+  var host = (req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
+  return proto + '://' + host;
+}
+// Mollie REST-API aanroepen via ingebouwde https (geen externe library nodig)
+function mollie(method, apiPath, body) {
+  return new Promise(function (resolve, reject) {
+    var data = body ? JSON.stringify(body) : null;
+    var r = https.request({
+      hostname: 'api.mollie.com', path: '/v2' + apiPath, method: method,
+      headers: {
+        'Authorization': 'Bearer ' + MOLLIE_API_KEY,
+        'Content-Type': 'application/json',
+        'Content-Length': data ? Buffer.byteLength(data) : 0
+      }, timeout: 15000
+    }, function (resp) {
+      var s = '';
+      resp.on('data', function (c) { s += c; });
+      resp.on('end', function () {
+        var j = {}; try { j = s ? JSON.parse(s) : {}; } catch (e) {}
+        if (resp.statusCode >= 200 && resp.statusCode < 300) resolve(j);
+        else reject(new Error('Mollie ' + resp.statusCode + ': ' + (j.detail || s).toString().slice(0, 200)));
+      });
+    });
+    r.on('error', reject);
+    r.on('timeout', function () { r.destroy(new Error('Mollie timeout')); });
+    if (data) r.write(data);
+    r.end();
+  });
+}
+
 function parseQuery(u) {
   var out = {}, i = u.indexOf('?');
   if (i < 0) return out;
@@ -446,7 +493,7 @@ async function handleApi(req, res, urlPath) {
   if (seg[0] === 'menu' && method === 'GET') {
     var cats = allCategories();
     var prods = allProducts().filter(function (p) { return p.available; });
-    return sendJson(res, 200, { categories: cats, products: prods, config: { deliveryFee: DELIVERY_FEE, minOrder: MIN_ORDER, open: isOpenNow() } });
+    return sendJson(res, 200, { categories: cats, products: prods, config: { deliveryFee: DELIVERY_FEE, minOrder: MIN_ORDER, open: isOpenNow(), online: !!MOLLIE_API_KEY } });
   }
 
   /* ---------- publiek: bestelling plaatsen (webshop) ---------- */
@@ -518,21 +565,79 @@ async function handleApi(req, res, urlPath) {
     var now = new Date().toISOString();
     var providedNo = (source === 'pos' && ob.no) ? String(ob.no).slice(0, 20) : null;
     var payVal = (source === 'pos' && ob.pay) ? JSON.stringify(ob.pay) : null;
+    // online betalen via Mollie? enkel de webshop, en enkel als Mollie is ingesteld
+    var wantsOnline = (source === 'web' && String(ob.pay_method || '') === 'online' && !!MOLLIE_API_KEY);
+    var payStatus = wantsOnline ? 'open' : 'later';  // 'open' = wacht op online betaling → nog niet naar de keuken
     var out = db.prepare(
-      'INSERT INTO orders (no,created_at,type,tbl,cust_name,cust_phone,cust_email,cust_address,items,subtotal,discount,delivery,total,pay,vat,note,time_wanted,status,source) ' +
-      'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+      'INSERT INTO orders (no,created_at,type,tbl,cust_name,cust_phone,cust_email,cust_address,items,subtotal,discount,delivery,total,pay,vat,note,time_wanted,status,source,pay_status) ' +
+      'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
     ).run(providedNo, now, type, (source === 'pos' ? String(ob.table || '').slice(0, 20) : ''),
       String(cust.name || '').slice(0, 120), String(cust.phone || '').slice(0, 40),
       String(cust.email || '').slice(0, 120), String(cust.address || '').slice(0, 240),
       JSON.stringify(items), subtotal, discount, delivery, total,
       payVal, JSON.stringify(vat),
-      String(ob.note || '').slice(0, 300), String(ob.time || '').slice(0, 40), status, source);
+      String(ob.note || '').slice(0, 300), String(ob.time || '').slice(0, 40), status, source, payStatus);
     var oid = Number(out.lastInsertRowid);
     var no = providedNo || ('LM-' + String(oid).padStart(4, '0'));
     if (!providedNo) db.prepare('UPDATE orders SET no=? WHERE id=?').run(no, oid);
-    broadcast('order', orderRow(oid)); // live naar het keukenscherm
     var eta = type === 'leveren' ? '35–50 min' : '20–30 min';
+
+    if (wantsOnline) {
+      // Mollie-betaling starten; de bestelling gaat pas naar keuken/kassa als de webhook 'betaald' meldt.
+      try {
+        var b = baseUrl(req);
+        var mp = await mollie('POST', '/payments', {
+          amount: { currency: 'EUR', value: total.toFixed(2) },
+          description: 'La Mia Pizzeria ' + no,
+          redirectUrl: b + '/order.html?betaald=' + oid,
+          webhookUrl: b + '/api/mollie/webhook',
+          metadata: { orderId: oid, no: no }
+        });
+        db.prepare('UPDATE orders SET mollie_id=? WHERE id=?').run(String(mp.id || ''), oid);
+        var checkout = mp._links && mp._links.checkout && mp._links.checkout.href;
+        if (!checkout) throw new Error('geen checkout-url');
+        return sendJson(res, 200, { no: no, id: oid, eta: eta, total: total, checkoutUrl: checkout });
+      } catch (e) {
+        db.prepare('DELETE FROM orders WHERE id=?').run(oid); // niks half laten staan
+        return sendJson(res, 502, { error: 'Online betaling kon niet gestart worden. Probeer opnieuw of kies betalen bij afhaling/levering.' });
+      }
+    }
+
+    broadcast('order', orderRow(oid)); // live naar het keukenscherm (betaald bij afhaling of aan de kassa)
     return sendJson(res, 200, { no: no, id: oid, eta: eta, subtotal: subtotal, discount: discount, delivery: delivery, total: total });
+  }
+
+  /* ---------- Mollie webhook: betaalstatus ophalen en de bestelling vrijgeven ---------- */
+  if (seg[0] === 'mollie' && seg[1] === 'webhook' && method === 'POST') {
+    if (!MOLLIE_API_KEY) return sendJson(res, 200, { ok: true });
+    var raw = await readRaw(req);
+    var mm = /(?:^|&)id=([^&]+)/.exec(raw || '');
+    var pid = mm ? decodeURIComponent(mm[1]) : '';
+    if (!pid) return sendJson(res, 200, { ok: true });
+    try {
+      var pm = await mollie('GET', '/payments/' + encodeURIComponent(pid));
+      var moid = pm.metadata && pm.metadata.orderId;
+      if (moid) {
+        var row = db.prepare('SELECT * FROM orders WHERE id=? AND mollie_id=?').get(Number(moid), pid);
+        if (row && row.pay_status !== 'paid') {
+          if (pm.status === 'paid') {
+            db.prepare("UPDATE orders SET pay_status='paid', pay=? WHERE id=?").run(JSON.stringify({ method: 'online', provider: 'mollie', id: pid }), Number(moid));
+            broadcast('order', orderRow(Number(moid))); // nu pas zichtbaar in keuken/kassa
+          } else if (pm.status === 'expired' || pm.status === 'canceled' || pm.status === 'failed') {
+            db.prepare('UPDATE orders SET pay_status=? WHERE id=?').run(pm.status, Number(moid));
+          }
+        }
+      }
+    } catch (e) {}
+    return sendJson(res, 200, { ok: true }); // Mollie verwacht altijd 200
+  }
+
+  /* ---------- publiek: betaalstatus van een webbestelling (na terugkeer van Mollie) ---------- */
+  if (seg[0] === 'order-status' && method === 'GET') {
+    var qs = parseQuery(urlPath);
+    var orow = db.prepare('SELECT no, pay_status, source FROM orders WHERE id=?').get(Number(qs.id));
+    if (!orow || orow.source !== 'web') return sendJson(res, 404, { error: 'niet gevonden' });
+    return sendJson(res, 200, { no: orow.no, pay_status: orow.pay_status || 'later' });
   }
 
   /* ---------- kassa-rol activeren (zonder PIN): online bestellingen bekijken ---------- */
@@ -678,8 +783,8 @@ async function handleApi(req, res, urlPath) {
       if (method === 'GET') {
         var activeOnly = urlPath.indexOf('active=1') >= 0;
         var sql = activeOnly
-          ? "SELECT * FROM orders WHERE status != 'afgehaald' ORDER BY id ASC LIMIT 200"
-          : 'SELECT * FROM orders ORDER BY id DESC LIMIT 200';
+          ? "SELECT * FROM orders WHERE status != 'afgehaald' AND (pay_status IS NULL OR pay_status != 'open') ORDER BY id ASC LIMIT 200"
+          : "SELECT * FROM orders WHERE (pay_status IS NULL OR pay_status != 'open') ORDER BY id DESC LIMIT 200";
         var rows = db.prepare(sql).all().map(function (o) {
           o.items = o.items ? JSON.parse(o.items) : [];
           o.pay = o.pay ? JSON.parse(o.pay) : null;
@@ -708,6 +813,7 @@ async function handleApi(req, res, urlPath) {
         byCat: {}, vat: {}
       };
       rows.forEach(function (o) {
+        if (o.pay_status === 'open' || o.pay_status === 'expired' || o.pay_status === 'canceled' || o.pay_status === 'failed') return; // niet-betaalde online bestellingen tellen niet mee
         rep.count++; rep.revenue += o.total || 0; rep.discount += o.discount || 0; rep.delivery += o.delivery || 0;
         rep.bySource[o.source] = (rep.bySource[o.source] || 0) + (o.total || 0);
         rep.byType[o.type] = (rep.byType[o.type] || 0) + (o.total || 0);
@@ -738,6 +844,7 @@ async function handleApi(req, res, urlPath) {
       var erows = db.prepare('SELECT * FROM orders WHERE created_at >= ? AND created_at < ? ORDER BY id').all(eq.from || '0000', eq.to || '9999');
       var out = ['nummer;datum;bron;type;tafel;klant;subtotaal;korting;levering;totaal;btw6;btw12;btw21;betaalwijze'];
       erows.forEach(function (o) {
+        if (o.pay_status === 'open' || o.pay_status === 'expired' || o.pay_status === 'canceled' || o.pay_status === 'failed') return; // niet-betaalde online bestellingen niet exporteren
         var v = o.vat ? JSON.parse(o.vat) : {}, pay = o.pay ? JSON.parse(o.pay) : null;
         out.push([o.no, o.created_at, o.source, o.type, o.tbl || '', o.cust_name || '',
           o.subtotal || 0, o.discount || 0, o.delivery || 0, o.total || 0,
