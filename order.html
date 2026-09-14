@@ -903,7 +903,7 @@
       <label class="co-f" id="coTimeField" style="display:none"><span>Gewenst uur</span><input name="uur" placeholder="bv. 19:30"></label>
       <div class="co-pay">
         <label class="co-radio"><input type="radio" name="pay" value="ter plaatse" checked> <span>Betalen bij afhaling / levering</span></label>
-        <label class="co-radio"><input type="radio" name="pay" value="online"> <span>Online betalen <small>(binnenkort)</small></span></label>
+        <label class="co-radio" id="payOnlineRow" style="display:none"><input type="radio" name="pay" value="online" id="payOnline"> <span>Online betalen <small>(Bancontact, kaart…)</small></span></label>
       </div>
       <div class="co-review" id="coReview"></div>
       <button type="submit" class="btn btn-primary co-submit">Bestelling plaatsen →</button>
@@ -1326,7 +1326,8 @@
         .then(function(j){
           if(!j||!j.products||!j.products.length) return;
           // leveringskosten & minimum uit de serverconfig (blijft in sync met de kassa)
-          if(j.config){ if(typeof j.config.deliveryFee==='number') DELIVERY_FEE=j.config.deliveryFee; if(typeof j.config.minOrder==='number') MIN_ORDER=j.config.minOrder; }
+          if(j.config){ if(typeof j.config.deliveryFee==='number') DELIVERY_FEE=j.config.deliveryFee; if(typeof j.config.minOrder==='number') MIN_ORDER=j.config.minOrder;
+            if(j.config.online){ var por=$('#payOnlineRow'); if(por) por.style.display=''; } }
           var mapped=j.products.map(function(p){
             return {id:p.id, c:p.cat, t:p.type||'simple', name:p.name, desc:p.descr||'',
                     sz:p.sizes||null, price:p.price, img:p.img||'pizza-card', tag:p.tag||'',
@@ -1617,8 +1618,10 @@
       var addr=[ f.adres?f.adres.value.trim():'', f.postcode?f.postcode.value.trim():'', f.gemeente?f.gemeente.value.trim():'' ]
                  .filter(Boolean).join(', ');
       var timeField=$('#coTimeField');
+      var payChoice=(f.pay && f.pay.value)||'ter plaatse';
       var payload={
         type: mode,
+        pay_method: payChoice==='online' ? 'online' : 'later',
         customer:{ name:f.naam?f.naam.value.trim():'', phone:f.tel?f.tel.value.trim():'',
                    email:f.email?f.email.value.trim():'', address:addr },
         items: cart.map(function(l){ return {name:l.name, opts:l.opts, note:l.note, unit:effUnit(l), qty:l.qty, cat:l.cat}; }),
@@ -1640,6 +1643,7 @@
       fetch('api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
         .then(function(r){ return r.text().then(function(t){ var j={}; try{ j=t?JSON.parse(t):{}; }catch(e){} return {ok:r.ok,j:j}; }); })
         .then(function(res){ if(btn)btn.disabled=false;
+          if(res.ok && res.j && res.j.checkoutUrl){ window.location.href=res.j.checkoutUrl; return; } // online betalen → naar Mollie
           if(res.ok && res.j && res.j.no){ showConfirm(res.j.no, res.j.eta||localEta); }
           else { orderError((res.j&&res.j.error)||'Bestelling kon niet geplaatst worden. Probeer opnieuw.'); }
         })
@@ -1650,6 +1654,27 @@
     var confOv=$('#confOv');
     $('#confClose').addEventListener('click',function(){closeOv(confOv);});
     var confWaBtn=$('#confWa'); if(confWaBtn) confWaBtn.addEventListener('click',function(){ if(lastWaUrl) window.open(lastWaUrl,'_blank'); });
+
+    // Terugkeer van Mollie: ?betaald=<id> → betaalstatus tonen
+    (function(){
+      var m=/[?&]betaald=(\d+)/.exec(location.search); if(!m) return;
+      fetch('api/order-status?id='+encodeURIComponent(m[1]))
+        .then(function(r){ return r.ok?r.json():null; })
+        .then(function(j){
+          if(j && j.pay_status==='paid'){
+            $('#confNum').textContent=j.no||'';
+            $('#confEta').innerHTML='<b>Betaald ✓</b> — je bestelling is bevestigd en wordt klaargemaakt.';
+            $('#confSum').innerHTML='';
+            confOv.classList.add('open'); confOv.setAttribute('aria-hidden','false');
+            try{ cart=[]; renderCart(); }catch(e){}
+          } else if(j && j.pay_status==='open'){
+            alert('We hebben je betaling nog niet bevestigd. Is het bedrag afgeschreven, dan komt je bestelling zo binnen.');
+          } else {
+            alert('De betaling is niet voltooid, dus je bestelling is niet geplaatst. Je kan gerust opnieuw bestellen.');
+          }
+          if(history.replaceState) history.replaceState({},'',location.pathname);
+        }).catch(function(){});
+    })();
 
     function closeOv(o){o.classList.remove('open');o.setAttribute('aria-hidden','true');}
     document.addEventListener('keydown',function(e){if(e.key==='Escape'){[ov,authOv,acctOv,coOv,confOv].forEach(function(o){if(o)closeOv(o);});}});
