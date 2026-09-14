@@ -1263,13 +1263,36 @@
     function addWebOrder(o,isNew){
       if(!o||o.source!=='web'||o.status!=='nieuw') return;
       var fresh=!webOrders[o.id]; webOrders[o.id]=o;
-      if(isNew&&fresh){ toast('🌐 Nieuwe online bestelling '+(o.no||'')); beepPos(); }
+      if(isNew&&fresh){ toast('🌐 Nieuwe online bestelling '+(o.no||'')); startAlarm(); }
       renderOnline();
     }
-    function removeWebOrder(id){ if(webOrders[id]){ delete webOrders[id]; renderOnline(); } }
+    function removeWebOrder(id){ if(webOrders[id]){ delete webOrders[id]; renderOnline(); if(!Object.keys(webOrders).length) stopAlarm(); } }
 
     var pactx;
-    function beepPos(){ try{ pactx=pactx||new (window.AudioContext||window.webkitAudioContext)(); if(pactx.state==='suspended') pactx.resume(); var o=pactx.createOscillator(),g=pactx.createGain(); o.connect(g);g.connect(pactx.destination);o.type='sine';o.frequency.value=760;g.gain.setValueAtTime(0.0001,pactx.currentTime);g.gain.exponentialRampToValueAtTime(0.1,pactx.currentTime+0.02);g.gain.exponentialRampToValueAtTime(0.0001,pactx.currentTime+0.3);o.start();o.stop(pactx.currentTime+0.31);}catch(e){} }
+    function beepPos(){
+      try{
+        pactx=pactx||new (window.AudioContext||window.webkitAudioContext)();
+        if(pactx.state==='suspended') pactx.resume();
+        var t0=pactx.currentTime;
+        // luide, opvallende reeks piepjes (± 1,8s) zodat een online bestelling niet gemist wordt
+        var seq=[988,740,988,740,988,740,988];
+        seq.forEach(function(freq,i){
+          var t=t0+i*0.26;
+          var o=pactx.createOscillator(), g=pactx.createGain();
+          o.connect(g); g.connect(pactx.destination);
+          o.type='square';                 // scherper en luider dan een sinus
+          o.frequency.value=freq;
+          g.gain.setValueAtTime(0.0001,t);
+          g.gain.exponentialRampToValueAtTime(0.4,t+0.02);   // hoger volume
+          g.gain.exponentialRampToValueAtTime(0.0001,t+0.2);
+          o.start(t); o.stop(t+0.22);
+        });
+      }catch(e){}
+    }
+    // blijf piepen tot het personeel reageert (online-paneel openen, laden of afvinken)
+    var alarmTimer=null;
+    function startAlarm(){ beepPos(); if(alarmTimer) return; alarmTimer=setInterval(beepPos, 2400); }
+    function stopAlarm(){ if(alarmTimer){ clearInterval(alarmTimer); alarmTimer=null; } }
 
     function loadInitial(){
       return fetch('api/admin/orders?active=1',{credentials:'same-origin'}).then(function(r){
@@ -1295,6 +1318,7 @@
     }
 
     $('#btnOnline').onclick=function(){
+      stopAlarm(); // personeel heeft gereageerd → alarm stopt
       if(onlineAuthed){ openOv('#ovOnline'); return; }
       activate().then(function(ok){ if(ok){ openOv('#ovOnline'); } else { toast('Geen verbinding'); } });
     };
@@ -1315,6 +1339,7 @@
     }
     $('#onlineList').addEventListener('click',function(e){
       var lo=e.target.closest('[data-load]'), ak=e.target.closest('[data-ack]');
+      if(lo||ak) stopAlarm(); // reactie op de bestelling → alarm stopt
       if(lo) loadIntoTicket(+lo.getAttribute('data-load'));
       else if(ak) ackOrder(+ak.getAttribute('data-ack'));
     });
