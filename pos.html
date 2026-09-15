@@ -1293,6 +1293,26 @@
     function startAlarm(){ beepPos(); if(alarmTimer) return; alarmTimer=setInterval(beepPos, 2400); }
     function stopAlarm(){ if(alarmTimer){ clearInterval(alarmTimer); alarmTimer=null; } }
 
+    // Browsers blokkeren geluid tot er één keer op de pagina geklikt/getikt is.
+    // Daarom ontgrendelen we de audio bij de allereerste aanraking van het kassascherm,
+    // anders kan het alarm niet spelen wanneer een online bestelling binnenkomt.
+    var audioUnlocked=false;
+    function primeAudio(){
+      try{
+        pactx=pactx||new (window.AudioContext||window.webkitAudioContext)();
+        if(pactx.state==='suspended') pactx.resume();
+        if(!audioUnlocked){
+          var o=pactx.createOscillator(), g=pactx.createGain();
+          g.gain.value=0.00001; o.connect(g); g.connect(pactx.destination);
+          o.start(); o.stop(pactx.currentTime+0.02);   // onhoorbare tik die de audio ontgrendelt
+          audioUnlocked=true;
+        }
+      }catch(e){}
+    }
+    ['pointerdown','touchstart','keydown','click'].forEach(function(ev){
+      window.addEventListener(ev, primeAudio, {passive:true});
+    });
+
     function loadInitial(){
       return fetch('api/admin/orders?active=1',{credentials:'same-origin'}).then(function(r){
         if(r.status===401) return null; return r.json();
