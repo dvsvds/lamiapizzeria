@@ -529,7 +529,7 @@
      ============================================================= */
   var LS={cart:'lamia_pos_cart',parked:'lamia_pos_parked',sales:'lamia_pos_sales',
           seq:'lamia_pos_seq',theme:'lamia_pos_theme',closed:'lamia_pos_closed'};
-  var state={ lines:[], type:'afhalen', table:'', discount:{pct:0,eur:0}, cust:{name:'',phone:'',address:''}, prepriced:false };
+  var state={ lines:[], type:'afhalen', table:'', discount:{pct:0,eur:0}, cust:{name:'',phone:'',address:''}, prepriced:false, onlinePaid:false };
   var parked=[], sales=[], seq={date:'',n:0};
 
   function today(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -540,7 +540,7 @@
 
   function initState(){
     var c=load(LS.cart,null);
-    if(c&&c.lines){ state=c; if(!state.discount) state.discount={pct:0,eur:0}; if(!state.cust) state.cust={name:'',phone:'',address:''}; if(typeof state.prepriced!=='boolean') state.prepriced=false; }
+    if(c&&c.lines){ state=c; if(!state.discount) state.discount={pct:0,eur:0}; if(!state.cust) state.cust={name:'',phone:'',address:''}; if(typeof state.prepriced!=='boolean') state.prepriced=false; if(typeof state.onlinePaid!=='boolean') state.onlinePaid=false; }
     parked=load(LS.parked,[]);
     sales=load(LS.sales,[]);
     seq=load(LS.seq,{date:'',n:0});
@@ -691,7 +691,7 @@
     state.lines.push({key:key,pid:p.id,cat:p.c,name:p.name,opts:opts,note:note,unit:unit,qty:qty});
     renderTicket(); saveCart();
   }
-  function clearIfEmpty(){ if(!state.lines.length){ state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; } }
+  function clearIfEmpty(){ if(!state.lines.length){ state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; state.onlinePaid=false; } }
   function setQty(i,delta){
     var l=state.lines[i]; if(!l) return;
     l.qty+=delta;
@@ -805,7 +805,7 @@
   });
   $('#btnClear').onclick=function(){
     if(!state.lines.length) return;
-    if(confirm('Huidige bon wissen?')){ state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; renderTicket(); saveCart(); }
+    if(confirm('Huidige bon wissen?')){ state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; state.onlinePaid=false; renderTicket(); saveCart(); }
   };
 
   // Korting
@@ -834,7 +834,7 @@
     if(label===null) return;
     parked.push({id:Date.now(),label:label||def,ts:new Date().toISOString(),state:JSON.parse(JSON.stringify(state))});
     save(LS.parked,parked);
-    state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; renderTicket(); saveCart();
+    state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; state.onlinePaid=false; renderTicket(); saveCart();
     toast('Bon geparkeerd');
   };
   function openParked(){
@@ -856,7 +856,7 @@
       var id=+lo.getAttribute('data-load'), idx=parked.findIndex(function(x){return x.id===id;});
       if(idx<0) return;
       if(state.lines.length && !confirm('Huidige bon vervangen door de geparkeerde bon?')) return;
-      state=parked[idx].state; if(!state.discount) state.discount={pct:0,eur:0}; if(!state.cust) state.cust={name:'',phone:'',address:''}; if(typeof state.prepriced!=='boolean') state.prepriced=false;
+      state=parked[idx].state; if(!state.discount) state.discount={pct:0,eur:0}; if(!state.cust) state.cust={name:'',phone:'',address:''}; if(typeof state.prepriced!=='boolean') state.prepriced=false; if(typeof state.onlinePaid!=='boolean') state.onlinePaid=false;
       parked.splice(idx,1); save(LS.parked,parked);
       $('#otype').querySelectorAll('button').forEach(function(x){x.classList.toggle('active',x.getAttribute('data-type')===state.type);});
       renderTicket(); saveCart(); closeOv('#ovPark'); toast('Bon geopend');
@@ -873,6 +873,13 @@
   var payMethod='cash', tender=0, payTotals=null;
   function openPay(){
     if(!state.lines.length) return;
+    if(state.onlinePaid){
+      // Al online betaald via de website (Mollie) — niet opnieuw laten afrekenen,
+      // meteen de bon afsluiten en afdrukken met de vermelding "ONLINE BETAALD".
+      payTotals=totals();
+      finalizeSale({method:'online',cash:0,card:0,tendered:payTotals.total,change:0});
+      return;
+    }
     payTotals=totals(); payMethod='cash'; tender=0; tenderStr='';  // reset ingevoerde cijfers van vorige bon
     $('#payTotal').textContent=euro(payTotals.total);
     $('#pmTabs').querySelectorAll('button').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-m')==='cash'); });
@@ -952,11 +959,13 @@
       sub:t.sub, disc:t.disc, delivDisc:t.delivDisc, manualDisc:t.manualDisc, discount:JSON.parse(JSON.stringify(state.discount)), delivery:t.delivery, total:t.total, vat:t.vat, pay:pay
     };
     sales.push(sale); save(LS.sales,sales);
-    postSaleToServer(sale, no);
+    // Online betaalde bestellingen staan al in de database (via de website) en tellen
+    // daar al mee voor de omzet — niet opnieuw doorsturen, anders wordt alles dubbel geteld.
+    if(sale.pay.method!=='online') postSaleToServer(sale, no);
     buildReceipt(sale);
     closeOv('#ovPay');
     // reset bon
-    state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; renderTicket(); saveCart();
+    state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; state.onlinePaid=false; renderTicket(); saveCart();
     toast('Bon #'+no+' afgerekend');
     setTimeout(function(){ window.print(); }, 120);
   }
@@ -1018,7 +1027,10 @@
       if(sale.vat[r]>0.0001) h+='<tr><td>BTW '+(r*100)+'%</td><td class="rt">'+euro(sale.vat[r])+'</td></tr>';
     });
     h+='</table><hr><table>';
-    if(sale.pay.method==='cash'){
+    if(sale.pay.method==='online'){
+      h+='<tr><td class="big">✔ ONLINE BETAALD</td><td class="rt big">'+euro(sale.total)+'</td></tr>';
+      h+='<tr><td colspan="2">Reeds betaald via de website</td></tr>';
+    } else if(sale.pay.method==='cash'){
       h+='<tr><td>Contant</td><td class="rt">'+euro(sale.pay.tendered)+'</td></tr>';
       h+='<tr><td>Wisselgeld</td><td class="rt">'+euro(sale.pay.change)+'</td></tr>';
     } else if(sale.pay.method==='card'){
@@ -1083,7 +1095,8 @@
       h+='<table class="rep-tbl"><thead><tr><th>Bon</th><th>Tijd</th><th>Type</th><th class="rt">Bedrag</th><th></th></tr></thead><tbody>';
       sales.forEach(function(s,i){
         var t=new Date(s.ts), tm=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
-        var pm=(s.pay&&s.pay.method)==='card'?'💳':((s.pay&&s.pay.method)==='split'?'🔀':'💵');
+        var pmm=(s.pay&&s.pay.method);
+        var pm=pmm==='online'?'🌐':(pmm==='card'?'💳':(pmm==='split'?'🔀':'💵'));
         var who=(s.cust&&s.cust.name)?(' · '+esc(s.cust.name)):(s.table?(' · T'+esc(s.table)):'');
         h+='<tr><td>#'+s.no+'</td><td>'+tm+'</td><td>'+(TYPEIC[s.type]||'')+' '+pm+who+'</td><td class="rt">'+euro(s.total)+'</td>'+
            '<td class="rt"><button class="abtn" style="padding:.2rem .5rem;font-size:.72rem" data-reprint="'+i+'">🖨</button></td></tr>';
@@ -1353,6 +1366,7 @@
       state.type=o.type||'afhalen'; state.discount={pct:0,eur:0}; state.table='';
       state.cust={name:o.cust_name||'',phone:o.cust_phone||'',address:o.cust_address||''};
       state.prepriced=true; // website heeft de leveringsprijs (toeslag) al verrekend
+      state.onlinePaid=(o.pay_status==='paid'); // online bestelling die al via Mollie betaald is
       $('#otype').querySelectorAll('button').forEach(function(x){x.classList.toggle('active',x.getAttribute('data-type')===state.type);});
       renderTicket(); saveCart();
       ackOrder(id); closeOv('#ovOnline'); toast('Online bestelling geladen — reken af');
