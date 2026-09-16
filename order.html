@@ -581,8 +581,12 @@
     display:inline-block;padding:.1rem .5rem .02rem;border-radius:5px;font-size:.95rem}
 
   /* ---- Winkelmandje ---- */
-  .cart{position:sticky;top:88px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:1.4rem;box-shadow:var(--sh-sm);align-self:start}
+  .cart{position:sticky;top:88px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:1.4rem;box-shadow:var(--sh-sm);align-self:start;
+    display:flex;flex-direction:column;max-height:calc(100vh - 108px)}
   .cart>h3{color:var(--coral);font-size:1.35rem;margin-bottom:1rem}
+  /* De productenlijst scrollt binnenin; titel, totaal en afreken-knop blijven altijd in beeld */
+  #cartLines{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;margin-right:-.5rem;padding-right:.5rem}
+  .cart>h3,.cart-mode,.cart-tot,.min-note,.cart-checkout{flex:0 0 auto}
   .cart-empty{color:var(--muted-2);font-size:.9rem;padding:.5rem 0 1rem}
   .cl{display:flex;gap:.7rem;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid var(--line)}
   .cl-name{font-weight:700;color:var(--cream);font-size:.9rem}
@@ -686,7 +690,7 @@
     .co-grid{grid-template-columns:1fr}
     /* Winkelmandje als bottom-sheet die van onderen omhoog schuift */
     .cart{position:fixed;left:0;right:0;bottom:0;top:auto;margin:0;z-index:185;
-      border-radius:20px 20px 0 0;max-height:86vh;overflow-y:auto;padding-top:1.8rem;
+      border-radius:20px 20px 0 0;max-height:86vh;overflow:hidden;padding-top:1.8rem;
       transform:translateY(106%);transition:transform .3s cubic-bezier(.4,0,.2,1);
       box-shadow:0 -16px 46px rgba(0,0,0,.55);-webkit-overflow-scrolling:touch}
     .cart.open{transform:translateY(0)}
