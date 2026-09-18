@@ -210,6 +210,21 @@
        '</tbody><tfoot><tr><td>Totaal BTW</td><td>'+euro(vatTotal)+'</td></tr></tfoot></table></div>';
     h+='</div>';
 
+    // per dag (enkel tonen als de periode meer dan één dag beslaat)
+    var days=r.byDay?Object.keys(r.byDay).sort():[];
+    if(days.length>1){
+      h+='<div class="panelbox"><h3>📅 Per dag</h3><div style="overflow-x:auto"><table><thead>'+
+         '<tr><th>Datum</th><th>Bons</th><th>Omzet</th><th>💵 Cash</th><th>💳 Kaart</th><th>🌐 Online</th></tr></thead><tbody>';
+      days.forEach(function(d){
+        var b=r.byDay[d];
+        var parts=d.split('-'); // YYYY-MM-DD → dd/mm
+        var lbl=parts.length===3?(parts[2]+'/'+parts[1]):d;
+        h+='<tr><td>'+lbl+'</td><td>'+b.count+'</td><td>'+euro(b.revenue)+'</td>'+
+           '<td>'+euro(b.cash)+'</td><td>'+euro(b.card)+'</td><td>'+euro(b.online||0)+'</td></tr>';
+      });
+      h+='</tbody></table></div></div>';
+    }
+
     // categorie
     var cats=Object.keys(r.byCat).sort(function(a,b){return r.byCat[b]-r.byCat[a];});
     if(cats.length){
