@@ -184,6 +184,7 @@
     // betaalmethode
     h+='<div class="panelbox"><h3>💳 Per betaalmethode</h3><table><tbody>'+
        row('💵 Cash', r.byPay.cash)+row('💳 Kaart', r.byPay.card)+
+       row('🌐 Online (website)', r.byPay.online||0)+
        row('⏳ Bij afhaling/levering', r.byPay.onbetaald)+
        '</tbody><tfoot><tr><td>Totaal</td><td>'+euro(r.revenue)+'</td></tr></tfoot></table></div>';
     // bron

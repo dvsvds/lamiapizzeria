@@ -1048,10 +1048,11 @@
      11. DAGRAPPORT (X / Z)
      ============================================================= */
   function reportData(){
-    var r={count:sales.length,total:0,cash:0,card:0,disc:0,delivery:0,vat:{},byCat:{},byType:{terplaatse:0,afhalen:0,leveren:0}};
+    var r={count:sales.length,total:0,cash:0,card:0,online:0,disc:0,delivery:0,vat:{},byCat:{},byType:{terplaatse:0,afhalen:0,leveren:0}};
     sales.forEach(function(s){
       r.total+=s.total; r.disc+=s.disc; r.delivery+=s.delivery;
       r.cash+=(s.pay.cash||0); r.card+=(s.pay.card||0);
+      if(s.pay.method==='online') r.online+=s.total; // online betaald via de website (Mollie)
       r.byType[s.type]=(r.byType[s.type]||0)+s.total;
       Object.keys(s.vat).forEach(function(rate){ r.vat[rate]=(r.vat[rate]||0)+s.vat[rate]; });
       s.lines.forEach(function(l){ r.byCat[l.cat]=(r.byCat[l.cat]||0)+l.total; });
@@ -1069,6 +1070,7 @@
        '<div class="rep-card"><div class="k">Aantal bons</div><div class="v">'+r.count+'</div></div>'+
        '<div class="rep-card"><div class="k">💵 Cash</div><div class="v">'+euro(r.cash)+'</div></div>'+
        '<div class="rep-card"><div class="k">💳 Kaart</div><div class="v">'+euro(r.card)+'</div></div>'+
+       (r.online>0?'<div class="rep-card"><div class="k">🌐 Online</div><div class="v">'+euro(r.online)+'</div></div>':'')+
        '</div>';
     h+='<table class="rep-tbl"><thead><tr><th>Type</th><th>Omzet</th></tr></thead><tbody>'+
        '<tr><td>🍽 Ter plaatse</td><td>'+euro(r.byType.terplaatse)+'</td></tr>'+
