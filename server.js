@@ -467,6 +467,13 @@ function orderRow(id) {
   return o;
 }
 
+// Kalenderdag (YYYY-MM-DD) in de Belgische tijdzone, voor het per-dag overzicht.
+function belgiumDate(iso) {
+  try {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso));
+  } catch (e) { return String(iso || '').slice(0, 10); }
+}
+
 /* ============================================================================
    API ROUTES
    ========================================================================== */
@@ -810,19 +817,26 @@ async function handleApi(req, res, urlPath) {
         byPay: { cash: 0, card: 0, online: 0, onbetaald: 0 },
         bySource: { web: 0, pos: 0 },
         byType: { afhalen: 0, leveren: 0, terplaatse: 0 },
-        byCat: {}, vat: {}
+        byCat: {}, vat: {}, byDay: {}
       };
       rows.forEach(function (o) {
         if (o.pay_status === 'open' || o.pay_status === 'expired' || o.pay_status === 'canceled' || o.pay_status === 'failed') return; // niet-betaalde online bestellingen tellen niet mee
         rep.count++; rep.revenue += o.total || 0; rep.discount += o.discount || 0; rep.delivery += o.delivery || 0;
         rep.bySource[o.source] = (rep.bySource[o.source] || 0) + (o.total || 0);
         rep.byType[o.type] = (rep.byType[o.type] || 0) + (o.total || 0);
+        // betaalwijze uitsplitsen (één keer berekenen, toepassen op totaal én per dag)
         var pay = o.pay ? JSON.parse(o.pay) : null;
-        if (!pay) rep.byPay.onbetaald += o.total || 0;
-        else if (pay.method === 'split') { rep.byPay.cash += pay.cash || 0; rep.byPay.card += pay.card || 0; }
-        else if (pay.method === 'card') rep.byPay.card += o.total || 0;
-        else if (pay.method === 'online') rep.byPay.online += o.total || 0; // online via de website (Mollie)
-        else rep.byPay.cash += o.total || 0;
+        var cAmt = 0, kAmt = 0, oAmt = 0, uAmt = 0;
+        if (!pay) uAmt = o.total || 0;
+        else if (pay.method === 'split') { cAmt = pay.cash || 0; kAmt = pay.card || 0; }
+        else if (pay.method === 'card') kAmt = o.total || 0;
+        else if (pay.method === 'online') oAmt = o.total || 0; // online via de website (Mollie)
+        else cAmt = o.total || 0;
+        rep.byPay.cash += cAmt; rep.byPay.card += kAmt; rep.byPay.online += oAmt; rep.byPay.onbetaald += uAmt;
+        // per dag
+        var day = belgiumDate(o.created_at);
+        var bd = rep.byDay[day] || (rep.byDay[day] = { revenue: 0, count: 0, cash: 0, card: 0, online: 0, onbetaald: 0 });
+        bd.revenue += o.total || 0; bd.count++; bd.cash += cAmt; bd.card += kAmt; bd.online += oAmt; bd.onbetaald += uAmt;
         var vat = o.vat ? JSON.parse(o.vat) : {};
         Object.keys(vat).forEach(function (r) { rep.vat[r] = (rep.vat[r] || 0) + vat[r]; });
         (o.items ? JSON.parse(o.items) : []).forEach(function (it) {
@@ -833,6 +847,9 @@ async function handleApi(req, res, urlPath) {
       rep.revenue = r2(rep.revenue); rep.discount = r2(rep.discount); rep.delivery = r2(rep.delivery);
       ['byPay', 'bySource', 'byType', 'byCat', 'vat'].forEach(function (g) {
         Object.keys(rep[g]).forEach(function (k) { rep[g][k] = r2(rep[g][k]); });
+      });
+      Object.keys(rep.byDay).forEach(function (day) {
+        Object.keys(rep.byDay[day]).forEach(function (k) { if (k !== 'count') rep.byDay[day][k] = r2(rep.byDay[day][k]); });
       });
       // labels voor categorieën
       var catLabels = {};
