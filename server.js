@@ -473,6 +473,16 @@ function belgiumDate(iso) {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso));
   } catch (e) { return String(iso || '').slice(0, 10); }
 }
+// Maandag (YYYY-MM-DD) van de week waarin een kalenderdag valt, voor het per-week overzicht.
+function weekMonday(ymd) {
+  try {
+    var p = String(ymd).split('-');
+    var d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]));
+    var dow = (d.getUTCDay() + 6) % 7; // 0 = maandag
+    d.setUTCDate(d.getUTCDate() - dow);
+    return d.toISOString().slice(0, 10);
+  } catch (e) { return String(ymd || ''); }
+}
 
 /* ============================================================================
    API ROUTES
@@ -691,9 +701,12 @@ async function handleApi(req, res, urlPath) {
   /* ---------- manager-sessie voor de rapporten (aparte PIN) ---------- */
   if (seg[0] === 'report-login' && method === 'POST') {
     var rlb = await readBody(req);
-    var rg = crypto.createHash('sha256').update(String(rlb.pin || '')).digest();
-    var rw = crypto.createHash('sha256').update(reportPin()).digest();
-    if (!crypto.timingSafeEqual(rg, rw)) return sendJson(res, 401, { error: 'Verkeerde PIN' });
+    var given = String(rlb.pin || '');
+    function pinEq(a, b) { return crypto.timingSafeEqual(crypto.createHash('sha256').update(a).digest(), crypto.createHash('sha256').update(b).digest()); }
+    var okPin = pinEq(given, reportPin());
+    var envPin = String(process.env.REPORT_PIN || ''); // hoofdsleutel via Railway (noodoplossing bij vergeten PIN)
+    if (!okPin && envPin) okPin = pinEq(given, envPin);
+    if (!okPin) return sendJson(res, 401, { error: 'Verkeerde PIN' });
     var mtok = sign(JSON.stringify({ role: 'mgr', exp: Date.now() + SESSION_HOURS * 3600e3 }));
     var msec = (req.headers['x-forwarded-proto'] === 'https') ? '; Secure' : '';
     return sendJson(res, 200, { authed: true }, { 'Set-Cookie': 'lamia_mgr=' + mtok + '; HttpOnly; SameSite=Lax; Path=/' + msec + '; Max-Age=' + (SESSION_HOURS * 3600) });
@@ -817,7 +830,7 @@ async function handleApi(req, res, urlPath) {
         byPay: { cash: 0, card: 0, online: 0, onbetaald: 0 },
         bySource: { web: 0, pos: 0 },
         byType: { afhalen: 0, leveren: 0, terplaatse: 0 },
-        byCat: {}, vat: {}, byDay: {}
+        byCat: {}, vat: {}, byDay: {}, byWeek: {}
       };
       rows.forEach(function (o) {
         if (o.pay_status === 'open' || o.pay_status === 'expired' || o.pay_status === 'canceled' || o.pay_status === 'failed') return; // niet-betaalde online bestellingen tellen niet mee
@@ -837,6 +850,10 @@ async function handleApi(req, res, urlPath) {
         var day = belgiumDate(o.created_at);
         var bd = rep.byDay[day] || (rep.byDay[day] = { revenue: 0, count: 0, cash: 0, card: 0, online: 0, onbetaald: 0 });
         bd.revenue += o.total || 0; bd.count++; bd.cash += cAmt; bd.card += kAmt; bd.online += oAmt; bd.onbetaald += uAmt;
+        // per week (op de maandag van die week)
+        var wk = weekMonday(day);
+        var bw = rep.byWeek[wk] || (rep.byWeek[wk] = { revenue: 0, count: 0, cash: 0, card: 0, online: 0, onbetaald: 0 });
+        bw.revenue += o.total || 0; bw.count++; bw.cash += cAmt; bw.card += kAmt; bw.online += oAmt; bw.onbetaald += uAmt;
         var vat = o.vat ? JSON.parse(o.vat) : {};
         Object.keys(vat).forEach(function (r) { rep.vat[r] = (rep.vat[r] || 0) + vat[r]; });
         (o.items ? JSON.parse(o.items) : []).forEach(function (it) {
@@ -850,6 +867,9 @@ async function handleApi(req, res, urlPath) {
       });
       Object.keys(rep.byDay).forEach(function (day) {
         Object.keys(rep.byDay[day]).forEach(function (k) { if (k !== 'count') rep.byDay[day][k] = r2(rep.byDay[day][k]); });
+      });
+      Object.keys(rep.byWeek).forEach(function (wk) {
+        Object.keys(rep.byWeek[wk]).forEach(function (k) { if (k !== 'count') rep.byWeek[wk][k] = r2(rep.byWeek[wk][k]); });
       });
       // labels voor categorieën
       var catLabels = {};

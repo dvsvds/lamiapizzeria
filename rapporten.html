@@ -210,6 +210,22 @@
        '</tbody><tfoot><tr><td>Totaal BTW</td><td>'+euro(vatTotal)+'</td></tr></tfoot></table></div>';
     h+='</div>';
 
+    // per week (enkel tonen als de periode meer dan één week beslaat)
+    var weeks=r.byWeek?Object.keys(r.byWeek).sort():[];
+    if(weeks.length>1){
+      h+='<div class="panelbox"><h3>📆 Per week</h3><div style="overflow-x:auto"><table><thead>'+
+         '<tr><th>Week</th><th>Bons</th><th>Omzet</th><th>💵 Cash</th><th>💳 Kaart</th><th>🌐 Online</th></tr></thead><tbody>';
+      weeks.forEach(function(w){
+        var b=r.byWeek[w];
+        var mo=new Date(w+'T00:00:00'), su=new Date(mo); su.setDate(su.getDate()+6);
+        var lbl=String(mo.getDate()).padStart(2,'0')+'/'+String(mo.getMonth()+1).padStart(2,'0')+' – '+
+                String(su.getDate()).padStart(2,'0')+'/'+String(su.getMonth()+1).padStart(2,'0');
+        h+='<tr><td>'+lbl+'</td><td>'+b.count+'</td><td>'+euro(b.revenue)+'</td>'+
+           '<td>'+euro(b.cash)+'</td><td>'+euro(b.card)+'</td><td>'+euro(b.online||0)+'</td></tr>';
+      });
+      h+='</tbody></table></div></div>';
+    }
+
     // per dag (enkel tonen als de periode meer dan één dag beslaat)
     var days=r.byDay?Object.keys(r.byDay).sort():[];
     if(days.length>1){
