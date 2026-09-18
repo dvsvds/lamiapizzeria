@@ -211,21 +211,23 @@
   @media print{
     body *{visibility:hidden}
     #receipt,#receipt *{visibility:visible}
-    #receipt{display:block;position:absolute;left:0;top:0;width:80mm;padding:4mm;color:#000;background:#fff;
-      font-family:'Courier New',monospace;font-size:15px;line-height:1.5;font-weight:700}
+    /* Vult de volledige breedte van de bonrol; de printer bepaalt zelf de papierbreedte
+       (size:auto) zodat Chrome de bon niet verkleint. Groter, dik lettertype. */
+    #receipt{display:block;position:absolute;left:0;top:0;width:100%;padding:2mm 3mm;color:#000;background:#fff;
+      font-family:'Courier New',monospace;font-size:18px;line-height:1.5;font-weight:700}
     #receipt .r-c{text-align:center}
     #receipt .r-b{font-weight:700}
-    #receipt .r-logo{display:block;margin:0 auto 4px;width:56mm;max-width:78%;height:auto;filter:grayscale(1) contrast(1.9) brightness(.72)}
-    #receipt h3{font-size:24px;font-family:'Courier New',monospace;letter-spacing:1px;margin:2px 0}
-    #receipt .r-sub{font-size:13px;font-weight:700}
-    #receipt hr{border:0;border-top:1px dashed #000;margin:6px 0}
+    #receipt .r-logo{display:block;margin:0 auto 5px;width:58%;max-width:60mm;height:auto;filter:grayscale(1) contrast(1.9) brightness(.72)}
+    #receipt h3{font-size:30px;font-family:'Courier New',monospace;letter-spacing:1px;margin:3px 0}
+    #receipt .r-sub{font-size:15px;font-weight:700}
+    #receipt hr{border:0;border-top:1px dashed #000;margin:7px 0}
     #receipt table{width:100%;border-collapse:collapse}
-    #receipt td{vertical-align:top;padding:1px 0}
+    #receipt td{vertical-align:top;padding:2px 0}
     #receipt .rt{text-align:right}
-    #receipt .big{font-size:20px;font-weight:800}
-    #receipt .r-deliv{border:1px solid #000;padding:4px 6px;margin:6px 0;font-size:15px}
-    #receipt .r-deliv b{font-size:16px}
-    @page{margin:0;size:80mm auto}
+    #receipt .big{font-size:26px;font-weight:800}
+    #receipt .r-deliv{border:2px solid #000;padding:5px 7px;margin:7px 0;font-size:17px}
+    #receipt .r-deliv b{font-size:18px}
+    @page{margin:0;size:auto}
   }
 
   @media (max-width:820px){
