@@ -906,12 +906,12 @@
       </div>
       <label class="co-f" id="coTimeField" style="display:none"><span>Gewenst uur</span><input name="uur" placeholder="bv. 19:30"></label>
       <div class="co-pay">
-        <label class="co-radio"><input type="radio" name="pay" value="ter plaatse" checked> <span>Betalen bij afhaling / levering</span></label>
+        <label class="co-radio" id="payCashRow"><input type="radio" name="pay" value="ter plaatse" checked> <span>Betalen bij afhaling / levering</span></label>
         <label class="co-radio" id="payOnlineRow" style="display:none"><input type="radio" name="pay" value="online" id="payOnline"> <span>Online betalen <small>(Bancontact, kaart…)</small></span></label>
       </div>
       <div class="co-review" id="coReview"></div>
       <button type="submit" class="btn btn-primary co-submit">Bestelling plaatsen →</button>
-      <p class="co-note">Demo — nog geen echte betaling. Klaar om te koppelen aan WhatsApp, e-mail of een betaalprovider.</p>
+      <p class="co-note">Je betaalt veilig online met Bancontact of kaart.</p>
     </form>
   </div>
 </div>
@@ -1331,7 +1331,12 @@
           if(!j||!j.products||!j.products.length) return;
           // leveringskosten & minimum uit de serverconfig (blijft in sync met de kassa)
           if(j.config){ if(typeof j.config.deliveryFee==='number') DELIVERY_FEE=j.config.deliveryFee; if(typeof j.config.minOrder==='number') MIN_ORDER=j.config.minOrder;
-            if(j.config.online){ var por=$('#payOnlineRow'); if(por) por.style.display=''; } }
+            if(j.config.online){
+              // Online betalen beschikbaar → op de website enkel met kaart/Bancontact (geen cash)
+              var por=$('#payOnlineRow'); if(por) por.style.display='';
+              var pon=$('#payOnline'); if(pon) pon.checked=true;      // online standaard aangevinkt
+              var cashRow=$('#payCashRow'); if(cashRow) cashRow.style.display='none'; // cash-optie verbergen
+            } }
           var mapped=j.products.map(function(p){
             return {id:p.id, c:p.cat, t:p.type||'simple', name:p.name, desc:p.descr||'',
                     sz:p.sizes||null, price:p.price, img:p.img||'pizza-card', tag:p.tag||'',
