@@ -807,7 +807,7 @@ async function handleApi(req, res, urlPath) {
       var rows = db.prepare('SELECT * FROM orders WHERE created_at >= ? AND created_at < ? ORDER BY id').all(from, to);
       var rep = {
         count: 0, revenue: 0, discount: 0, delivery: 0,
-        byPay: { cash: 0, card: 0, onbetaald: 0 },
+        byPay: { cash: 0, card: 0, online: 0, onbetaald: 0 },
         bySource: { web: 0, pos: 0 },
         byType: { afhalen: 0, leveren: 0, terplaatse: 0 },
         byCat: {}, vat: {}
@@ -821,6 +821,7 @@ async function handleApi(req, res, urlPath) {
         if (!pay) rep.byPay.onbetaald += o.total || 0;
         else if (pay.method === 'split') { rep.byPay.cash += pay.cash || 0; rep.byPay.card += pay.card || 0; }
         else if (pay.method === 'card') rep.byPay.card += o.total || 0;
+        else if (pay.method === 'online') rep.byPay.online += o.total || 0; // online via de website (Mollie)
         else rep.byPay.cash += o.total || 0;
         var vat = o.vat ? JSON.parse(o.vat) : {};
         Object.keys(vat).forEach(function (r) { rep.vat[r] = (rep.vat[r] || 0) + vat[r]; });
