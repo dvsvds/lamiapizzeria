@@ -409,7 +409,10 @@
   .promo-pop .pp-dot.on{background:var(--yellow)}
   .promo-pop .pp-btn{display:block;width:100%;text-align:center;background:var(--yellow);color:#1a1206;font-weight:800;text-transform:uppercase;letter-spacing:.03em;font-size:.86rem;padding:.72rem;border-radius:11px;border:0;cursor:pointer;text-decoration:none}
   .promo-pop .pp-btn:hover{background:#ffd83a}
-  .promo-pop .pp-list{margin:.1rem 0 1rem;max-height:42vh;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem;-webkit-overflow-scrolling:touch}
+  .promo-pop .pp-list{margin:.1rem 0 1rem;max-height:42vh;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem;-webkit-overflow-scrolling:touch;padding-right:.85rem;scrollbar-gutter:stable}
+  .promo-pop .pp-list::-webkit-scrollbar{width:8px}
+  .promo-pop .pp-list::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:6px}
+  .promo-pop .pp-list::-webkit-scrollbar-track{background:transparent}
   .promo-pop .pp-sub{font-family:'Anton',sans-serif;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-size:.75rem;margin:.3rem 0 .1rem}
   .promo-pop .pp-deal{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;border-bottom:1px solid var(--line);padding-bottom:.45rem}
   .promo-pop .pp-deal b{color:var(--cream);font-size:.88rem;display:block}
