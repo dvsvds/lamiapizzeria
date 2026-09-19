@@ -400,6 +400,12 @@ function serveStatic(req, res, urlPath) {
   try { rel = decodeURIComponent(urlPath.split('?')[0]); }
   catch (e) { res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Ongeldige URL'); }
   if (rel === '/' || rel === '') rel = '/index.html';
+  // nette URL's zonder .html:  /order → /order.html,  /pos → /pos.html, enz.
+  if (rel !== '/index.html' && !path.extname(rel)) {
+    var htmlRel = rel.replace(/\/+$/, '') + '.html';
+    var htmlFile = path.join(ROOT, path.normalize(htmlRel).replace(/^(\.\.[\/\\])+/, ''));
+    if (htmlFile.indexOf(ROOT) === 0 && fs.existsSync(htmlFile)) rel = htmlRel;
+  }
   var safe = path.normalize(rel).replace(/^(\.\.[\/\\])+/, '');
   var file = path.join(ROOT, safe);
   if (file.indexOf(ROOT) !== 0) { res.writeHead(403); return res.end('Verboden'); }
