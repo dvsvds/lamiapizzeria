@@ -162,6 +162,29 @@
 
   function row(label,val){ return '<tr><td>'+label+'</td><td>'+euro(val)+'</td></tr>'; }
 
+  // Verkoopgrafiek: staafdiagram van de omzet per dag (inline SVG, geen externe libraries)
+  function salesChart(byDay){
+    var days=Object.keys(byDay||{}).sort();
+    if(days.length<2) return ''; // enkel zinvol bij meerdere dagen
+    var vals=days.map(function(d){return byDay[d].revenue||0;});
+    var max=Math.max.apply(null,vals); if(max<=0) max=1;
+    var padL=8, padT=22, padB=34, innerH=150, barGap=8, bw=34;
+    var W=padL*2+days.length*(bw+barGap)-barGap, H=padT+innerH+padB;
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMinYMid meet" width="'+W+'" style="max-width:none;height:'+H+'px">';
+    svg+='<line x1="'+padL+'" y1="'+(padT+innerH)+'" x2="'+(W-padL)+'" y2="'+(padT+innerH)+'" stroke="var(--line-2)" stroke-width="1"></line>';
+    days.forEach(function(d,i){
+      var v=byDay[d].revenue||0;
+      var bh=Math.max(1,Math.round(innerH*(v/max)));
+      var x=padL+i*(bw+barGap), y=padT+innerH-bh;
+      var p=d.split('-'); var lbl=p.length===3?(p[2]+'/'+p[1]):d;
+      svg+='<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+bh+'" rx="3" fill="var(--gold)"></rect>';
+      svg+='<text x="'+(x+bw/2)+'" y="'+(y-5)+'" text-anchor="middle" font-size="10" font-weight="700" fill="var(--cream)">€'+Math.round(v)+'</text>';
+      svg+='<text x="'+(x+bw/2)+'" y="'+(H-12)+'" text-anchor="middle" font-size="10" fill="var(--muted)">'+lbl+'</text>';
+    });
+    svg+='</svg>';
+    return '<div class="panelbox"><h3>📈 Verkoop per dag</h3><div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'+svg+'</div></div>';
+  }
+
   function load(){
     $('#periodLabel').textContent=range.label;
     fetch('api/admin/report?from='+encodeURIComponent(range.from)+'&to='+encodeURIComponent(range.to),{credentials:'same-origin'})
@@ -181,6 +204,9 @@
        '<div class="kpi"><div class="k">Aantal bestellingen</div><div class="v">'+r.count+'</div></div>'+
        '<div class="kpi"><div class="k">Gemiddelde bon</div><div class="v">'+euro(avg)+'</div></div>'+
        '</div>';
+
+    // verkoopgrafiek (omzet per dag)
+    h+=salesChart(r.byDay||{});
 
     h+='<div class="grid2">';
     // betaalmethode
