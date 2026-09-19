@@ -56,10 +56,10 @@
   .tbtn:hover{border-color:var(--gold);color:var(--gold)}
   .tbtn .badge{background:var(--coral);color:#fff;border-radius:999px;font-size:.68rem;padding:.05rem .42rem;font-weight:800}
 
-  .main{flex:1;display:grid;grid-template-columns:1fr 400px;min-height:0}
+  .main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 400px;min-height:0}
 
   /* ---------- Left: catalogue ---------- */
-  .catalogue{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line)}
+  .catalogue{display:flex;flex-direction:column;min-height:0;min-width:0;border-right:1px solid var(--line)}
   .cat-top{display:flex;gap:.6rem;padding:.6rem .8rem;align-items:center;border-bottom:1px solid var(--line);flex:0 0 auto}
   .search{flex:1;position:relative}
   .search input{width:100%;background:var(--panel);border:1px solid var(--line-2);border-radius:10px;color:var(--cream);
