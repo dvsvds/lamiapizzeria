@@ -47,6 +47,11 @@
     'categorie opgeslagen': 'Category saved', 'categorie verwijderd': 'Category removed',
     'pin gewijzigd': 'PIN changed', 'weer beschikbaar': 'Available again', 'op onbeschikbaar gezet': 'Set to unavailable',
     'geen producten gevonden.': 'No products found.',
+    // --- beheer: kassakleur + placeholders ---
+    'kassa-kleur (optioneel)': 'Register colour (optional)',
+    'vis': 'Fish', 'vlees': 'Meat', 'kaas': 'Cheese', 'zee': 'Sea',
+    'bv. margherita': 'e.g. Margherita', 'toppings / ingrediënten': 'Toppings / ingredients',
+    'bv. populair': 'e.g. Popular', 'bv. salades': 'e.g. Salads',
     // --- kassa ---
     'bestelling': 'Order', 'nog geen artikels.': 'No items yet.',
     'tik links op een product om te starten.': 'Tap a product on the left to start.',
