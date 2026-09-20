@@ -411,11 +411,10 @@
      ============================================================= */
   var STD=[11,12.5,13.5];                    // standaard pizza S/M/L
   var SIZE_LABELS=['Small','Medium','Large'];
-  var PIZZA_EXTRAS=[
-    {k:'Extra kaas',p:1.5},
-    {k:'Halal ham',p:1.5},{k:'Halal salami',p:1.5},{k:'Halal pepperoni',p:1.5},{k:'Halal spek',p:1.5},{k:'Kip',p:1.5},{k:'Gehakt',p:1.5},{k:'Merguez',p:1.5},
-    {k:'Champignons',p:1},{k:'Rode ui',p:1},{k:'Paprika',p:1},{k:'Olijven',p:1},{k:'Ananas',p:1},{k:'Jalapeño',p:1}
-  ];
+  // Een topping kost evenveel, ongeacht welke: de prijs hangt af van het formaat
+  // van de pizza. Zelfde lijst en zelfde tarief als in de webshop.
+  var EXTRA_BY_SIZE=[0.5,1,1.5];   // Small · Medium · Large
+  var PIZZA_EXTRAS=['Extra kaas','Halal ham','Halal salami','Halal pepperoni','Halal spek','Kip','Gehakt','Merguez','Champignons','Rode ui','Paprika','Olijven','Ananas','Jalapeño'];
   var PASTA_SAUCE=[{k:'Zoals op de kaart',p:0},{k:'Extra pittig',p:0},{k:'Extra romig',p:0}];
   var DRINK_SIZES=[{k:'Blik 33cl',d:0},{k:'Fles 50cl',d:0.5},{k:'Fles 1,5L',d:1.5}];
   var DELIVERY_FEE=3.00;
@@ -665,7 +664,7 @@
       p.sz.forEach(function(price,i){ h+='<button class="opt-pill'+(i===1?' on':'')+'" data-i="'+i+'">'+SIZE_LABELS[i]+' <small>'+euro(price+delvSur(p.c))+'</small></button>'; });
       h+='</div></div>';
       h+='<div class="opt-group"><h4>Extra toppings</h4><div class="opt-row" data-g="extras">';
-      PIZZA_EXTRAS.forEach(function(x,i){ h+='<button class="opt-pill" data-i="'+i+'">'+esc(x.k)+' <small>+'+euro(x.p)+'</small></button>'; });
+      PIZZA_EXTRAS.forEach(function(naam,i){ h+='<button class="opt-pill" data-i="'+i+'">'+esc(naam)+' <small data-extra-prijs>+'+euro(EXTRA_BY_SIZE[optCtx.size])+'</small></button>'; });
       h+='</div></div>';
     } else if(p.t==='drink'){
       h+='<div class="opt-group"><h4>Formaat</h4><div class="opt-row" data-g="formaat">';
@@ -699,19 +698,25 @@
   }
   function optUnitPrice(){
     var p=optCtx.p, price=p.price;
-    if(p.t==='pizza'){ price=p.sz[optCtx.size]; optCtx.extras.forEach(function(i){ price+=PIZZA_EXTRAS[i].p; }); }
+    if(p.t==='pizza'){ price=p.sz[optCtx.size]; price+=EXTRA_BY_SIZE[optCtx.size]*optCtx.extras.length; }
     else if(p.t==='drink'){ price=p.price+DRINK_SIZES[optCtx.formaat].d; }
     else if(p.t==='pasta'){ price=p.price+(optCtx.extraKaas?1.5:0); }
     return price;
   }
   function optLabels(){
     var p=optCtx.p, out=[];
-    if(p.t==='pizza'){ out.push(SIZE_LABELS[optCtx.size]); optCtx.extras.forEach(function(i){ out.push('+'+PIZZA_EXTRAS[i].k); }); }
+    if(p.t==='pizza'){ out.push(SIZE_LABELS[optCtx.size]); optCtx.extras.forEach(function(i){ out.push('+'+PIZZA_EXTRAS[i]); }); }
     else if(p.t==='drink'){ out.push(DRINK_SIZES[optCtx.formaat].k); }
     else if(p.t==='pasta'){ if(optCtx.sauce>0) out.push(PASTA_SAUCE[optCtx.sauce].k); if(optCtx.extraKaas) out.push('+Extra kaas'); }
     return out;
   }
-  function updateOptPrice(){ $('#optPrice').textContent=euro((optUnitPrice()+delvSur(optCtx.p.c))*optCtx.qty); }
+  // de bedragen naast de toppings volgen het gekozen formaat
+  function ververseToppingPrijzen(){
+    if(!optCtx.p||optCtx.p.t!=='pizza') return;
+    var prijs=euro(EXTRA_BY_SIZE[optCtx.size]);
+    $('#optBody').querySelectorAll('[data-extra-prijs]').forEach(function(el){ el.textContent='+'+prijs; });
+  }
+  function updateOptPrice(){ ververseToppingPrijzen(); $('#optPrice').textContent=euro((optUnitPrice()+delvSur(optCtx.p.c))*optCtx.qty); }
   $('#optMinus').onclick=function(){ if(optCtx.qty>1){optCtx.qty--;$('#optQty').textContent=optCtx.qty;updateOptPrice();} };
   $('#optPlus').onclick=function(){ optCtx.qty++;$('#optQty').textContent=optCtx.qty;updateOptPrice(); };
   $('#optAdd').onclick=function(){

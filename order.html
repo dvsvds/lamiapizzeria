@@ -1281,7 +1281,10 @@
 
     // ---- Opties (herbruikbaar) ----
     var SIZE_LABELS = ['Small','Medium','Large'];
-    var PIZZA_EXTRAS= [{k:'Extra kaas',p:1.5},{k:'Champignons',p:1},{k:'Halal pepperoni',p:1},{k:'Rode ui',p:1},{k:'Olijven',p:1},{k:'Jalapeño',p:1}];
+    // Een topping kost evenveel, ongeacht welke: de prijs hangt af van het
+    // formaat van de pizza. Zelfde lijst en zelfde tarief als in de kassa.
+    var EXTRA_BY_SIZE=[0.5,1,1.5];   // Small · Medium · Large
+    var PIZZA_EXTRAS=['Extra kaas','Halal ham','Halal salami','Halal pepperoni','Halal spek','Kip','Gehakt','Merguez','Champignons','Rode ui','Paprika','Olijven','Ananas','Jalapeño'];
     var PASTA_SAUCE = [{k:'Zoals op de kaart',p:0},{k:'Extra pittig',p:0},{k:'Extra romig',p:0}];
     var DRINK_SIZES = [{k:'Blik 33cl',d:0},{k:'Fles 50cl',d:0.5},{k:'Fles 1,5L',d:1.5}];
     var STD=[11,12.5,13.5]; // standaard pizza S/M/L
@@ -1594,7 +1597,7 @@
         h+='<div class="opt-grp"><h4>Formaat</h4><div class="opt-seg" data-role="size">'+
            p.sz.map(function(pr,i){return '<button type="button" data-i="'+i+'" class="'+(i===1?'on':'')+'">'+SIZE_LABELS[i]+' · '+fmt(mode==='leveren'?pr+PIZZA_SURCHARGE:pr)+'</button>';}).join('')+'</div></div>';
         h+='<div class="opt-grp"><h4>Extra toppings</h4><div class="opt-chips" data-role="extra">'+
-           PIZZA_EXTRAS.map(function(x,i){return '<label class="opt-chip"><input type="checkbox" data-i="'+i+'"> '+x.k+' <b>+'+fmt(x.p).replace('€ ','€')+'</b></label>';}).join('')+'</div></div>';
+           PIZZA_EXTRAS.map(function(naam,i){return '<label class="opt-chip"><input type="checkbox" data-i="'+i+'"> '+naam+' <b data-extra-prijs>+'+fmt(EXTRA_BY_SIZE[1]).replace('€ ','€')+'</b></label>';}).join('')+'</div></div>';
       } else if(p.t==='pasta'){
         h+='<div class="opt-grp"><h4>Saus</h4><div class="opt-seg" data-role="sauce">'+
            PASTA_SAUCE.map(function(s,i){return '<button type="button" data-i="'+i+'" class="'+(i===0?'on':'')+'">'+s.k+'</button>';}).join('')+'</div></div>';
@@ -1613,10 +1616,10 @@
       }
       body.innerHTML=h;
       ov.querySelectorAll('.opt-seg').forEach(function(seg){
-        seg.addEventListener('click',function(e){var t=e.target.closest('button');if(!t)return;[].forEach.call(seg.children,function(c){c.classList.remove('on');});t.classList.add('on');optPrice();});
+        seg.addEventListener('click',function(e){var t=e.target.closest('button');if(!t)return;[].forEach.call(seg.children,function(c){c.classList.remove('on');});t.classList.add('on');ververseToppingPrijzen();optPrice();});
       });
       ov.querySelectorAll('.opt-chips input').forEach(function(c){c.addEventListener('change',optPrice);});
-      optPrice(); re(); ov.classList.add('open'); ov.setAttribute('aria-hidden','false');
+      ververseToppingPrijzen(); optPrice(); re(); ov.classList.add('open'); ov.setAttribute('aria-hidden','false');
     }
     function readOpts(){
       var p=optState.p, opts=[], price=p.price;
@@ -1629,9 +1632,27 @@
       if(sauceSeg){opts.push(PASTA_SAUCE[+sauceSeg.querySelector('.on').getAttribute('data-i')].k);}
       var extraWrap=ov.querySelector('[data-role="extra"]');
       if(extraWrap){[].forEach.call(extraWrap.querySelectorAll('input:checked'),function(c){
-        var arr = p.t==='pizza'?PIZZA_EXTRAS:[{k:'Extra kaas',p:1.5}]; var x=arr[+c.getAttribute('data-i')]; price+=x.p; opts.push('+'+x.k);
+        if(p.t==='pizza'){
+          // toppingprijs volgt het gekozen formaat
+          price+=EXTRA_BY_SIZE[gekozenFormaat()];
+          opts.push('+'+PIZZA_EXTRAS[+c.getAttribute('data-i')]);
+        } else {                       // pasta: extra kaas, geen formaat
+          price+=1.5; opts.push('+Extra kaas');
+        }
       });}
       return {opts:opts, unit:price};
+    }
+    // welk formaat staat aan? (Medium als er geen formaatkeuze is)
+    function gekozenFormaat(){
+      var seg=ov.querySelector('[data-role="size"] .on');
+      return seg?+seg.getAttribute('data-i'):1;
+    }
+    // de bedragen naast de toppings volgen het gekozen formaat
+    function ververseToppingPrijzen(){
+      var prijs=EXTRA_BY_SIZE[gekozenFormaat()];
+      ov.querySelectorAll('[data-role="extra"] [data-extra-prijs]').forEach(function(b){
+        b.textContent='+'+fmt(prijs).replace('€ ','€');
+      });
     }
     function optPrice(){var r=readOpts();var ex=(mode==='leveren'&&surCat(optState.p.c))?PIZZA_SURCHARGE:0;optPriceEl.textContent=fmt((r.unit+ex)*optState.qty);}
     $('#optMinus').addEventListener('click',function(){optState.qty=Math.max(1,optState.qty-1);optQtyEl.textContent=optState.qty;optPrice();});
