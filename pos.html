@@ -185,6 +185,12 @@
   .split-row label{font-size:.72rem;color:var(--muted);font-weight:800;text-transform:uppercase;display:block;margin-bottom:.25rem}
   .split-row input{width:100%;background:var(--ink);border:1px solid var(--line-2);border-radius:9px;color:var(--cream);padding:.55rem;font-weight:800;font-size:1rem;text-align:right}
 
+  /* vraag-/bevestigingsvenster (vervangt prompt en confirm van de browser) */
+  #askField label{font-size:.72rem;color:var(--muted);font-weight:800;text-transform:uppercase;display:block;margin-bottom:.3rem}
+  #askInput{width:100%;background:var(--ink);border:1px solid var(--line-2);border-radius:10px;color:var(--cream);padding:.75rem .7rem;font-weight:800;font-size:1.05rem}
+  #askInput:focus{outline:none;border-color:var(--gold)}
+  .bigadd.danger{background:var(--red);color:#fff}
+
   /* parked & report lists */
   .plist{display:flex;flex-direction:column;gap:.55rem}
   .pitem{display:flex;align-items:center;justify-content:space-between;gap:.6rem;border:1px solid var(--line-2);background:var(--ink);border-radius:11px;padding:.7rem .85rem}
@@ -360,6 +366,24 @@
   <div class="mfoot">
     <button class="abtn" id="btnPrintReport" style="flex:1">🖨 Print X-rapport</button>
     <button class="abtn warn" id="btnCloseDay" style="flex:1">🔒 Dag afsluiten (Z)</button>
+  </div>
+</div></div>
+
+<!-- Vraag-modal: vervangt de blokkerende prompt()/confirm() van de browser.
+     Die konden door Chrome uitgeschakeld worden ("voorkom extra dialoogvensters"),
+     waarna parkeren en dag afsluiten stil niets meer deden. -->
+<div class="ov" id="ovAsk"><div class="modal" style="max-width:380px">
+  <div class="mhead"><h3 id="askTitle">Bevestigen</h3><button class="x" data-close data-ask-cancel>✕</button></div>
+  <div class="mbody">
+    <p id="askMsg" style="margin:0 0 .2rem;line-height:1.5;white-space:pre-line"></p>
+    <div class="fld" id="askField" style="margin-top:.9rem;display:none">
+      <label id="askLabel" for="askInput">Naam</label>
+      <input id="askInput" autocomplete="off">
+    </div>
+  </div>
+  <div class="mfoot" style="gap:.6rem">
+    <button class="abtn" id="askCancel" data-ask-cancel style="flex:1">Annuleren</button>
+    <button class="bigadd" id="askOk" style="flex:1.4">Bevestigen</button>
   </div>
 </div></div>
 
@@ -811,7 +835,10 @@
   });
   $('#btnClear').onclick=function(){
     if(!state.lines.length) return;
-    if(confirm('Huidige bon wissen?')){ state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; state.onlinePaid=false; renderTicket(); saveCart(); }
+    askConfirm({title:'Bon wissen?',msg:'Alle artikelen op deze bon worden verwijderd.',ok:'Wissen',danger:true}).then(function(ja){
+      if(!ja) return;
+      state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; state.onlinePaid=false; renderTicket(); saveCart();
+    });
   };
 
   // Korting
@@ -836,12 +863,13 @@
   $('#btnPark').onclick=function(){
     if(!state.lines.length) return;
     var def=state.type==='terplaatse'&&state.table?('Tafel '+state.table):('Bon '+currentOrderNo());
-    var label=prompt('Parkeren als:', def);
-    if(label===null) return;
-    parked.push({id:Date.now(),label:label||def,ts:new Date().toISOString(),state:JSON.parse(JSON.stringify(state))});
-    save(LS.parked,parked);
-    state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; state.onlinePaid=false; renderTicket(); saveCart();
-    toast('Bon geparkeerd');
+    ask({title:'Bon parkeren',label:'Parkeren als',input:true,value:def,placeholder:def,ok:'Parkeren'}).then(function(label){
+      if(label===null) return;
+      parked.push({id:Date.now(),label:label||def,ts:new Date().toISOString(),state:JSON.parse(JSON.stringify(state))});
+      save(LS.parked,parked);
+      state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; state.onlinePaid=false; renderTicket(); saveCart();
+      toast('Bon geparkeerd');
+    });
   };
   function openParked(){
     var l=$('#parkList');
@@ -861,14 +889,22 @@
     if(lo){
       var id=+lo.getAttribute('data-load'), idx=parked.findIndex(function(x){return x.id===id;});
       if(idx<0) return;
-      if(state.lines.length && !confirm('Huidige bon vervangen door de geparkeerde bon?')) return;
-      state=parked[idx].state; if(!state.discount) state.discount={pct:0,eur:0}; if(!state.cust) state.cust={name:'',phone:'',address:''}; if(typeof state.prepriced!=='boolean') state.prepriced=false; if(typeof state.onlinePaid!=='boolean') state.onlinePaid=false;
-      parked.splice(idx,1); save(LS.parked,parked);
-      $('#otype').querySelectorAll('button').forEach(function(x){x.classList.toggle('active',x.getAttribute('data-type')===state.type);});
-      renderTicket(); saveCart(); closeOv('#ovPark'); toast('Bon geopend');
+      var vraag=state.lines.length
+        ? askConfirm({title:'Huidige bon vervangen?',msg:'Er staan nog artikelen op de openstaande bon. Die gaan verloren als je de geparkeerde bon opent.',ok:'Vervangen',danger:true})
+        : Promise.resolve(true);
+      vraag.then(function(ja){
+        if(!ja) return;
+        state=parked[idx].state; if(!state.discount) state.discount={pct:0,eur:0}; if(!state.cust) state.cust={name:'',phone:'',address:''}; if(typeof state.prepriced!=='boolean') state.prepriced=false; if(typeof state.onlinePaid!=='boolean') state.onlinePaid=false;
+        parked.splice(idx,1); save(LS.parked,parked);
+        $('#otype').querySelectorAll('button').forEach(function(x){x.classList.toggle('active',x.getAttribute('data-type')===state.type);});
+        renderTicket(); saveCart(); closeOv('#ovPark'); toast('Bon geopend');
+      });
     } else if(de){
       var id2=+de.getAttribute('data-del');
-      if(confirm('Geparkeerde bon verwijderen?')){ parked=parked.filter(function(x){return x.id!==id2;}); save(LS.parked,parked); openParked(); updateParkBadge(); }
+      askConfirm({title:'Geparkeerde bon verwijderen?',msg:'Deze bon wordt definitief verwijderd.',ok:'Verwijderen',danger:true}).then(function(ja){
+        if(!ja) return;
+        parked=parked.filter(function(x){return x.id!==id2;}); save(LS.parked,parked); openParked(); updateParkBadge();
+      });
     }
   });
   $('#btnPark2').onclick=openParked;
@@ -1201,12 +1237,14 @@
   });
   // de dagomzet zit achter de manager-PIN (zelfde als de rapportenpagina)
   $('#btnReport').onclick=function(){
-    var pin=prompt('Manager-PIN voor de dagomzet:'); if(pin===null) return;
-    if(!window.fetch){ toast('Geen verbinding'); return; }
-    fetch('api/report-login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:pin})})
-      .then(function(r){ return r.ok; })
-      .then(function(ok){ if(ok) openReport(); else toast('Verkeerde PIN'); })
-      .catch(function(){ toast('Geen verbinding — PIN kan niet gecontroleerd worden'); });
+    ask({title:'Dagrapport',msg:'De dagomzet is enkel zichtbaar met de manager-PIN.',label:'Manager-PIN',input:true,password:true,numeric:true,ok:'Bekijken'}).then(function(pin){
+      if(pin===null) return;
+      if(!window.fetch){ toast('Geen verbinding'); return; }
+      fetch('api/report-login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:pin})})
+        .then(function(r){ return r.ok; })
+        .then(function(ok){ if(ok) openReport(); else toast('Verkeerde PIN'); })
+        .catch(function(){ toast('Geen verbinding — PIN kan niet gecontroleerd worden'); });
+    });
   };
 
   function buildReportReceipt(r,isZ){
@@ -1234,26 +1272,34 @@
   $('#btnPrintReport').onclick=function(){ buildReportReceipt($('#reportBody')._report,false); setTimeout(function(){window.print();},100); };
   function doCloseDay(){
     var r=reportData();
-    if(!confirm('Dag afsluiten?\n\nOmzet: '+euro(r.total)+' over '+r.count+' bon(s).\nDe verkooplijst wordt gearchiveerd en op nul gezet.')) return;
-    buildReportReceipt(r,true);
-    var closed=load(LS.closed,[]);
-    closed.push({date:new Date().toISOString(),report:r});
-    save(LS.closed,closed);
-    sales=[]; save(LS.sales,sales);
-    seq={date:today(),n:0}; save(LS.seq,seq);
-    closeOv('#ovReport'); renderTicket();
-    toast('Dag afgesloten (Z-rapport)');
-    setTimeout(function(){window.print();},120);
+    askConfirm({
+      title:'Dag afsluiten?',
+      msg:'Omzet: '+euro(r.total)+' over '+r.count+' bon(s).\n\nDe verkooplijst wordt gearchiveerd en op nul gezet.',
+      ok:'Dag afsluiten', danger:true
+    }).then(function(ja){
+      if(!ja) return;
+      buildReportReceipt(r,true);
+      var closed=load(LS.closed,[]);
+      closed.push({date:new Date().toISOString(),report:r});
+      save(LS.closed,closed);
+      sales=[]; save(LS.sales,sales);
+      seq={date:today(),n:0}; save(LS.seq,seq);
+      closeOv('#ovReport'); renderTicket();
+      toast('Dag afgesloten (Z-rapport)');
+      setTimeout(function(){window.print();},120);
+    });
   }
   // dag afsluiten toont de omzet → ook achter de manager-PIN
   $('#btnCloseDay').onclick=function(){
     if(!sales.length){ toast('Nog geen verkoop vandaag'); return; }
-    var pin=prompt('Manager-PIN om de dag af te sluiten:'); if(pin===null) return;
-    if(!window.fetch){ toast('Geen verbinding'); return; }
-    fetch('api/report-login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:pin})})
-      .then(function(r){ return r.ok; })
-      .then(function(ok){ if(ok) doCloseDay(); else toast('Verkeerde PIN'); })
-      .catch(function(){ toast('Geen verbinding — PIN kan niet gecontroleerd worden'); });
+    ask({title:'Dag afsluiten',msg:'De dag afsluiten kan enkel met de manager-PIN.',label:'Manager-PIN',input:true,password:true,numeric:true,ok:'Doorgaan'}).then(function(pin){
+      if(pin===null) return;
+      if(!window.fetch){ toast('Geen verbinding'); return; }
+      fetch('api/report-login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:pin})})
+        .then(function(r){ return r.ok; })
+        .then(function(ok){ if(ok) doCloseDay(); else toast('Verkeerde PIN'); })
+        .catch(function(){ toast('Geen verbinding — PIN kan niet gecontroleerd worden'); });
+    });
   };
 
   /* =============================================================
@@ -1261,6 +1307,58 @@
      ============================================================= */
   function openOv(sel){ $(sel).classList.add('open'); }
   function closeOv(sel){ $(sel).classList.remove('open'); }
+
+  /* -------------------------------------------------------------
+     Eigen vraag- en bevestigingsvenster
+
+     Vervangt prompt() en confirm() van de browser. Die blokkeerden de hele
+     kassa, waren op een tablet nauwelijks te bedienen, en Chrome kon ze
+     permanent uitschakelen — waarna parkeren en dag afsluiten stil niets meer
+     deden. Dit venster gebruikt dezelfde modals als de rest van de kassa en
+     geeft een belofte terug: bij annuleren null, anders de waarde (of true).
+     ------------------------------------------------------------- */
+  var askResolve=null;
+  function askClose(val){
+    var r=askResolve; askResolve=null;
+    closeOv('#ovAsk');
+    if(r) r(val);
+  }
+  function ask(o){
+    if(askResolve) askClose(null);           // een openstaande vraag eerst netjes afsluiten
+    o=o||{};
+    $('#askTitle').textContent=o.title||'Bevestigen';
+    $('#askMsg').textContent=o.msg||'';
+    $('#askMsg').style.display=o.msg?'':'none';
+    $('#askOk').textContent=o.ok||'Bevestigen';
+    $('#askOk').classList.toggle('danger',!!o.danger);
+    var fld=$('#askField'), inp=$('#askInput');
+    if(o.input){
+      fld.style.display='';
+      $('#askLabel').textContent=o.label||'';
+      $('#askLabel').style.display=o.label?'':'none';
+      inp.type=o.password?'password':'text';
+      if(o.numeric){ inp.setAttribute('inputmode','numeric'); } else { inp.removeAttribute('inputmode'); }
+      inp.placeholder=o.placeholder||'';
+      inp.value=o.value||'';
+    } else {
+      fld.style.display='none';
+      inp.value='';
+    }
+    openOv('#ovAsk');
+    // even wachten tot het venster zichtbaar is, anders pakt het toetsenbord niet
+    setTimeout(function(){ if(o.input){ inp.focus(); inp.select(); } else $('#askOk').focus(); },50);
+    return new Promise(function(res){ askResolve=res; });
+  }
+  function askConfirm(o){ return ask(o).then(function(v){ return v!==null; }); }
+
+  (function bindAsk(){
+    var ov=$('#ovAsk'), inp=$('#askInput');
+    $('#askOk').addEventListener('click',function(){ askClose($('#askField').style.display==='none' ? true : inp.value); });
+    ov.querySelectorAll('[data-ask-cancel]').forEach(function(b){ b.addEventListener('click',function(){ askClose(null); }); });
+    ov.addEventListener('click',function(e){ if(e.target===ov) askClose(null); });          // naast het venster tikken
+    inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); $('#askOk').click(); } });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape' && askResolve) askClose(null); });
+  })();
   document.querySelectorAll('.ov').forEach(function(ov){
     ov.addEventListener('click',function(e){ if(e.target===ov) ov.classList.remove('open'); });
     ov.querySelectorAll('[data-close]').forEach(function(x){ x.onclick=function(){ ov.classList.remove('open'); }; });
@@ -1455,7 +1553,17 @@
     function ackOrder(id){ fetch('api/admin/orders/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status:'bereiden'})}).catch(function(){}); removeWebOrder(id); }
     function loadIntoTicket(id){
       var o=webOrders[id]; if(!o) return;
-      if(state.lines.length && !confirm('Huidige bon vervangen door online bestelling '+(o.no||'')+'?')) return;
+      if(state.lines.length){
+        askConfirm({
+          title:'Huidige bon vervangen?',
+          msg:'Er staan nog artikelen op de openstaande bon. Die gaan verloren als je online bestelling '+(o.no||'')+' laadt.',
+          ok:'Vervangen', danger:true
+        }).then(function(ja){ if(ja) applyWebOrder(o); });
+        return;
+      }
+      applyWebOrder(o);
+    }
+    function applyWebOrder(o){
       state.lines=(o.items||[]).map(function(l){
         return {key:lineKey('web',l.opts||[],l.note||'',l.unit), pid:'web', cat:l.cat||'', name:l.name, opts:l.opts||[], note:l.note||'', unit:l.unit, qty:l.qty};
       });
@@ -1465,7 +1573,7 @@
       state.onlinePaid=(o.pay_status==='paid'); // online bestelling die al via Mollie betaald is
       $('#otype').querySelectorAll('button').forEach(function(x){x.classList.toggle('active',x.getAttribute('data-type')===state.type);});
       renderTicket(); saveCart();
-      ackOrder(id); closeOv('#ovOnline'); toast('Online bestelling geladen — reken af');
+      ackOrder(o.id); closeOv('#ovOnline'); toast('Online bestelling geladen — reken af');
     }
     $('#onlineList').addEventListener('click',function(e){
       var lo=e.target.closest('[data-load]'), ak=e.target.closest('[data-ack]');
