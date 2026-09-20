@@ -143,3 +143,21 @@ index.html        Publieke website
 images/           Foto's
 data/             Database + sessiesleutel (staat in .gitignore, hoort niet in git)
 ```
+
+## Kassa koppelen (sinds de beveiliging van de kassa-rol)
+
+De kassa-rol (online bestellingen zien, verkopen doorsturen) zat vroeger achter
+géén PIN: iedereen die `/api/pos/hello` aanriep kreeg hem. Daarmee waren de
+klantgegevens van lopende bestellingen leesbaar en kon iedereen kassabonnen
+aanmaken. Dat zit nu achter de beheer-PIN.
+
+**In de praktijk:** open de kassa op het toestel, klik één keer op
+**🔌 Koppelen** en geef de beheer-PIN. De koppeling blijft een jaar staan; daarna
+vraagt de kassa nooit meer iets. Zonder koppeling blijft de kassa gewoon werken —
+bonnen worden lokaal bewaard en gaan alsnog de deur uit zodra er gekoppeld is.
+
+Wil je een aparte PIN voor de kassa (los van het beheer), zet dan `POS_PIN` als
+omgevingsvariabele op Railway.
+
+> De link naar de kassa stond in de voettekst van de publieke website. Die is
+> weggehaald; personeel opent de kassa via een bladwijzer op het toestel.

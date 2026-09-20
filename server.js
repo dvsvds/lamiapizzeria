@@ -301,11 +301,46 @@ function isManager(req) {
   return !!(p && p.role === 'mgr');
 }
 // kassa-rol: mag online bestellingen bekijken/afvinken en verkopen doorsturen,
-// maar NIET het beheer (menu/prijzen) of de rapporten. Vereist geen PIN.
+// maar NIET het beheer (menu/prijzen) of de rapporten. Wordt verkregen met de
+// beheer-PIN (of POS_PIN), één keer per toestel — zie /api/pos/hello.
 function isPos(req) {
   var p = verify(parseCookies(req)['lamia_pos']);
   return !!(p && p.role === 'pos');
 }
+
+/* ---------------------------------------------------------------------------
+   PIN-vergelijking en een rem op raden
+
+   Een PIN van vier cijfers is in seconden door te proberen als je onbeperkt mag
+   raden. Per IP houden we de mislukte pogingen bij: vanaf 8 fout volgt een
+   wachttijd die oploopt tot een kwartier. Een geslaagde PIN wist de teller.
+   --------------------------------------------------------------------------- */
+function pinEquals(given, want) {
+  var a = crypto.createHash('sha256').update(String(given)).digest();
+  var b = crypto.createHash('sha256').update(String(want)).digest();
+  return crypto.timingSafeEqual(a, b);
+}
+var pinTries = new Map();                 // ip -> { n, until }
+function pinKey(req) {
+  var fwd = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  return fwd || (req.socket && req.socket.remoteAddress) || 'onbekend';
+}
+function pinGuard(req) {                  // geeft een melding terug als er nog gewacht moet worden
+  var e = pinTries.get(pinKey(req));
+  if (e && e.until > Date.now()) {
+    var sec = Math.ceil((e.until - Date.now()) / 1000);
+    return 'Te veel pogingen. Probeer over ' + sec + ' seconden opnieuw.';
+  }
+  return null;
+}
+function pinFailed(req) {
+  var k = pinKey(req), e = pinTries.get(k) || { n: 0, until: 0 };
+  e.n++;
+  if (e.n >= 8) e.until = Date.now() + Math.min(15 * 60e3, Math.pow(2, e.n - 8) * 5e3);
+  pinTries.set(k, e);
+  if (pinTries.size > 5000) pinTries.clear();   // eenvoudige bovengrens op het geheugen
+}
+function pinOk(req) { pinTries.delete(pinKey(req)); }
 
 /* ============================================================================
    HTTP HELPERS
@@ -678,8 +713,31 @@ async function handleApi(req, res, urlPath) {
     return sendJson(res, 200, { no: orow.no, pay_status: orow.pay_status || 'later' });
   }
 
-  /* ---------- kassa-rol activeren (zonder PIN): online bestellingen bekijken ---------- */
+  /* ---------- kassa-rol: heeft dit toestel al een geldige koppeling? ----------
+     Zo kan de kassa stil opnieuw verbinden zonder telkens naar de PIN te vragen. */
+  if (seg[0] === 'pos' && seg[1] === 'session' && method === 'GET') {
+    return sendJson(res, 200, { pos: isPos(req) || isAuthed(req) });
+  }
+
+  /* ---------- kassa-rol activeren ----------
+     Vroeger gaf deze route aan iedereen die erom vroeg een kassa-rol, zonder PIN.
+     Daarmee kon elke bezoeker de klantgegevens van lopende bestellingen lezen
+     (naam, telefoon, e-mail, adres) en zelf kassabonnen aanmaken die op het
+     keukenscherm en in de omzet belandden. De rol zit nu achter de beheer-PIN
+     (of POS_PIN als die is ingesteld). Het personeel geeft de PIN één keer per
+     toestel in; de koppeling blijft daarna een jaar geldig. */
   if (seg[0] === 'pos' && seg[1] === 'hello' && method === 'POST') {
+    // al gekoppeld (of ingelogd als beheer)? dan niets vragen
+    if (isPos(req) || isAuthed(req)) return sendJson(res, 200, { ok: true, already: true });
+    var lim = pinGuard(req);
+    if (lim) return sendJson(res, 429, { error: lim });
+    var phb = await readBody(req);
+    var posWant = String(process.env.POS_PIN || '') || currentPin();
+    if (!pinEquals(String(phb.pin || ''), posWant)) {
+      pinFailed(req);
+      return sendJson(res, 401, { error: 'Verkeerde PIN' });
+    }
+    pinOk(req);
     var ptok = sign(JSON.stringify({ role: 'pos', exp: Date.now() + 365 * 24 * 3600e3 }));
     var psec = (req.headers['x-forwarded-proto'] === 'https') ? '; Secure' : '';
     return sendJson(res, 200, { ok: true }, { 'Set-Cookie': 'lamia_pos=' + ptok + '; HttpOnly; SameSite=Lax; Path=/' + psec + '; Max-Age=' + (365 * 24 * 3600) });
@@ -706,10 +764,14 @@ async function handleApi(req, res, urlPath) {
     return sendJson(res, 200, { authed: isAuthed(req) });
   }
   if (seg[0] === 'login' && method === 'POST') {
+    var lgLim = pinGuard(req);
+    if (lgLim) return sendJson(res, 429, { error: lgLim });
     var body = await readBody(req);
-    var given = crypto.createHash('sha256').update(String(body.pin || '')).digest();
-    var want = crypto.createHash('sha256').update(currentPin()).digest();
-    if (!crypto.timingSafeEqual(given, want)) return sendJson(res, 401, { error: 'Verkeerde PIN' });
+    if (!pinEquals(String(body.pin || ''), currentPin())) {
+      pinFailed(req);
+      return sendJson(res, 401, { error: 'Verkeerde PIN' });
+    }
+    pinOk(req);
     var token = sign(JSON.stringify({ exp: Date.now() + SESSION_HOURS * 3600e3 }));
     var secure = (req.headers['x-forwarded-proto'] === 'https') ? '; Secure' : '';
     var cookie = 'lamia_sess=' + token + '; HttpOnly; SameSite=Lax; Path=/' + secure + '; Max-Age=' + (SESSION_HOURS * 3600);
@@ -721,13 +783,15 @@ async function handleApi(req, res, urlPath) {
 
   /* ---------- manager-sessie voor de rapporten (aparte PIN) ---------- */
   if (seg[0] === 'report-login' && method === 'POST') {
+    var rpLim = pinGuard(req);
+    if (rpLim) return sendJson(res, 429, { error: rpLim });
     var rlb = await readBody(req);
     var given = String(rlb.pin || '');
-    function pinEq(a, b) { return crypto.timingSafeEqual(crypto.createHash('sha256').update(a).digest(), crypto.createHash('sha256').update(b).digest()); }
-    var okPin = pinEq(given, reportPin());
+    var okPin = pinEquals(given, reportPin());
     var envPin = String(process.env.REPORT_PIN || ''); // hoofdsleutel via Railway (noodoplossing bij vergeten PIN)
-    if (!okPin && envPin) okPin = pinEq(given, envPin);
-    if (!okPin) return sendJson(res, 401, { error: 'Verkeerde PIN' });
+    if (!okPin && envPin) okPin = pinEquals(given, envPin);
+    if (!okPin) { pinFailed(req); return sendJson(res, 401, { error: 'Verkeerde PIN' }); }
+    pinOk(req);
     var mtok = sign(JSON.stringify({ role: 'mgr', exp: Date.now() + SESSION_HOURS * 3600e3 }));
     var msec = (req.headers['x-forwarded-proto'] === 'https') ? '; Secure' : '';
     return sendJson(res, 200, { authed: true }, { 'Set-Cookie': 'lamia_mgr=' + mtok + '; HttpOnly; SameSite=Lax; Path=/' + msec + '; Max-Age=' + (SESSION_HOURS * 3600) });
