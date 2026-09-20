@@ -409,7 +409,10 @@
   .promo-pop .pp-dot.on{background:var(--yellow)}
   .promo-pop .pp-btn{display:block;width:100%;text-align:center;background:var(--yellow);color:#1a1206;font-weight:800;text-transform:uppercase;letter-spacing:.03em;font-size:.86rem;padding:.72rem;border-radius:11px;border:0;cursor:pointer;text-decoration:none}
   .promo-pop .pp-btn:hover{background:#ffd83a}
-  .promo-pop .pp-list{margin:.1rem 0 1rem;max-height:42vh;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem;-webkit-overflow-scrolling:touch}
+  .promo-pop .pp-list{margin:.1rem 0 1rem;max-height:42vh;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem;-webkit-overflow-scrolling:touch;padding-right:.85rem;scrollbar-gutter:stable}
+  .promo-pop .pp-list::-webkit-scrollbar{width:8px}
+  .promo-pop .pp-list::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px}
+  .promo-pop .pp-list::-webkit-scrollbar-track{background:transparent}
   .promo-pop .pp-sub{font-family:'Anton',sans-serif;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-size:.75rem;margin:.3rem 0 .1rem}
   .promo-pop .pp-deal{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;border-bottom:1px solid var(--line);padding-bottom:.45rem}
   .promo-pop .pp-deal b{color:var(--cream);font-size:.88rem;display:block}
@@ -760,12 +763,22 @@
   .stars{color:#e8a51c}
   .m-acc>summary.m-cat:hover{color:var(--red)}
 
-  /* ---- Promo-popup op een witte kaart ---- */
+  /* ---- Promo-popup op een witte kaart ----
+     De tekstkleuren hieronder gingen al uit van een witte kaart, maar de kaart
+     zelf bleef donker. Daardoor stond de dealnaam (var(--cream) = bijna zwart)
+     onzichtbaar op zwart en had de prijs te weinig contrast. Nu is de kaart
+     ook echt wit; onder [data-theme="dark"] gaat ze terug naar donker. */
+  .promo-pop .pp-card{background:var(--panel);border-color:var(--line);box-shadow:0 30px 80px rgba(60,30,15,.22)}
   .promo-pop .pp-title,.promo-pop .pp-price,.promo-pop .pp-hl b{color:var(--red)}
+  .promo-pop .pp-deal{border-bottom-color:var(--line)}
+  .promo-pop .pp-deal b{color:var(--cream)}
+  .promo-pop .pp-deal small,.promo-pop .pp-text,.promo-pop .pp-sub{color:var(--muted)}
+  .promo-pop .pp-close{color:var(--muted)}
+  .promo-pop .pp-dot{background:var(--line)}
   .promo-pop .pp-dot.on{background:var(--red)}
   .promo-pop .pp-btn{background:var(--red);color:#fff}
   .promo-pop .pp-btn:hover{background:var(--red-dark)}
-  .promo-pop .pp-hl{background:#fdf1ef}
+  .promo-pop .pp-hl{background:#fdf1ef;border-color:#f3d9d5}
 
   /* ---- Donkere footer als anker onder de witte pagina ---- */
   footer{background:var(--footer-bg);color:#e8ded5}
@@ -883,11 +896,20 @@
   :root[data-theme="dark"] .byo-sizes span b,:root[data-theme="dark"] .menu-sizes span b,
   :root[data-theme="dark"] .about .stat b,:root[data-theme="dark"] .score-card .big,
   :root[data-theme="dark"] .promo-hero .free{color:var(--gold)}
+  :root[data-theme="dark"] .promo-pop .pp-card{background:linear-gradient(180deg,#1d1613,#141010);
+    border-color:var(--line);box-shadow:0 30px 80px rgba(0,0,0,.6)}
   :root[data-theme="dark"] .promo-pop .pp-title,:root[data-theme="dark"] .promo-pop .pp-price,
   :root[data-theme="dark"] .promo-pop .pp-hl b{color:var(--yellow)}
+  :root[data-theme="dark"] .promo-pop .pp-deal b{color:var(--cream)}
+  :root[data-theme="dark"] .promo-pop .pp-deal small,
+  :root[data-theme="dark"] .promo-pop .pp-text,
+  :root[data-theme="dark"] .promo-pop .pp-sub{color:var(--muted-2)}
+  :root[data-theme="dark"] .promo-pop .pp-close{color:var(--muted-2)}
+  :root[data-theme="dark"] .promo-pop .pp-list::-webkit-scrollbar-thumb{background:var(--line-2)}
+  :root[data-theme="dark"] .promo-pop .pp-dot{background:var(--line)}
   :root[data-theme="dark"] .promo-pop .pp-dot.on{background:var(--yellow)}
   :root[data-theme="dark"] .promo-pop .pp-btn{background:var(--yellow);color:#1a1206}
-  :root[data-theme="dark"] .promo-pop .pp-hl{background:rgba(230,178,76,.12)}
+  :root[data-theme="dark"] .promo-pop .pp-hl{background:rgba(230,178,76,.12);border-color:var(--line)}
   :root[data-theme="dark"] footer{color:var(--muted)}
   :root[data-theme="dark"] footer p,:root[data-theme="dark"] footer .fnav a,
   :root[data-theme="dark"] footer .socials a{color:var(--muted)}
