@@ -315,7 +315,14 @@
     });
   }
 
-  function init() { injectButton(); if (lang === 'en') translateAll(); }
+  function init() {
+    injectButton();
+    // Ook het lang-attribuut meezetten. Anders staat er lang="nl" boven een
+    // Engelse pagina en spreekt een schermlezer de tekst met Nederlandse
+    // klanken uit.
+    try { document.documentElement.setAttribute('lang', lang); } catch (e) {}
+    if (lang === 'en') translateAll();
+  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
