@@ -925,7 +925,9 @@ async function handleApi(req, res, urlPath) {
         var sql = activeOnly
           // Een webbestelling verschijnt enkel als ze betaald is. Kassabonnen
           // (source 'pos') zijn aan de toog betaald en komen altijd door.
-          ? "SELECT * FROM orders WHERE status != 'afgehaald' AND (source != 'web' OR pay_status = 'paid') ORDER BY id ASC LIMIT 200"
+          // Een geannuleerde bon hoort niet meer op het keukenbord: ze wordt niet
+          // gemaakt en telt niet mee in de omzet.
+          ? "SELECT * FROM orders WHERE status NOT IN ('afgehaald','geannuleerd') AND voided_at IS NULL AND (source != 'web' OR pay_status = 'paid') ORDER BY id ASC LIMIT 200"
           : "SELECT * FROM orders WHERE (source != 'web' OR pay_status = 'paid') ORDER BY id DESC LIMIT 200";
         var rows = db.prepare(sql).all().map(function (o) {
           o.items = o.items ? JSON.parse(o.items) : [];
@@ -1082,7 +1084,10 @@ var server = http.createServer(function (req, res) {
 
 server.listen(PORT, function () {
   console.log('La Mia Pizzeria — systeem draait');
-  console.log('  ↳ open http://localhost:' + PORT + '/beheer.html   (beheer, PIN ' + currentPin() + ')');
+  // De beheer-PIN stond hier vroeger voluit in. Op Railway staan die logs in het
+  // dashboard, dus die PIN wordt enkel nog getoond wanneer je lokaal draait.
+  var lokaal = !process.env.RAILWAY_ENVIRONMENT && process.env.NODE_ENV !== 'production';
+  console.log('  ↳ open http://localhost:' + PORT + '/beheer.html   (beheer' + (lokaal ? ', PIN ' + currentPin() : '') + ')');
   console.log('  ↳ site   http://localhost:' + PORT + '/');
 });
 
