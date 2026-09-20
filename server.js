@@ -105,6 +105,9 @@ db.exec(
   "  source TEXT NOT NULL DEFAULT 'web'" +        // web | pos
   ');'
 );
+// De kassa zoekt op bonnummer om te zien of een herkansing al aangekomen is.
+// Zonder index wordt dat bij elke bestelling een scan over de hele tabel.
+db.exec('CREATE INDEX IF NOT EXISTS idx_orders_no ON orders(no);');
 
 /* categorie → standaardafbeelding voor de webshopkaartjes */
 var CAT_IMG = {
@@ -587,6 +590,18 @@ async function handleApi(req, res, urlPath) {
     var cust = ob.customer || {};
     var now = new Date().toISOString();
     var providedNo = (source === 'pos' && ob.no) ? String(ob.no).slice(0, 20) : null;
+    // De kassa bewaart bonnen die niet verstuurd raakten en probeert het later opnieuw.
+    // Zo'n herkansing mag geen tweede bon aanmaken: kent de database dit bonnummer al,
+    // dan is de vorige poging wél aangekomen en bevestigen we gewoon die bestelling.
+    if (providedNo) {
+      var dup = db.prepare('SELECT id,no,total,type FROM orders WHERE no=?').get(providedNo);
+      if (dup) {
+        return sendJson(res, 200, {
+          no: dup.no, id: dup.id, total: dup.total, duplicate: true,
+          eta: dup.type === 'leveren' ? '35–50 min' : '20–30 min'
+        });
+      }
+    }
     var payVal = (source === 'pos' && ob.pay) ? JSON.stringify(ob.pay) : null;
     // online betalen via Mollie? enkel de webshop, en enkel als Mollie is ingesteld
     var wantsOnline = (source === 'web' && String(ob.pay_method || '') === 'online' && !!MOLLIE_API_KEY);

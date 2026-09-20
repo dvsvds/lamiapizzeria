@@ -55,6 +55,8 @@
   .tbtn{border:1px solid var(--line-2);background:var(--panel);color:var(--cream);border-radius:10px;padding:.5rem .8rem;font-weight:800;font-size:.82rem;display:inline-flex;align-items:center;gap:.4rem;transition:.12s}
   .tbtn:hover{border-color:var(--gold);color:var(--gold)}
   .tbtn .badge{background:var(--coral);color:#fff;border-radius:999px;font-size:.68rem;padding:.05rem .42rem;font-weight:800}
+  /* Bonnen die nog niet bij de server geraakten. Alleen zichtbaar als er iets wacht. */
+  .tbtn.sync{background:var(--coral);color:#fff;border-color:var(--coral);cursor:default;font-weight:800}
 
   .main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 400px;min-height:0}
 
@@ -248,6 +250,7 @@
     </div>
     <span class="clock" id="clock">—</span>
     <span class="spacer"></span>
+    <span class="tbtn sync" id="syncBadge" style="display:none" role="status" aria-live="polite"></span>
     <button class="tbtn" id="btnOnline" title="Online bestellingen van de website">🌐 Online <span class="badge" id="onlineBadge" style="display:none">0</span></button>
     <button class="tbtn" id="btnPark2" title="Bekijk geparkeerde bons">🅿️ Geparkeerd <span class="badge" id="parkBadge" style="display:none">0</span></button>
     <button class="tbtn" id="btnReport">📊 Dagrapport</button>
@@ -530,7 +533,8 @@
      2. STATE + PERSISTENTIE
      ============================================================= */
   var LS={cart:'lamia_pos_cart',parked:'lamia_pos_parked',sales:'lamia_pos_sales',
-          seq:'lamia_pos_seq',theme:'lamia_pos_theme',closed:'lamia_pos_closed'};
+          seq:'lamia_pos_seq',theme:'lamia_pos_theme',closed:'lamia_pos_closed',
+          outbox:'lamia_pos_outbox'};
   var state={ lines:[], type:'afhalen', table:'', discount:{pct:0,eur:0}, cust:{name:'',phone:'',address:''}, prepriced:false, onlinePaid:false };
   var parked=[], sales=[], seq={date:'',n:0};
 
@@ -972,20 +976,98 @@
     setTimeout(function(){ window.print(); }, 120);
   }
 
-  // Afgerekende bon naar de centrale database sturen (best effort — de kassa
-  // werkt gewoon door als de server even niet bereikbaar is; alles staat ook lokaal).
+  /* -------------------------------------------------------------
+     Verkoop doorsturen — met wachtrij
+
+     Elke afgerekende bon gaat eerst in een wachtrij in localStorage en pas
+     daarna de deur uit. Lukt het versturen niet (server plat, Railway die
+     herstart na een deploy, wifi even weg), dan blijft de bon in de rij staan
+     en probeert de kassa het vanzelf opnieuw. Zo verdwijnt er nooit meer een
+     verkoop uit de omzet en de BTW-aangifte.
+
+     Het bonnummer gaat mee als sleutel: herkent de server het nummer al, dan
+     bevestigt hij de bestaande bon in plaats van een tweede aan te maken.
+     ------------------------------------------------------------- */
+  var outbox=load(LS.outbox,[]);
+  var flushing=false, flushTimer=null;
+  // activate() woont in het online-blok verderop; die zet de serververbinding op.
+  // Hij wordt daar aan posActivate gehangen zodat de wachtrij hem ook kan gebruiken.
+  var posActivate=null;
+  function tryActivate(){ if(posActivate) posActivate(); }
+
+  function saveOutbox(){ save(LS.outbox,outbox); updateSyncBadge(); }
+
   function postSaleToServer(sale, no){
-    if(!window.fetch || !serverSession) return;  // enkel doorsturen als de kassa is ingelogd
-    try{
-      fetch('api/orders',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({
+    outbox.push({
+      no:'K-'+String(no).padStart(4,'0'), ts:sale.ts, tries:0,
+      body:{
         source:'pos', no:'K-'+String(no).padStart(4,'0'),
         type:sale.type, table:sale.table,
         customer:{ name:(sale.cust&&sale.cust.name)||'', phone:(sale.cust&&sale.cust.phone)||'', address:(sale.cust&&sale.cust.address)||'' },
         items:sale.lines.map(function(l){return {name:l.name,cat:l.cat,opts:l.opts,note:l.note,unit:l.unit,qty:l.qty};}),
         discount:sale.disc, pay:sale.pay
-      })}).catch(function(){});
-    }catch(e){}
+      }
+    });
+    saveOutbox();
+    flushOutbox();
   }
+
+  // De rij leegmaken, oudste bon eerst. Stopt bij de eerste die niet doorkomt,
+  // zodat de volgorde bewaard blijft en de server niet overspoeld wordt.
+  function flushOutbox(){
+    if(flushing || !outbox.length || !window.fetch) return;
+    if(!serverSession){ tryActivate(); return; }   // eerst weer verbinding maken
+    flushing=true;
+    var item=outbox[0];
+    fetch('api/orders',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(item.body)})
+      .then(function(r){
+        if(r.ok){
+          outbox.shift(); saveOutbox();
+          flushing=false;
+          if(outbox.length) flushOutbox();          // meteen door met de volgende
+          else if(flushTimer){ clearInterval(flushTimer); flushTimer=null; }
+          return;
+        }
+        // 4xx = de server weigert deze bon inhoudelijk; opnieuw proberen helpt niet.
+        // We halen hem uit de rij zodat hij de rest niet blokkeert, maar bewaren
+        // hem apart zodat er niets ongemerkt verdwijnt.
+        if(r.status>=400 && r.status<500){
+          var bad=load('lamia_pos_geweigerd',[]);
+          bad.push({ no:item.no, ts:item.ts, status:r.status, body:item.body });
+          save('lamia_pos_geweigerd',bad);
+          outbox.shift(); saveOutbox();
+          toast('Bon '+item.no+' geweigerd door de server');
+        } else {
+          item.tries++;                            // 5xx → later opnieuw
+        }
+        flushing=false;
+      })
+      .catch(function(){ item.tries++; flushing=false; });  // offline → in de rij laten staan
+    ensureFlushTimer();
+  }
+
+  // Zolang er bonnen wachten, elke 20 seconden opnieuw proberen.
+  function ensureFlushTimer(){
+    if(flushTimer || !outbox.length) return;
+    flushTimer=setInterval(function(){
+      if(!outbox.length){ clearInterval(flushTimer); flushTimer=null; updateSyncBadge(); return; }
+      if(!serverSession) tryActivate();
+      flushOutbox();
+    },20000);
+  }
+
+  // Zichtbaar maken hoeveel bonnen nog niet doorgestuurd zijn. Staat er niets
+  // in de rij, dan blijft de knop onzichtbaar en verandert er niets aan de kassa.
+  function updateSyncBadge(){
+    var b=$('#syncBadge'); if(!b) return;
+    if(!outbox.length){ b.style.display='none'; b.textContent=''; b.removeAttribute('title'); return; }
+    b.style.display='';
+    b.textContent='⏳ '+outbox.length+' niet verstuurd';
+    b.title=outbox.length+' afgerekende bon(nen) wachten op de server. De kassa probeert het vanzelf opnieuw.';
+  }
+
+  // Zodra het toestel weer online is: meteen proberen in plaats van wachten.
+  window.addEventListener('online',function(){ if(!serverSession) tryActivate(); flushOutbox(); });
 
   /* =============================================================
      10. TICKET / BON PRINTEN
@@ -1217,6 +1299,8 @@
   initState();
   $('#otype').querySelectorAll('button').forEach(function(x){x.classList.toggle('active',x.getAttribute('data-type')===state.type);});
   renderTabs(); renderGrid(); renderTicket();
+  // Bonnen die bij een vorige sessie niet doorkwamen, alsnog versturen.
+  updateSyncBadge(); ensureFlushTimer(); flushOutbox();
 
   /* ---------- LIVE MENU uit de database (gedeeld met de webshop) ----------
      Haalt de actuele kaart + prijzen op uit /api/menu. Lukt dat niet (kassa los
@@ -1347,12 +1431,20 @@
       esPos.addEventListener('status',function(ev){ try{ var d=JSON.parse(ev.data); if(d.status!=='nieuw') removeWebOrder(d.id); }catch(e){} });
     }
     // kassa-rol activeren zonder PIN (geeft toegang tot online bestellingen + verkoop doorsturen)
+    var activating=false;
     function activate(){
+      if(activating) return Promise.resolve(false);
+      activating=true;
       return fetch('api/pos/hello',{method:'POST',credentials:'same-origin'})
         .then(function(){ return loadInitial(); })
-        .then(function(ok){ if(ok){ onlineAuthed=true; serverSession=true; connectSSE(); } return ok; })
-        .catch(function(){ return false; });
+        .then(function(ok){
+          activating=false;
+          if(ok){ onlineAuthed=true; serverSession=true; connectSSE(); flushOutbox(); }
+          return ok;
+        })
+        .catch(function(){ activating=false; return false; });
     }
+    posActivate=activate;   // de verkoop-wachtrij mag hem ook gebruiken
 
     $('#btnOnline').onclick=function(){
       stopAlarm(); // personeel heeft gereageerd → alarm stopt
@@ -1383,6 +1475,15 @@
     });
 
     activate(); // stille poging bij opstart (als er al een sessie is)
+
+    // Lukte die eerste poging niet — bijvoorbeeld omdat de kassa geopend werd
+    // terwijl de server net herstartte na een deploy — dan bleef de kassa
+    // vroeger de hele avond losgekoppeld. Nu proberen we het stil opnieuw tot
+    // de verbinding er is.
+    var reconnect=setInterval(function(){
+      if(serverSession){ clearInterval(reconnect); return; }
+      activate();
+    },30000);
   })();
 })();
 </script>
