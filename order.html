@@ -6,6 +6,8 @@
 <title>Bestellen — La Mia Pizzeria Antwerpen</title>
 <meta name="description" content="La Mia Pizzeria, Abdijstraat 226a Antwerpen. New York style pizzaslices, vers deeg en dagverse toppings. Afhalen &amp; bezorgen. 4,7★ · 260 reviews. Bekijk het menu en de promo's.">
 <meta name="theme-color" content="#141110">
+<script>/* thema herstellen vóór het tekenen, anders flitst de pagina even wit */
+try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.setAttribute('data-theme','dark'); }catch(e){}</script>
 <link rel="canonical" href="https://lamiapizzeria.be/">
 <!-- Open Graph / social preview -->
 <meta property="og:type" content="restaurant">
@@ -2093,9 +2095,14 @@
   /* ---- Light / dark theme toggle ---- */
   (function(){
     var btn=document.getElementById('themeToggle'),root=document.documentElement;
+    // Het gekozen thema staat al vóór het tekenen ingesteld (script in de head);
+    // hier zetten we enkel het icoon goed en bewaren we elke wissel.
+    if(root.getAttribute('data-theme')==='dark') btn.textContent='☀️';
     btn.addEventListener('click',function(){
-      if(root.getAttribute('data-theme')==='dark'){root.removeAttribute('data-theme');btn.textContent='🌙';}
-      else{root.setAttribute('data-theme','dark');btn.textContent='☀️';}
+      var naarDonker=root.getAttribute('data-theme')!=='dark';
+      if(naarDonker){ root.setAttribute('data-theme','dark'); btn.textContent='☀️'; }
+      else { root.removeAttribute('data-theme'); btn.textContent='🌙'; }
+      try{ localStorage.setItem('lamia_thema', naarDonker?'dark':'light'); }catch(e){}
     });
   })();
 
@@ -2337,10 +2344,17 @@
     b.setAttribute('aria-label', target==='nl'?'Schakel naar Nederlands':'Switch to English');
   }
   window.__i18nApply=apply;
-  function setLang(lang){ document.documentElement.setAttribute('lang',lang); document.documentElement.setAttribute('data-lang',lang); apply(); }
+  /* De taalkeuze werd nergens bewaard: wie naar Engels schakelde en doorklikte
+     naar een andere pagina, stond meteen weer in het Nederlands. Ook een
+     gewone verversing wiste de keuze. Nu onthouden we ze per bezoeker. */
+  var TAALSLEUTEL='lamia_taal';
+  function bewaarTaal(l){ try{ localStorage.setItem(TAALSLEUTEL,l); }catch(e){} }
+  function bewaardeTaal(){ try{ return localStorage.getItem(TAALSLEUTEL); }catch(e){ return null; } }
+  function setLang(lang){ document.documentElement.setAttribute('lang',lang); document.documentElement.setAttribute('data-lang',lang); bewaarTaal(lang); apply(); }
   var btn=document.getElementById('langToggle');
   if(btn){ btn.addEventListener('click',function(){ setLang(document.documentElement.getAttribute('data-lang')==='en'?'nl':'en'); }); }
-  renderLangBtn(document.documentElement.getAttribute('data-lang')==='en'?'en':'nl');
+  if(bewaardeTaal()==='en') setLang('en');
+  else renderLangBtn(document.documentElement.getAttribute('data-lang')==='en'?'en':'nl');
 })();
 </script>
 </body>
