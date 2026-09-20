@@ -1000,7 +1000,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
     <div class="section-head">
       <span class="kicker">Bestel online</span>
       <h2>Online bestellen</h2>
-      <p>Kies uit het menu, personaliseer en reken af. Betalen kan bij afhaling/levering.</p>
+      <p>Kies uit het menu, personaliseer en reken af. Je betaalt meteen online met Bancontact of kaart.</p>
     </div>
 
     <p class="halal-note">🥩 <b>Al ons vlees is 100% halal.</b> Onze pepperoni, salami, ham en spek zijn halal varianten.</p>
@@ -1095,6 +1095,9 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
       <div class="co-pay">
         <label class="co-radio" id="payCashRow"><input type="radio" name="pay" value="ter plaatse" checked> <span>Betalen bij afhaling / levering</span></label>
         <label class="co-radio" id="payOnlineRow" style="display:none"><input type="radio" name="pay" value="online" id="payOnline"> <span>Online betalen <small>(Bancontact, kaart…)</small></span></label>
+        <!-- Online bestellen kan enkel met onmiddellijke betaling. Kan Mollie even
+             niet, dan heeft bestellen geen zin en sturen we de klant naar de telefoon. -->
+        <p class="co-note" id="payUit" style="display:none">Online bestellen is even niet mogelijk. Bel ons op <a href="tel:+3236442331">03 644 23 31</a> om te bestellen.</p>
       </div>
       <div class="co-review" id="coReview"></div>
       <button type="submit" class="btn btn-primary co-submit">Bestelling plaatsen →</button>
@@ -1565,11 +1568,19 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
           if(!j||!j.products||!j.products.length) return;
           // leveringskosten & minimum uit de serverconfig (blijft in sync met de kassa)
           if(j.config){ if(typeof j.config.deliveryFee==='number') DELIVERY_FEE=j.config.deliveryFee; if(typeof j.config.minOrder==='number') MIN_ORDER=j.config.minOrder;
+            var cashRow=$('#payCashRow'), por=$('#payOnlineRow'), pon=$('#payOnline'), uit=$('#payUit');
+            if(cashRow) cashRow.style.display='none';   // betalen bij afhaling bestaat niet meer online
             if(j.config.online){
-              // Online betalen beschikbaar → op de website enkel met kaart/Bancontact (geen cash)
-              var por=$('#payOnlineRow'); if(por) por.style.display='';
-              var pon=$('#payOnline'); if(pon) pon.checked=true;      // online standaard aangevinkt
-              var cashRow=$('#payCashRow'); if(cashRow) cashRow.style.display='none'; // cash-optie verbergen
+              // Online betalen beschikbaar → enkel met kaart/Bancontact
+              if(por) por.style.display='';
+              if(pon) pon.checked=true;
+              if(uit) uit.style.display='none';
+            } else {
+              // Geen online betaling mogelijk → bestellen heeft geen zin; verwijs naar de telefoon
+              if(por) por.style.display='none';
+              if(uit) uit.style.display='';
+              var verzend=document.querySelector('.co-submit');
+              if(verzend){ verzend.disabled=true; verzend.textContent='Online bestellen even niet mogelijk'; }
             } }
           var mapped=j.products.map(function(p){
             return {id:p.id, c:p.cat, t:p.type||'simple', name:p.name, desc:p.descr||'',
@@ -1826,7 +1837,8 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
       if(t==='uur'){ var el=$('#coTimeField input'); var u=el?el.value.trim():''; return u?('Om '+u):'Specifiek uur'; }
       return 'Zo snel mogelijk';
     }
-    function coPayLabel(f){ try{ return f.pay.value==='online'?'Online betalen':'Betalen bij afhaling/levering'; }catch(e){ return 'Betalen bij afhaling/levering'; } }
+    // Online bestellen kan enkel met onmiddellijke betaling; betalen bij afhaling bestaat hier niet meer.
+    function coPayLabel(){ return 'Online betalen'; }
     function buildWaUrl(f,num){
       var sub=subtotal(), L=[];
       L.push('🍕 *NIEUWE BESTELLING* — La Mia Pizzeria');
@@ -2214,7 +2226,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
     "beoordelingen samengebracht van google en uber eats.":"Ratings collected from Google and Uber Eats.",
     "lees alle reviews op google →":"Read all reviews on Google →","google-review":"Google review",
     "online bestellen":"Order online","🔥 meest gekozen":"🔥 Most popular","⭐ meest gekozen":"⭐ Most popular","🔥 deals":"🔥 Deals","vanaf":"From","📋 menu":"📋 Menu","🥤 drankjes":"🥤 Drinks","🔥 promoties":"🔥 Deals",
-    "kies uit het menu, personaliseer en reken af. betalen kan bij afhaling/levering.":"Pick from the menu, customise and check out. Pay on pickup/delivery.",
+    "kies uit het menu, personaliseer en reken af. je betaalt meteen online met bancontact of kaart.":"Pick from the menu, customise and check out. You pay online right away with Bancontact or card.",
     "kies ingrediënten — ze verschijnen live op je pizza.":"Pick ingredients — they appear live on your pizza.","jouw pizza":"Your pizza","nog geen ingrediënten gekozen.":"No ingredients selected yet.","➕ voeg toe aan mandje":"➕ Add to cart",
     "toevoegen":"Add","toevoegen ·":"Add ·","🛒 winkelmandje":"🛒 Cart","je mandje is leeg. voeg iets toe uit het menu.":"Your cart is empty. Add something from the menu.",
     "🛵 leveren":"🛵 Delivery","leveren":"Delivery","subtotaal":"Subtotal","leveringskosten":"Delivery fee","totaal":"Total","bestelling afronden →":"Checkout →",

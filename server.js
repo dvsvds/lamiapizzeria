@@ -657,6 +657,20 @@ async function handleApi(req, res, urlPath) {
     var payVal = (source === 'pos' && ob.pay) ? JSON.stringify(ob.pay) : null;
     // online betalen via Mollie? enkel de webshop, en enkel als Mollie is ingesteld
     var wantsOnline = (source === 'web' && String(ob.pay_method || '') === 'online' && !!MOLLIE_API_KEY);
+    /* Een webbestelling wordt enkel aangenomen als ze online betaald wordt.
+
+       Vroeger kon de webshop ook een bestelling doorsturen die pas bij afhaling
+       of levering betaald werd; die kwam meteen op het keukenscherm en in de
+       kassa terecht, zonder dat er geld binnen was. De bestelpagina biedt die
+       keuze al niet meer aan, maar de server nam ze nog wel aan — bijvoorbeeld
+       van een pagina die nog in de browser openstond. Nu wordt ze geweigerd. */
+    if (source === 'web' && !wantsOnline) {
+      return sendJson(res, 400, {
+        error: MOLLIE_API_KEY
+          ? 'Online bestellen kan enkel met onmiddellijke betaling. Herlaad de pagina en betaal met kaart of Bancontact.'
+          : 'Online bestellen is even niet mogelijk. Bel ons op 03 644 23 31 om te bestellen.'
+      });
+    }
     var payStatus = wantsOnline ? 'open' : 'later';  // 'open' = wacht op online betaling → nog niet naar de keuken
     var out = db.prepare(
       'INSERT INTO orders (no,created_at,type,tbl,cust_name,cust_phone,cust_email,cust_address,items,subtotal,discount,delivery,total,pay,vat,note,time_wanted,status,source,pay_status,client_key) ' +
@@ -689,11 +703,14 @@ async function handleApi(req, res, urlPath) {
         return sendJson(res, 200, { no: no, id: oid, eta: eta, total: total, checkoutUrl: checkout });
       } catch (e) {
         db.prepare('DELETE FROM orders WHERE id=?').run(oid); // niks half laten staan
-        return sendJson(res, 502, { error: 'Online betaling kon niet gestart worden. Probeer opnieuw of kies betalen bij afhaling/levering.' });
+        return sendJson(res, 502, { error: 'De betaling kon niet gestart worden. Probeer het straks opnieuw, of bel ons op 03 644 23 31 om te bestellen.' });
       }
     }
 
-    broadcast('order', orderRow(oid)); // live naar het keukenscherm (betaald bij afhaling of aan de kassa)
+    // Enkel doorsturen wat ook echt getoond mag worden. Een webbestelling die
+    // nog op de betaling wacht, verschijnt pas als Mollie bevestigt dat ze
+    // betaald is (zie de webhook hieronder).
+    if (!wantsOnline) broadcast('order', orderRow(oid)); // kassabon, of betaald aan de toog
     return sendJson(res, 200, { no: no, id: oid, eta: eta, subtotal: subtotal, discount: discount, delivery: delivery, total: total });
   }
 
@@ -906,8 +923,10 @@ async function handleApi(req, res, urlPath) {
       if (method === 'GET') {
         var activeOnly = urlPath.indexOf('active=1') >= 0;
         var sql = activeOnly
-          ? "SELECT * FROM orders WHERE status != 'afgehaald' AND (pay_status IS NULL OR pay_status != 'open') ORDER BY id ASC LIMIT 200"
-          : "SELECT * FROM orders WHERE (pay_status IS NULL OR pay_status != 'open') ORDER BY id DESC LIMIT 200";
+          // Een webbestelling verschijnt enkel als ze betaald is. Kassabonnen
+          // (source 'pos') zijn aan de toog betaald en komen altijd door.
+          ? "SELECT * FROM orders WHERE status != 'afgehaald' AND (source != 'web' OR pay_status = 'paid') ORDER BY id ASC LIMIT 200"
+          : "SELECT * FROM orders WHERE (source != 'web' OR pay_status = 'paid') ORDER BY id DESC LIMIT 200";
         var rows = db.prepare(sql).all().map(function (o) {
           o.items = o.items ? JSON.parse(o.items) : [];
           o.pay = o.pay ? JSON.parse(o.pay) : null;
