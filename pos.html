@@ -195,6 +195,12 @@
   .split-row label{font-size:.72rem;color:var(--muted);font-weight:800;text-transform:uppercase;display:block;margin-bottom:.25rem}
   .split-row input{width:100%;background:var(--ink);border:1px solid var(--line-2);border-radius:9px;color:var(--cream);padding:.55rem;font-weight:800;font-size:1rem;text-align:right}
 
+  /* keuzelijsten in een deal: welke pizza's en welke drank */
+  .dealsel{width:100%;background:var(--ink);border:1px solid var(--line-2);border-radius:10px;color:var(--cream);
+    padding:.7rem .6rem;font-weight:800;font-size:1rem;margin-bottom:.45rem}
+  .dealsel:focus{outline:none;border-color:var(--gold)}
+  .dealsel:last-child{margin-bottom:0}
+
   /* vraag-/bevestigingsvenster (vervangt prompt en confirm van de browser) */
   #askField label{font-size:.72rem;color:var(--muted);font-weight:800;text-transform:uppercase;display:block;margin-bottom:.3rem}
   #askInput{width:100%;background:var(--ink);border:1px solid var(--line-2);border-radius:10px;color:var(--cream);padding:.75rem .7rem;font-weight:800;font-size:1.05rem}
@@ -270,6 +276,7 @@
     <button class="tbtn koppel" id="btnKoppel" style="display:none" title="Dit toestel één keer aan de server koppelen met de beheer-PIN">🔌 Koppelen</button>
     <button class="tbtn" id="btnOnline" title="Online bestellingen van de website">🌐 Online <span class="badge" id="onlineBadge" style="display:none">0</span></button>
     <button class="tbtn" id="btnPark2" title="Bekijk geparkeerde bons">🅿️ Geparkeerd <span class="badge" id="parkBadge" style="display:none">0</span></button>
+    <button class="tbtn" id="btnBonnen" title="De laatste bonnen opnieuw afdrukken of annuleren">🧾 Bonnen</button>
     <button class="tbtn" id="btnReport">📊 Dagrapport</button>
     <button class="tbtn" id="btnFull" title="Volledig scherm (kiosk)">⛶ Scherm</button>
     <button class="tbtn" id="btnTheme" title="Licht / donker">🌙</button>
@@ -372,6 +379,13 @@
 </div></div>
 
 <!-- Report modal -->
+<!-- De laatste bonnen: opnieuw afdrukken als er eentje kwijtraakt, of een fout
+     aangeslagen bon annuleren. Afdrukken kan zonder PIN — dat moet aan de toog
+     meteen kunnen. Annuleren raakt de omzet en vraagt dus de manager-PIN. -->
+<div class="ov" id="ovBonnen"><div class="modal wide"><div class="mhead"><h3>🧾 Laatste bonnen</h3><button class="x" data-close>✕</button></div>
+  <div class="mbody"><div class="plist" id="bonnenLijst"></div></div>
+</div></div>
+
 <div class="ov" id="ovReport"><div class="modal wide"><div class="mhead"><h3>Dagrapport</h3><button class="x" data-close>✕</button></div>
   <div class="mbody" id="reportBody"></div>
   <div class="mfoot">
@@ -671,7 +685,7 @@
       el.className='pcard'; el.style.setProperty('--cc',col);
       // eigen productkleur → het hele vakje getint (achtergrond + rand)
       if(p.color){ var rgb=hexRgb(p.color); if(rgb){ el.style.background='rgba('+rgb+',.16)'; el.style.borderColor='rgba('+rgb+',.55)'; } }
-      var needOpt=(p.t==='pizza'||p.t==='drink'||p.t==='pasta');
+      var needOpt=(p.t==='pizza'||p.t==='drink'||p.t==='pasta'||p.t==='promo');
       el.innerHTML=(needOpt?'<span class="opt-flag">opties</span>':'')+
         '<div class="ptxt"><div class="pn">'+esc(p.name)+'</div><div class="pd">'+esc(p.desc)+'</div></div>'+
         '<div class="pp">'+euro(p.price+delvSur(p.c))+'</div>';
@@ -693,7 +707,7 @@
 
   var optCtx=null;
   function openOptions(p){
-    optCtx={p:p, size:(p.t==='pizza'?1:0), formaat:0, sauce:0, extras:[], extraKaas:false, note:'', qty:1};
+    optCtx={p:p, size:(p.t==='pizza'?1:0), formaat:0, sauce:0, extras:[], extraKaas:false, note:'', qty:1, dealPizzas:[], dealDrank:''};
     $('#optTitle').textContent=p.name;
     var b=$('#optBody'), h='';
     h+='<p class="hint" style="margin:-.3rem 0 1rem">'+esc(p.desc)+'</p>';
@@ -713,6 +727,24 @@
       PASTA_SAUCE.forEach(function(x,i){ h+='<button class="opt-pill'+(i===0?' on':'')+'" data-i="'+i+'">'+esc(x.k)+'</button>'; });
       h+='</div></div>';
       h+='<div class="opt-group"><h4>Extra</h4><div class="opt-row" data-g="kaas"><button class="opt-pill" data-i="0">Extra kaas <small>+'+euro(1.5)+'</small></button></div></div>';
+    } else if(p.t==='promo'){
+      /* Een deal bestaat uit een aantal pizza's naar keuze. Tot nu toe werd ze
+         als één regel op de bon gezet en moest het personeel er zelf bij
+         onthouden welke pizza's de klant koos. Nu duid je ze hier aan; ze komen
+         op de bon en dus ook op het keukenscherm. */
+      var pizzaNamen=PRODUCTS.filter(function(x){return x.c==='pizza';}).map(function(x){return x.name;});
+      var drankNamen=PRODUCTS.filter(function(x){return DRINK_CATS[x.c];}).map(function(x){return x.name;});
+      h+='<div class="opt-group"><h4>Welke pizza\'s?</h4>';
+      for(var dp=0;dp<(p.pizzas||1);dp++){
+        h+='<select class="dealsel" data-deal="pizza" data-n="'+dp+'"><option value="">Pizza '+(dp+1)+' kiezen…</option>'+
+           pizzaNamen.map(function(nm){ return '<option>'+esc(nm)+'</option>'; }).join('')+'</select>';
+      }
+      h+='</div>';
+      if(p.drink){
+        h+='<div class="opt-group"><h4>Welke drank?</h4><select class="dealsel" data-deal="drank"><option value="">Drank kiezen…</option>'+
+           drankNamen.map(function(nm){ return '<option>'+esc(nm)+'</option>'; }).join('')+'</select></div>';
+      }
+      if(p.side) h+='<p class="hint" style="margin:.2rem 0 0">Inbegrepen: '+esc(p.side)+'</p>';
     }
     h+='<div class="opt-group"><h4>Opmerking</h4><input class="noteinp" id="optNote" placeholder="bv. zonder ui, goed doorbakken…"></div>';
     b.innerHTML=h;
@@ -730,6 +762,12 @@
         };
       });
     });
+    b.querySelectorAll('.dealsel').forEach(function(sel){
+      sel.onchange=function(){
+        if(this.getAttribute('data-deal')==='drank') optCtx.dealDrank=this.value;
+        else optCtx.dealPizzas[+this.getAttribute('data-n')]=this.value;
+      };
+    });
     $('#optNote').oninput=function(){ optCtx.note=this.value; };
     updateOptPrice();
     openOv('#ovOpt');
@@ -746,6 +784,11 @@
     if(p.t==='pizza'){ out.push(SIZE_LABELS[optCtx.size]); optCtx.extras.forEach(function(i){ out.push('+'+PIZZA_EXTRAS[i]); }); }
     else if(p.t==='drink'){ out.push(DRINK_SIZES[optCtx.formaat].k); }
     else if(p.t==='pasta'){ if(optCtx.sauce>0) out.push(PASTA_SAUCE[optCtx.sauce].k); if(optCtx.extraKaas) out.push('+Extra kaas'); }
+    else if(p.t==='promo'){
+      optCtx.dealPizzas.forEach(function(nm){ if(nm) out.push(nm); });
+      if(optCtx.dealDrank) out.push(optCtx.dealDrank);
+      if(p.side) out.push(p.side);
+    }
     return out;
   }
   // de bedragen naast de toppings volgen het gekozen formaat
@@ -758,6 +801,13 @@
   $('#optMinus').onclick=function(){ if(optCtx.qty>1){optCtx.qty--;$('#optQty').textContent=optCtx.qty;updateOptPrice();} };
   $('#optPlus').onclick=function(){ optCtx.qty++;$('#optQty').textContent=optCtx.qty;updateOptPrice(); };
   $('#optAdd').onclick=function(){
+    var pr=optCtx.p;
+    if(pr.t==='promo'){
+      var nodig=pr.pizzas||1, gekozen=0;
+      for(var i=0;i<nodig;i++) if(optCtx.dealPizzas[i]) gekozen++;
+      if(gekozen<nodig){ toast('Kies eerst alle pizza’s van deze deal'); return; }
+      if(pr.drink && !optCtx.dealDrank){ toast('Kies eerst de drank van deze deal'); return; }
+    }
     addLine(optCtx.p, optLabels(), optUnitPrice(), optCtx.note, optCtx.qty);
     closeOv('#ovOpt'); toast(optCtx.p.name+' toegevoegd');
   };
@@ -1091,10 +1141,14 @@
   function saveOutbox(){ save(LS.outbox,outbox); updateSyncBadge(); }
 
   function postSaleToServer(sale, no){
+    // Sleutel om een herkansing te herkennen. Het bonnummer alleen volstaat
+    // niet: de teller begint elke dag opnieuw bij 1, dus K-0001 komt elke dag
+    // terug. Met de datum erbij is elke bon eenmalig.
+    var sleutel='pos-'+String(sale.ts).slice(0,10)+'-'+String(no).padStart(4,'0');
     outbox.push({
       no:'K-'+String(no).padStart(4,'0'), ts:sale.ts, tries:0,
       body:{
-        source:'pos', no:'K-'+String(no).padStart(4,'0'),
+        source:'pos', no:'K-'+String(no).padStart(4,'0'), clientKey:sleutel,
         type:sale.type, table:sale.table,
         customer:{ name:(sale.cust&&sale.cust.name)||'', phone:(sale.cust&&sale.cust.phone)||'', address:(sale.cust&&sale.cust.address)||'' },
         items:sale.lines.map(function(l){return {name:l.name,cat:l.cat,opts:l.opts,note:l.note,unit:l.unit,qty:l.qty};}),
@@ -1224,8 +1278,12 @@
      11. DAGRAPPORT (X / Z)
      ============================================================= */
   function reportData(){
-    var r={count:sales.length,total:0,cash:0,card:0,online:0,disc:0,delivery:0,vat:{},byCat:{},byType:{terplaatse:0,afhalen:0,leveren:0}};
+    var r={count:0,total:0,cash:0,card:0,online:0,disc:0,delivery:0,vat:{},byCat:{},byType:{terplaatse:0,afhalen:0,leveren:0},geannuleerd:{count:0,amount:0}};
     sales.forEach(function(s){
+      // een geannuleerde bon blijft in de lijst staan maar telt niet mee,
+      // net zoals in de rapporten op de server
+      if(s.geannuleerd){ r.geannuleerd.count++; r.geannuleerd.amount+=s.total; return; }
+      r.count++;
       r.total+=s.total; r.disc+=s.disc; r.delivery+=s.delivery;
       r.cash+=(s.pay.cash||0); r.card+=(s.pay.card||0);
       if(s.pay.method==='online') r.online+=s.total; // online betaald via de website (Mollie)
@@ -1240,7 +1298,8 @@
     var b=$('#reportBody');
     var opened=sales.length?new Date(sales[0].ts):new Date();
     var h='';
-    h+='<p class="hint" style="margin-top:-.3rem;margin-bottom:1rem">Sessie sinds openen · '+sales.length+' afgerekende bon(s)</p>';
+    h+='<p class="hint" style="margin-top:-.3rem;margin-bottom:1rem">Sessie sinds openen · '+r.count+' afgerekende bon(s)'+
+       (r.geannuleerd.count?' · <span style="color:var(--red)">'+r.geannuleerd.count+' geannuleerd ('+euro(r.geannuleerd.amount)+')</span>':'')+'</p>';
     h+='<div class="rep-grid">'+
        '<div class="rep-card"><div class="k">Omzet (incl. BTW)</div><div class="v">'+euro(r.total)+'</div></div>'+
        '<div class="rep-card"><div class="k">Aantal bons</div><div class="v">'+r.count+'</div></div>'+
@@ -1292,6 +1351,101 @@
     var s=sales[+rb.getAttribute('data-reprint')]; if(!s) return;
     buildReceipt(s); setTimeout(function(){ window.print(); }, 100);
   });
+
+  /* -------------------------------------------------------------
+     Laatste bonnen
+
+     Raakt er een bon kwijt, dan moet het personeel hem meteen opnieuw kunnen
+     afdrukken — zonder de manager erbij te halen. Vandaar deze lijst, los van
+     het dagrapport (dat achter de manager-PIN zit omdat het de omzet toont).
+     Hier staan enkel de laatste tien bonnen, zonder dagtotalen.
+
+     Annuleren staat er wél bij, maar vraagt de manager-PIN: dat haalt geld uit
+     de omzet. De bon verdwijnt niet, ze wordt gemarkeerd en telt niet meer mee.
+     ------------------------------------------------------------- */
+  var LAATSTE_BONNEN=10;
+
+  function openBonnen(){
+    var l=$('#bonnenLijst');
+    var recent=sales.slice(-LAATSTE_BONNEN).reverse();     // nieuwste eerst
+    if(!recent.length){
+      l.innerHTML='<p class="hint" style="text-align:center;padding:1.5rem">Nog geen afgerekende bonnen vandaag.</p>';
+    } else {
+      var TYPEIC={terplaatse:'🍽',afhalen:'🥡',leveren:'🛵'};
+      l.innerHTML=recent.map(function(s){
+        var i=sales.indexOf(s);
+        var t=new Date(s.ts), tm=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+        var pmm=(s.pay&&s.pay.method);
+        var pm=pmm==='online'?'🌐':(pmm==='card'?'💳':(pmm==='split'?'🔀':'💵'));
+        var wie=(s.cust&&s.cust.name)?(' · '+esc(s.cust.name)):(s.table?(' · T'+esc(s.table)):'');
+        var aantal=(s.lines||[]).reduce(function(a,x){return a+x.qty;},0);
+        return '<div class="pitem"'+(s.geannuleerd?' style="opacity:.55"':'')+'>'+
+          '<div class="meta"><b>Bon #'+s.no+'</b> '+(s.geannuleerd?'<span style="color:var(--red);font-weight:800">· GEANNULEERD</span>':'')+
+            '<div>'+tm+' · '+(TYPEIC[s.type]||'')+' '+pm+wie+' · '+aantal+' artikel(en)</div>'+
+            '<div style="color:var(--gold);font-weight:800;font-size:.95rem">'+euro(s.total)+'</div></div>'+
+          '<div class="acts">'+
+            '<button class="load" data-bonprint="'+i+'">🖨 Afdrukken</button>'+
+            (s.geannuleerd?'':'<button class="del" data-bonannul="'+i+'">✕ Annuleren</button>')+
+          '</div></div>';
+      }).join('');
+    }
+    openOv('#ovBonnen');
+  }
+  $('#btnBonnen').onclick=openBonnen;
+
+  $('#bonnenLijst').addEventListener('click',function(e){
+    var pr=e.target.closest('[data-bonprint]'), an=e.target.closest('[data-bonannul]');
+    if(pr){
+      var s=sales[+pr.getAttribute('data-bonprint')]; if(!s) return;
+      buildReceipt(s); setTimeout(function(){ window.print(); }, 100);
+      toast('Bon #'+s.no+' opnieuw afgedrukt');
+      return;
+    }
+    if(an){
+      var idx=+an.getAttribute('data-bonannul'), sa=sales[idx]; if(!sa) return;
+      annuleerBon(idx,sa);
+    }
+  });
+
+  function annuleerBon(idx,sa){
+    askConfirm({
+      title:'Bon #'+sa.no+' annuleren?',
+      msg:'Bedrag: '+euro(sa.total)+'\n\nDe bon blijft bewaard, maar telt niet meer mee in de omzet en de BTW. Dit kan niet ongedaan gemaakt worden.',
+      ok:'Bon annuleren', danger:true
+    }).then(function(ja){
+      if(!ja) return;
+      return ask({title:'Manager-PIN',msg:'Een bon annuleren haalt geld uit de omzet en kan enkel met de manager-PIN.',label:'Manager-PIN',input:true,password:true,numeric:true,ok:'Bevestigen'})
+        .then(function(pin){
+          if(pin===null) return;
+          if(!window.fetch){ toast('Geen verbinding'); return; }
+          return fetch('api/report-login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:pin})})
+            .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+            .then(function(res){
+              if(!res.ok){ toast(res.j&&res.j.error?res.j.error:'Verkeerde PIN'); return; }
+              return fetch('api/admin/orders/annuleer',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({no:'K-'+String(sa.no).padStart(4,'0'),reason:'Geannuleerd via de kassa'})})
+                .then(function(r2){ return r2.json().then(function(j2){ return {ok:r2.ok,j:j2}; }); })
+                .then(function(res2){
+                  var bonNr='K-'+String(sa.no).padStart(4,'0');
+                  // Kent de server de bon niet, dan staat ze nog in de wachtrij
+                  // (kassa niet gekoppeld of server was even weg). Ze moet dan
+                  // uit die rij, anders wordt ze later alsnog verstuurd en telt
+                  // ze tóch mee in de omzet.
+                  var nietOpServer = !res2.ok && res2.j && /niet gevonden/i.test(res2.j.error||'');
+                  if(!res2.ok && !nietOpServer){ toast(res2.j&&res2.j.error?res2.j.error:'Annuleren mislukt'); return; }
+                  if(nietOpServer){
+                    var voor=outbox.length;
+                    outbox=outbox.filter(function(x){ return x.no!==bonNr; });
+                    if(outbox.length!==voor) saveOutbox();
+                  }
+                  sales[idx].geannuleerd=true; save(LS.sales,sales);
+                  openBonnen();                    // lijst opnieuw tekenen
+                  toast('Bon #'+sa.no+' geannuleerd');
+                });
+            })
+            .catch(function(){ toast('Geen verbinding — bon niet geannuleerd'); });
+        });
+    });
+  }
   // de dagomzet zit achter de manager-PIN (zelfde als de rapportenpagina)
   $('#btnReport').onclick=function(){
     ask({title:'Dagrapport',msg:'De dagomzet is enkel zichtbaar met de manager-PIN.',label:'Manager-PIN',input:true,password:true,numeric:true,ok:'Bekijken'}).then(function(pin){
@@ -1486,7 +1640,8 @@
         CATS.forEach(function(x){ CATMAP[x.c]=x; });
         PRODUCTS.length=0;
         Array.prototype.push.apply(PRODUCTS, j.products.map(function(p){
-          return {id:p.id, c:p.cat, t:p.type||'simple', name:p.name, desc:p.descr||'', sz:p.sizes||null, price:p.price, tag:p.tag||'', color:p.color||''};
+          return {id:p.id, c:p.cat, t:p.type||'simple', name:p.name, desc:p.descr||'', sz:p.sizes||null, price:p.price, tag:p.tag||'', color:p.color||'',
+                  pizzas:p.pizzas||0, drink:!!p.drink, side:p.side||''};   // een deal: hoeveel pizza's te kiezen, drank erbij, en wat er verder in zit
         }));
         if(!CATS.some(function(x){return x.c===activeCat;})) activeCat='all';
         renderTabs(); renderGrid();

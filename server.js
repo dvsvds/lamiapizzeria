@@ -135,6 +135,14 @@ function imgForCat(cat) { return CAT_IMG[cat] || 'pizza-card'; }
   // online betaling (Mollie): betaalstatus + Mollie-betaal-id
   if (!has('orders', 'pay_status')) db.exec("ALTER TABLE orders ADD COLUMN pay_status TEXT DEFAULT 'later'");
   if (!has('orders', 'mollie_id')) db.exec('ALTER TABLE orders ADD COLUMN mollie_id TEXT');
+  // een geannuleerde bon blijft staan, maar telt niet mee in de omzet:
+  // wanneer en waarom ze geannuleerd is, blijft bewaard voor de boekhouding
+  // sleutel die de kassa meestuurt om een herkansing te herkennen. Het bonnummer
+  // alleen volstaat niet: dat begint elke dag opnieuw bij 1.
+  if (!has('orders', 'client_key')) db.exec('ALTER TABLE orders ADD COLUMN client_key TEXT');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_orders_client_key ON orders(client_key);');
+  if (!has('orders', 'voided_at')) db.exec('ALTER TABLE orders ADD COLUMN voided_at TEXT');
+  if (!has('orders', 'void_reason')) db.exec('ALTER TABLE orders ADD COLUMN void_reason TEXT');
 })();
 // optionele hex-kleur, of null als er geen ingesteld is
 function optColor(c) { return (typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c)) ? c : null; }
@@ -628,8 +636,17 @@ async function handleApi(req, res, urlPath) {
     // De kassa bewaart bonnen die niet verstuurd raakten en probeert het later opnieuw.
     // Zo'n herkansing mag geen tweede bon aanmaken: kent de database dit bonnummer al,
     // dan is de vorige poging wél aangekomen en bevestigen we gewoon die bestelling.
+    var clientKey = (source === 'pos' && ob.clientKey) ? String(ob.clientKey).slice(0, 60) : null;
     if (providedNo) {
-      var dup = db.prepare('SELECT id,no,total,type FROM orders WHERE no=?').get(providedNo);
+      // Het bonnummer alleen is géén goede sleutel: de kassateller begint elke
+      // dag opnieuw bij 1, dus K-0001 komt elke dag terug. Daarom kijken we naar
+      // de sleutel die de kassa meestuurt (nummer + datum). Komt die niet mee —
+      // een bon uit de wachtrij van een oudere versie — dan vergelijken we op
+      // bonnummer binnen dezelfde kalenderdag.
+      var dup = clientKey
+        ? db.prepare('SELECT id,no,total,type FROM orders WHERE client_key=?').get(clientKey)
+        : db.prepare('SELECT id,no,total,type FROM orders WHERE no=? AND substr(created_at,1,10)=?')
+            .get(providedNo, new Date().toISOString().slice(0, 10));
       if (dup) {
         return sendJson(res, 200, {
           no: dup.no, id: dup.id, total: dup.total, duplicate: true,
@@ -642,14 +659,14 @@ async function handleApi(req, res, urlPath) {
     var wantsOnline = (source === 'web' && String(ob.pay_method || '') === 'online' && !!MOLLIE_API_KEY);
     var payStatus = wantsOnline ? 'open' : 'later';  // 'open' = wacht op online betaling → nog niet naar de keuken
     var out = db.prepare(
-      'INSERT INTO orders (no,created_at,type,tbl,cust_name,cust_phone,cust_email,cust_address,items,subtotal,discount,delivery,total,pay,vat,note,time_wanted,status,source,pay_status) ' +
-      'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+      'INSERT INTO orders (no,created_at,type,tbl,cust_name,cust_phone,cust_email,cust_address,items,subtotal,discount,delivery,total,pay,vat,note,time_wanted,status,source,pay_status,client_key) ' +
+      'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
     ).run(providedNo, now, type, (source === 'pos' ? String(ob.table || '').slice(0, 20) : ''),
       String(cust.name || '').slice(0, 120), String(cust.phone || '').slice(0, 40),
       String(cust.email || '').slice(0, 120), String(cust.address || '').slice(0, 240),
       JSON.stringify(items), subtotal, discount, delivery, total,
       payVal, JSON.stringify(vat),
-      String(ob.note || '').slice(0, 300), String(ob.time || '').slice(0, 40), status, source, payStatus);
+      String(ob.note || '').slice(0, 300), String(ob.time || '').slice(0, 40), status, source, payStatus, clientKey);
     var oid = Number(out.lastInsertRowid);
     var no = providedNo || ('LM-' + String(oid).padStart(4, '0'));
     if (!providedNo) db.prepare('UPDATE orders SET no=? WHERE id=?').run(no, oid);
@@ -820,8 +837,9 @@ async function handleApi(req, res, urlPath) {
     if (kind === 'report' || kind === 'export') {
       if (!isManager(req)) return sendJson(res, 401, { error: 'Manager-PIN vereist' });
     } else if (kind === 'orders') {
-      // online bestellingen bekijken/afvinken: kassa-rol (geen PIN) of beheer-sessie
-      if (!isAuthed(req) && !isPos(req)) return sendJson(res, 401, { error: 'Niet toegestaan' });
+      // online bestellingen bekijken/afvinken: kassa-rol, beheer-sessie of manager
+      // (die laatste is nodig om een bon te annuleren)
+      if (!isAuthed(req) && !isPos(req) && !isManager(req)) return sendJson(res, 401, { error: 'Niet toegestaan' });
     } else if (!isAuthed(req)) {
       return sendJson(res, 401, { error: 'Niet ingelogd' });
     }
@@ -904,6 +922,27 @@ async function handleApi(req, res, urlPath) {
         broadcast('status', { id: Number(id), status: st }); // live naar het keukenscherm
         return sendJson(res, 200, { ok: true });
       }
+      /* Een afgerekende bon annuleren.
+
+         Sloeg iemand een bon verkeerd aan, dan stond die fout tot nu toe voorgoed
+         in de omzet en de BTW-aangifte. De bon wordt niet verwijderd — ze blijft
+         staan met het tijdstip en de reden — maar telt niet meer mee. Dat hoort
+         zo: een kassaverkoop laten verdwijnen is geen boekhouding.
+
+         Annuleren vraagt de manager-PIN; het is geen handeling voor aan de toog. */
+      if (method === 'POST' && id === 'annuleer') {
+        if (!isManager(req)) return sendJson(res, 401, { error: 'Manager-PIN vereist' });
+        var vb = await readBody(req);
+        var bonNo = String(vb.no || '').slice(0, 20);
+        if (!bonNo) return sendJson(res, 400, { error: 'Geen bonnummer' });
+        var ord = db.prepare('SELECT id,no,total,status,voided_at FROM orders WHERE no=?').get(bonNo);
+        if (!ord) return sendJson(res, 404, { error: 'Bon niet gevonden' });
+        if (ord.voided_at) return sendJson(res, 200, { ok: true, no: ord.no, al: true });
+        db.prepare("UPDATE orders SET status='geannuleerd', voided_at=?, void_reason=? WHERE id=?")
+          .run(new Date().toISOString(), String(vb.reason || '').slice(0, 200), ord.id);
+        broadcast('status', { id: ord.id, status: 'geannuleerd' });   // van het keukenscherm halen
+        return sendJson(res, 200, { ok: true, no: ord.no, total: ord.total });
+      }
     }
 
     if (kind === 'report' && method === 'GET') {
@@ -919,10 +958,13 @@ async function handleApi(req, res, urlPath) {
         // per artikel: hoeveel stuks en hoeveel omzet over de hele periode,
         // plus per dag het aantal stuks — zodat de zaakvoerder van op afstand
         // kan volgen wat er verkoopt en hoe dat van dag tot dag beweegt.
-        byItem: {}, byItemDay: {}
+        byItem: {}, byItemDay: {},
+        geannuleerd: { count: 0, amount: 0 }
       };
       rows.forEach(function (o) {
         if (o.pay_status === 'open' || o.pay_status === 'expired' || o.pay_status === 'canceled' || o.pay_status === 'failed') return; // niet-betaalde online bestellingen tellen niet mee
+        // geannuleerde bonnen tellen niet mee in de omzet, maar blijven wel zichtbaar
+        if (o.voided_at) { rep.geannuleerd.count++; rep.geannuleerd.amount += o.total || 0; return; }
         rep.count++; rep.revenue += o.total || 0; rep.discount += o.discount || 0; rep.delivery += o.delivery || 0;
         rep.bySource[o.source] = (rep.bySource[o.source] || 0) + (o.total || 0);
         rep.byType[o.type] = (rep.byType[o.type] || 0) + (o.total || 0);
@@ -968,6 +1010,7 @@ async function handleApi(req, res, urlPath) {
         Object.keys(rep.byWeek[wk]).forEach(function (k) { if (k !== 'count') rep.byWeek[wk][k] = r2(rep.byWeek[wk][k]); });
       });
       Object.keys(rep.byItem).forEach(function (naam) { rep.byItem[naam].revenue = r2(rep.byItem[naam].revenue); });
+      rep.geannuleerd.amount = r2(rep.geannuleerd.amount);
       // labels voor categorieën
       var catLabels = {};
       allCategories().forEach(function (c) { catLabels[c.id] = c.label; });
@@ -980,6 +1023,7 @@ async function handleApi(req, res, urlPath) {
       var out = ['nummer;datum;bron;type;tafel;klant;subtotaal;korting;levering;totaal;btw6;btw12;btw21;betaalwijze'];
       erows.forEach(function (o) {
         if (o.pay_status === 'open' || o.pay_status === 'expired' || o.pay_status === 'canceled' || o.pay_status === 'failed') return; // niet-betaalde online bestellingen niet exporteren
+        if (o.voided_at) return;   // geannuleerde bonnen horen niet in de boekhoudexport
         var v = o.vat ? JSON.parse(o.vat) : {}, pay = o.pay ? JSON.parse(o.pay) : null;
         out.push([o.no, o.created_at, o.source, o.type, o.tbl || '', o.cust_name || '',
           o.subtotal || 0, o.discount || 0, o.delivery || 0, o.total || 0,
