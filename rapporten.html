@@ -263,6 +263,16 @@
        '<div class="kpi"><div class="k">Gemiddelde bon</div><div class="v">'+euro(avg)+'</div></div>'+
        '</div>';
 
+    // Geannuleerde bonnen tellen niet mee in de omzet, maar horen wel zichtbaar
+    // te zijn: anders verdwijnt er geld zonder spoor.
+    var gea=r.geannuleerd||{count:0,amount:0};
+    if(gea.count){
+      h+='<div class="panelbox"><h3>✖ Geannuleerde bonnen</h3><table><tbody>'+
+         '<tr><td>Aantal</td><td>'+gea.count+'</td></tr>'+
+         '<tr><td>Bedrag (niet in de omzet)</td><td>'+euro(gea.amount)+'</td></tr>'+
+         '</tbody></table><p class="hint" style="margin:.6rem 0 0">Deze bonnen zijn met de manager-PIN geannuleerd en tellen niet mee in de omzet, de BTW of de export.</p></div>';
+    }
+
     // verkoopgrafiek (omzet per dag)
     h+=salesChart(r.byDay||{});
 
