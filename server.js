@@ -915,7 +915,11 @@ async function handleApi(req, res, urlPath) {
         byPay: { cash: 0, card: 0, online: 0, onbetaald: 0 },
         bySource: { web: 0, pos: 0 },
         byType: { afhalen: 0, leveren: 0, terplaatse: 0 },
-        byCat: {}, vat: {}, byDay: {}, byWeek: {}
+        byCat: {}, vat: {}, byDay: {}, byWeek: {},
+        // per artikel: hoeveel stuks en hoeveel omzet over de hele periode,
+        // plus per dag het aantal stuks — zodat de zaakvoerder van op afstand
+        // kan volgen wat er verkoopt en hoe dat van dag tot dag beweegt.
+        byItem: {}, byItemDay: {}
       };
       rows.forEach(function (o) {
         if (o.pay_status === 'open' || o.pay_status === 'expired' || o.pay_status === 'canceled' || o.pay_status === 'failed') return; // niet-betaalde online bestellingen tellen niet mee
@@ -943,6 +947,13 @@ async function handleApi(req, res, urlPath) {
         Object.keys(vat).forEach(function (r) { rep.vat[r] = (rep.vat[r] || 0) + vat[r]; });
         (o.items ? JSON.parse(o.items) : []).forEach(function (it) {
           var c = it.cat || 'onbekend'; rep.byCat[c] = (rep.byCat[c] || 0) + (it.unit * it.qty);
+          // per artikel optellen; de naam is wat er op de bon stond
+          var naam = String(it.name || 'onbekend');
+          var qty = Number(it.qty) || 0, bedrag = (Number(it.unit) || 0) * qty;
+          var bi = rep.byItem[naam] || (rep.byItem[naam] = { qty: 0, revenue: 0, cat: c });
+          bi.qty += qty; bi.revenue += bedrag;
+          var bid = rep.byItemDay[naam] || (rep.byItemDay[naam] = {});
+          bid[day] = (bid[day] || 0) + qty;
         });
       });
       function r2(x) { return Math.round(x * 100) / 100; }
@@ -956,6 +967,7 @@ async function handleApi(req, res, urlPath) {
       Object.keys(rep.byWeek).forEach(function (wk) {
         Object.keys(rep.byWeek[wk]).forEach(function (k) { if (k !== 'count') rep.byWeek[wk][k] = r2(rep.byWeek[wk][k]); });
       });
+      Object.keys(rep.byItem).forEach(function (naam) { rep.byItem[naam].revenue = r2(rep.byItem[naam].revenue); });
       // labels voor categorieën
       var catLabels = {};
       allCategories().forEach(function (c) { catLabels[c.id] = c.label; });
