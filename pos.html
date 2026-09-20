@@ -380,6 +380,18 @@
   </div>
 </div></div>
 
+<!-- Melding bij een nieuwe online bestelling. Een toast van anderhalve seconde
+     is op een drukke avond zo gemist; dit venster blijft staan tot iemand
+     reageert. -->
+<div class="ov" id="ovNieuw" data-blijft><div class="modal" style="max-width:420px">
+  <div class="mhead"><h3>🌐 Nieuwe online bestelling</h3></div>
+  <div class="mbody" id="nieuwBody"></div>
+  <div class="mfoot" style="gap:.6rem">
+    <button class="abtn" id="nieuwLater" style="flex:1">Later</button>
+    <button class="bigadd" id="nieuwLaden" style="flex:1.4">In de kassa laden</button>
+  </div>
+</div></div>
+
 <!-- Vraag-modal: vervangt de blokkerende prompt()/confirm() van de browser.
      Die konden door Chrome uitgeschakeld worden ("voorkom extra dialoogvensters"),
      waarna parkeren en dag afsluiten stil niets meer deden. -->
@@ -1404,11 +1416,19 @@
     inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); $('#askOk').click(); } });
     document.addEventListener('keydown',function(e){ if(e.key==='Escape' && askResolve) askClose(null); });
   })();
+  /* Vensters met data-blijft gaan niet dicht door ernaast te tikken of op
+     Escape te duwen. Dat is er voor de melding van een nieuwe online
+     bestelling: die mag niet per ongeluk weggeklikt worden, ze blijft staan
+     tot iemand bewust op een knop drukt. */
   document.querySelectorAll('.ov').forEach(function(ov){
+    if(ov.hasAttribute('data-blijft')) return;
     ov.addEventListener('click',function(e){ if(e.target===ov) ov.classList.remove('open'); });
     ov.querySelectorAll('[data-close]').forEach(function(x){ x.onclick=function(){ ov.classList.remove('open'); }; });
   });
-  document.addEventListener('keydown',function(e){ if(e.key==='Escape') document.querySelectorAll('.ov.open').forEach(function(o){o.classList.remove('open');}); });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape') return;
+    document.querySelectorAll('.ov.open').forEach(function(o){ if(!o.hasAttribute('data-blijft')) o.classList.remove('open'); });
+  });
 
   var themeBtn=$('#btnTheme');
   function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); themeBtn.textContent=t==='light'?'☀️':'🌙'; save(LS.theme,t); }
@@ -1504,10 +1524,53 @@
       updBadge();
     }
 
+    /* Melding bij een nieuwe online bestelling.
+
+       Het venster springt nooit zomaar over iets heen waar het personeel mee
+       bezig is: staat er al een ander venster open (opties, afrekenen, korting,
+       parkeren), dan wacht de melding tot dat weg is. Komen er ondertussen
+       meerdere bestellingen binnen, dan blijft de oudste wachtende staan en
+       verschijnen de rest gewoon in de lijst achter de knop 🌐 Online. */
+    var wachtendeMelding=null, meldingTimer=null;
+
+    function anderVensterOpen(){
+      return !!document.querySelector('.ov.open:not(#ovNieuw)');
+    }
+    function toonNieuweBestelling(o){
+      if(!webOrders[o.id]) return;                 // ondertussen al afgehandeld
+      var items=(o.items||[]).map(function(l){
+        return '<div>'+l.qty+'× '+esc(l.name)+(l.opts&&l.opts.length?(' <span style="color:var(--muted-2)">('+esc(l.opts.join(', '))+')</span>'):'')+(l.note?(' — <i>'+esc(l.note)+'</i>'):'')+'</div>';
+      }).join('');
+      var typ={terplaatse:'Ter plaatse',afhalen:'Afhalen',leveren:'Leveren'}[o.type]||o.type;
+      var klant=esc(o.cust_name||'')+(o.cust_phone?(' · '+esc(o.cust_phone)):'');
+      $('#nieuwBody').innerHTML=
+        '<div style="font-family:\'Anton\',sans-serif;font-size:1.4rem;color:var(--gold);letter-spacing:.02em">'+esc(o.no||('#'+o.id))+' · '+typ+'</div>'+
+        (klant?'<div style="margin-top:.2rem;color:var(--muted)">'+klant+'</div>':'')+
+        (o.type==='leveren'&&o.cust_address?'<div style="color:var(--muted)">'+esc(o.cust_address)+'</div>':'')+
+        '<div style="margin:.8rem 0;line-height:1.5;font-weight:600">'+items+'</div>'+
+        '<div style="font-family:\'Anton\',sans-serif;font-size:1.6rem">'+euro(o.total)+'</div>';
+      $('#nieuwLaden').onclick=function(){ closeOv('#ovNieuw'); stopAlarm(); loadIntoTicket(o.id); };
+      $('#nieuwLater').onclick=function(){ closeOv('#ovNieuw'); stopAlarm(); };
+      openOv('#ovNieuw');
+    }
+    // probeer de wachtende melding te tonen zodra er niets anders openstaat
+    function verwerkMelding(){
+      if(!wachtendeMelding) return;
+      if(anderVensterOpen()) return;               // nog even wachten
+      var o=wachtendeMelding; wachtendeMelding=null;
+      if(meldingTimer){ clearInterval(meldingTimer); meldingTimer=null; }
+      toonNieuweBestelling(o);
+    }
+    function meldNieuweBestelling(o){
+      wachtendeMelding=o;
+      if(!meldingTimer) meldingTimer=setInterval(verwerkMelding,700);
+      verwerkMelding();
+    }
+
     function addWebOrder(o,isNew){
       if(!o||o.source!=='web'||o.status!=='nieuw') return;
       var fresh=!webOrders[o.id]; webOrders[o.id]=o;
-      if(isNew&&fresh){ toast('🌐 Nieuwe online bestelling '+(o.no||'')); startAlarm(); }
+      if(isNew&&fresh){ startAlarm(); meldNieuweBestelling(o); }
       renderOnline();
     }
     function removeWebOrder(id){ if(webOrders[id]){ delete webOrders[id]; renderOnline(); if(!Object.keys(webOrders).length) stopAlarm(); } }

@@ -63,6 +63,8 @@
   table{width:100%;border-collapse:collapse;font-size:.9rem}
   th,td{text-align:left;padding:.45rem .3rem;border-bottom:1px solid var(--line)}
   td:last-child,th:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  /* getalkolommen die niet de laatste zijn (tabel per artikel) */
+  th.rt,td.rt{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   tr:last-child td{border-bottom:0}
   tfoot td{font-weight:800;border-top:2px solid var(--line-2);border-bottom:0}
   .muted{color:var(--muted-2)}
@@ -185,6 +187,62 @@
     return '<div class="panelbox"><h3>📈 Verkoop per dag</h3><div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'+svg+'</div></div>';
   }
 
+  /* Verkoop per artikel.
+
+     De zaakvoerder wil van op afstand kunnen volgen wát er verkoopt, niet enkel
+     hoeveel omzet er binnenkomt. Twee delen: een lijst van alle artikelen over
+     de gekozen periode, en een staafdiagram dat per dag toont hoeveel stuks er
+     van één gekozen artikel over de toonbank gingen. */
+  var gekozenArtikel=null;          // onthoudt de keuze tussen het herladen door
+
+  function artikelGrafiek(byItemDay, naam, dagen){
+    var perDag=byItemDay[naam]||{};
+    var vals=dagen.map(function(d){ return perDag[d]||0; });
+    var max=Math.max.apply(null,vals); if(max<=0) max=1;
+    var padL=8, padT=22, padB=34, innerH=140, barGap=8, bw=34;
+    var W=padL*2+dagen.length*(bw+barGap)-barGap, H=padT+innerH+padB;
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMinYMid meet" width="'+W+'" style="max-width:none;height:'+H+'px">';
+    svg+='<line x1="'+padL+'" y1="'+(padT+innerH)+'" x2="'+(W-padL)+'" y2="'+(padT+innerH)+'" stroke="var(--line-2)" stroke-width="1"></line>';
+    dagen.forEach(function(d,i){
+      var v=vals[i];
+      var bh=v>0?Math.max(2,Math.round(innerH*(v/max))):0;
+      var x=padL+i*(bw+barGap), y=padT+innerH-bh;
+      var p=d.split('-'); var lbl=p.length===3?(p[2]+'/'+p[1]):d;
+      if(bh) svg+='<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+bh+'" rx="3" fill="var(--coral)"></rect>';
+      svg+='<text x="'+(x+bw/2)+'" y="'+(bh?y-5:padT+innerH-5)+'" text-anchor="middle" font-size="10" font-weight="700" fill="'+(bh?'var(--cream)':'var(--muted-2)')+'">'+v+'</text>';
+      svg+='<text x="'+(x+bw/2)+'" y="'+(H-12)+'" text-anchor="middle" font-size="10" fill="var(--muted)">'+lbl+'</text>';
+    });
+    svg+='</svg>';
+    return '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'+svg+'</div>';
+  }
+
+  function artikelBlok(r, cl){
+    var namen=Object.keys(r.byItem||{});
+    if(!namen.length) return '';
+    namen.sort(function(a,b){ return r.byItem[b].qty-r.byItem[a].qty || r.byItem[b].revenue-r.byItem[a].revenue; });
+    if(!gekozenArtikel || namen.indexOf(gekozenArtikel)<0) gekozenArtikel=namen[0];
+    var dagen=Object.keys(r.byDay||{}).sort();
+    var totaalStuks=namen.reduce(function(a,n){return a+r.byItem[n].qty;},0)||1;
+
+    var h='<div class="panelbox"><h3>🍕 Verkoop per artikel</h3>';
+    if(dagen.length>1){
+      h+='<label style="display:block;font-size:.8rem;color:var(--muted);font-weight:700;margin:.2rem 0 .4rem">Grafiek per dag voor</label>';
+      h+='<select id="artikelKeuze" style="width:100%;max-width:340px;background:var(--panel);border:1px solid var(--line-2);border-radius:9px;color:var(--cream);padding:.5rem;font-weight:700;margin-bottom:.7rem">';
+      namen.forEach(function(n){ h+='<option value="'+esc(n)+'"'+(n===gekozenArtikel?' selected':'')+'>'+esc(n)+' — '+r.byItem[n].qty+'×</option>'; });
+      h+='</select>';
+      h+='<div id="artikelGrafiek">'+artikelGrafiek(r.byItemDay,gekozenArtikel,dagen)+'</div>';
+    }
+    h+='<div style="overflow-x:auto"><table><thead><tr><th>Artikel</th><th class="rt">Aantal</th><th class="rt">Omzet</th><th class="rt">Aandeel</th></tr></thead><tbody>';
+    namen.forEach(function(n){
+      var it=r.byItem[n];
+      h+='<tr><td>'+esc(n)+'<div style="font-size:.72rem;color:var(--muted-2)">'+esc(cl[it.cat]||it.cat||'')+'</div></td>'+
+         '<td class="rt"><b>'+it.qty+'</b></td><td class="rt">'+euro(it.revenue)+'</td>'+
+         '<td class="rt">'+Math.round(it.qty/totaalStuks*100)+'%</td></tr>';
+    });
+    h+='</tbody></table></div></div>';
+    return h;
+  }
+
   function load(){
     $('#periodLabel').textContent=range.label;
     fetch('api/admin/report?from='+encodeURIComponent(range.from)+'&to='+encodeURIComponent(range.to),{credentials:'same-origin'})
@@ -274,7 +332,15 @@
       cats.forEach(function(c){ h+=row(esc(cl[c]||c), r.byCat[c]); });
       h+='</tbody></table></div>';
     }
+    h+=artikelBlok(r,cl);
     $('#content').innerHTML=h;
+    // een ander artikel kiezen tekent enkel de grafiek opnieuw
+    var keuze=$('#artikelKeuze');
+    if(keuze) keuze.onchange=function(){
+      gekozenArtikel=this.value;
+      var dagen=Object.keys(r.byDay||{}).sort();
+      $('#artikelGrafiek').innerHTML=artikelGrafiek(r.byItemDay,gekozenArtikel,dagen);
+    };
   }
 
   /* login */
