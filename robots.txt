@@ -1,0 +1,11 @@
+# La Mia Pizzeria — enkel de website en de webshop mogen in Google.
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /beheer
+Disallow: /pos
+Disallow: /keuken
+Disallow: /rapporten
+Disallow: /start
+
+Sitemap: https://lamiapizzeria.be/sitemap.xml

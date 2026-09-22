@@ -4,47 +4,88 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bestellen — La Mia Pizzeria Antwerpen</title>
-<meta name="description" content="La Mia Pizzeria, Abdijstraat 226a Antwerpen. New York style pizzaslices, vers deeg en dagverse toppings. Afhalen &amp; bezorgen. 4,7★ · 260 reviews. Bekijk het menu en de promo's.">
+<meta name="description" content="Bestel online bij La Mia Pizzeria in Antwerpen: New York style pizza's, pasta, snacks, desserts en afhaaldeals. Afhalen of laten bezorgen, veilig online betalen.">
 <meta name="theme-color" content="#141110">
+<link rel="icon" href="images/logo.png" type="image/png">
+<link rel="apple-touch-icon" href="images/logo-badge-660.png">
 <script>/* thema herstellen vóór het tekenen, anders flitst de pagina even wit */
 try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.setAttribute('data-theme','dark'); }catch(e){}</script>
-<link rel="canonical" href="https://lamiapizzeria.be/">
+<link rel="canonical" href="https://lamiapizzeria.be/order.html">
 <!-- Open Graph / social preview -->
-<meta property="og:type" content="restaurant">
+<meta property="og:type" content="website">
 <meta property="og:locale" content="nl_BE">
 <meta property="og:site_name" content="La Mia Pizzeria">
-<meta property="og:title" content="La Mia Pizzeria — New York style pizza in Antwerpen">
-<meta property="og:description" content="Ambachtelijke New York-stijl pizza's, pasta en meer. Afhalen of bezorgen in Antwerpen. 4,7★ op 260 reviews.">
-<meta property="og:url" content="https://lamiapizzeria.be/">
+<meta property="og:title" content="Online bestellen — La Mia Pizzeria Antwerpen">
+<meta property="og:description" content="Stel je bestelling samen en betaal online. Afhalen of bezorgen in Antwerpen.">
+<meta property="og:url" content="https://lamiapizzeria.be/order.html">
+<meta property="og:image" content="https://lamiapizzeria.be/images/hero.jpg">
+<meta property="og:image:width" content="1344">
+<meta property="og:image:height" content="752">
+<meta property="og:image:alt" content="New York style pizza van La Mia Pizzeria in Antwerpen">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="La Mia Pizzeria — New York style pizza in Antwerpen">
-<meta name="twitter:description" content="Ambachtelijke New York-stijl pizza's, pasta en meer. Afhalen of bezorgen in Antwerpen.">
+<meta name="twitter:title" content="Online bestellen — La Mia Pizzeria Antwerpen">
+<meta name="twitter:description" content="Stel je bestelling samen en betaal online. Afhalen of bezorgen in Antwerpen.">
 <!-- Structured data: helpt Google je zaak, uren, rating en 'bestellen' tonen -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Restaurant",
+  "@id": "https://lamiapizzeria.be/#restaurant",
   "name": "La Mia Pizzeria",
+  "alternateName": "La Mia Pizzeria Antwerpen",
+  "description": "New York style slice shop in Antwerpen: pizza's met huisgemaakt deeg en dagverse toppings, pasta, snacks en desserts. 100% halal. Afhalen of bezorgen.",
+  "image": [
+    "https://lamiapizzeria.be/images/hero.jpg",
+    "https://lamiapizzeria.be/images/pizza-whole.jpg",
+    "https://lamiapizzeria.be/images/interior.jpg"
+  ],
+  "logo": "https://lamiapizzeria.be/images/logo-badge-660.png",
   "servesCuisine": ["Pizza", "Italiaans", "New York style"],
   "priceRange": "€€",
+  "currenciesAccepted": "EUR",
+  "paymentAccepted": "Cash, Bancontact, Kaart, Online betalen",
   "telephone": "+3236442331",
   "email": "info.lamiapizzeria@mail.com",
   "url": "https://lamiapizzeria.be/",
+  "sameAs": [
+    "https://www.instagram.com/lamiapizzeria/",
+    "https://www.facebook.com/lamiapizzeria",
+    "https://www.tiktok.com/@lamiapizzeria"
+  ],
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "Abdijstraat 226a",
     "postalCode": "2020",
     "addressLocality": "Antwerpen",
+    "addressRegion": "Antwerpen",
     "addressCountry": "BE"
   },
   "geo": { "@type": "GeoCoordinates", "latitude": 51.1861375, "longitude": 4.3874416 },
+  "hasMap": "https://www.google.com/maps/place/LA+MIA+PIZZERIA/@51.1861375,4.3874416,17z",
+  "areaServed": { "@type": "City", "name": "Antwerpen" },
   "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.7", "reviewCount": "260" },
   "openingHoursSpecification": [
-    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "11:30", "closes": "02:30" },
-    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Saturday","Sunday"], "opens": "14:00", "closes": "02:30" }
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "11:30", "closes": "02:00" },
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Saturday","Sunday"], "opens": "14:00", "closes": "02:00" }
   ],
   "hasMenu": "https://lamiapizzeria.be/#menu",
-  "acceptsReservations": false
+  "acceptsReservations": false,
+  "potentialAction": {
+    "@type": "OrderAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://lamiapizzeria.be/order.html",
+      "inLanguage": "nl",
+      "actionPlatform": [
+        "http://schema.org/DesktopWebPlatform",
+        "http://schema.org/MobileWebPlatform"
+      ]
+    },
+    "deliveryMethod": [
+      "http://purl.org/goodrelations/v1#DeliveryModePickUp",
+      "http://purl.org/goodrelations/v1#DeliveryModeOwnFleet"
+    ]
+  }
 }
 </script>
 <style>
@@ -926,13 +967,15 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   :root[data-theme="dark"] .tex-brick::before{opacity:.06}
   :root[data-theme="dark"] .deal-price{background:var(--yellow);color:#1a1206;font-size:1rem;padding:.1rem .45rem .02rem}
 </style>
+<meta name="twitter:image" content="https://lamiapizzeria.be/images/hero.jpg">
+<script src="analytics.js" defer></script>
 </head>
 <body>
 
 <header>
   <div class="wrap nav">
     <a href="index.html" class="logo">
-      <img src="images/logo.png" alt="La Mia Pizzeria" class="logo-img">
+      <img src="images/logo.png" alt="La Mia Pizzeria" class="logo-img" width="559" height="447">
       
     </a>
     <nav class="nav-links" id="navLinks">
@@ -969,7 +1012,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   <span class="stamp stamp-1" style="top:18%;left:6%;transform:rotate(-9deg)">Fresh dough daily</span>
   <span class="stamp stamp-2" style="top:16%;right:6%;transform:rotate(7deg)">By the slice</span>
   <div class="wrap">
-    <div class="hero-badge"><img src="images/logo-badge.png" alt="La Mia Pizzeria — Pizza, Pasta &amp; More"></div>
+    <div class="hero-badge"><picture><source srcset="images/logo-badge-660.webp" type="image/webp"><img src="images/logo-badge-660.png" width="660" height="660" fetchpriority="high" decoding="async" alt="La Mia Pizzeria — Pizza, Pasta &amp; More"></picture></div>
     <span class="eyebrow">New York style · Antwerpen</span>
     <h1>Order your New York slice</h1>
     <p>Kies je favoriet uit het menu en rond je bestelling snel af.</p>
@@ -1161,7 +1204,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
 <footer class="tex-brick">
   <div class="wrap">
     <a href="index.html" class="logo">
-      <img src="images/logo.png" alt="La Mia Pizzeria" class="logo-img">
+      <img src="images/logo.png" alt="La Mia Pizzeria" class="logo-img" width="559" height="447" loading="lazy">
       
     </a>
     <nav class="fnav">

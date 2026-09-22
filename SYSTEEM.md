@@ -140,7 +140,9 @@ beheer.html       Beheerscherm menu & prijzen
 order.html        Webshop (klant)          — wordt in fase 2 gekoppeld
 pos.html          Kassa (personeel)        — wordt in fase 3 gekoppeld
 index.html        Publieke website
+analytics.js      Google Analytics + cookie-toestemming (publieke pagina's; zie SEO.md)
 images/           Foto's
+SEO.md            Vindbaarheid & Google-koppelingen (Analytics, Search Console, Bedrijfsprofiel)
 data/             Database + sessiesleutel (staat in .gitignore, hoort niet in git)
 ```
 
