@@ -25,6 +25,7 @@ var https = require('node:https');
 var fs = require('node:fs');
 var path = require('node:path');
 var crypto = require('node:crypto');
+var zlib = require('node:zlib');
 var { DatabaseSync } = require('node:sqlite');
 var catalogue = require('./lib/catalogue');
 
@@ -37,6 +38,25 @@ var SESSION_HOURS = 12;
 var DELIVERY_FEE = parseFloat(process.env.DELIVERY_FEE || '0.00'); // leveringskosten (vervangen door 30% korting bij levering)
 var MIN_ORDER = parseFloat(process.env.MIN_ORDER || '20.00');      // minimum bestelbedrag (levering)
 var MOLLIE_API_KEY = String(process.env.MOLLIE_API_KEY || '');    // online betalen (Mollie); leeg = uit
+
+/* ---- SEO & Google-koppelingen (zie SEO.md) ---- */
+// Publiek adres van de site, zonder slash op het einde. Gebruikt in robots.txt en sitemap.xml.
+var SITE_URL = String(process.env.SITE_URL || 'https://lamiapizzeria.be').replace(/\/+$/, '');
+// Google Analytics 4 meet-ID (G-XXXXXXX). Leeg = geen Analytics. Wordt op de publieke
+// pagina's in <head> gezet als window.LAMIA_GA; analytics.js doet de rest (met cookie-toestemming).
+var GA_MEASUREMENT_ID = String(process.env.GA_MEASUREMENT_ID || '').trim();
+if (GA_MEASUREMENT_ID && !/^G-[A-Z0-9]+$/i.test(GA_MEASUREMENT_ID)) {
+  console.warn('GA_MEASUREMENT_ID ziet er niet uit als een GA4-ID (G-XXXXXXX) en wordt genegeerd: ' + GA_MEASUREMENT_ID);
+  GA_MEASUREMENT_ID = '';
+}
+// Google Search Console: de "content"-waarde van de verificatie-metatag.
+var GOOGLE_SITE_VERIFICATION = String(process.env.GOOGLE_SITE_VERIFICATION || '').trim();
+if (GOOGLE_SITE_VERIFICATION && !/^[A-Za-z0-9_-]+$/.test(GOOGLE_SITE_VERIFICATION)) {
+  console.warn('GOOGLE_SITE_VERIFICATION bevat vreemde tekens en wordt genegeerd.');
+  GOOGLE_SITE_VERIFICATION = '';
+}
+// Enkel deze pagina's zijn publiek en krijgen de Google-tags; beheer/kassa/keuken nooit.
+var PUBLIC_PAGES = { 'index.html': 1, 'order.html': 1 };
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -469,7 +489,7 @@ function serveStatic(req, res, urlPath) {
     // afbeeldingen/fonts mogen kort gecachet worden (schelen bandbreedte, veranderen zelden).
     var noCache = (ext === '.html' || ext === '.js' || ext === '.css');
     var type = MIME[ext] || 'application/octet-stream';
-    var cache = noCache ? 'no-cache, no-store, must-revalidate' : 'public, max-age=3600';
+    var cache = noCache ? 'no-cache, no-store, must-revalidate' : 'public, max-age=604800'; // 7 dagen
 
     // Video's worden met byte-ranges opgehaald. Safari en iOS weigeren een
     // video af te spelen als de server daar niet met 206 op antwoordt.
@@ -493,6 +513,17 @@ function serveStatic(req, res, urlPath) {
       return fs.createReadStream(file, { start: start, end: end }).pipe(res);
     }
 
+    // HTML/JS/CSS: in het geheugen laden, Google-tags injecteren (enkel publieke
+    // pagina's) en gecomprimeerd versturen. Scheelt ± 50% op de grote pagina's (de ingebakken fonts persen slecht),
+    // wat op mobiel direct in de laadtijd (en Google's Core Web Vitals) telt.
+    if (ext === '.html' || ext === '.js' || ext === '.css' || ext === '.svg') {
+      return fs.readFile(file, function (err2, buf) {
+        if (err2) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Niet gevonden'); }
+        if (ext === '.html' && PUBLIC_PAGES[base]) buf = Buffer.from(injectHead(buf.toString('utf8')), 'utf8');
+        sendCompressed(req, res, 200, buf, { 'Content-Type': type, 'Cache-Control': cache });
+      });
+    }
+
     res.writeHead(200, {
       'Content-Type': type,
       'Content-Length': st.size,
@@ -501,6 +532,68 @@ function serveStatic(req, res, urlPath) {
     });
     fs.createReadStream(file).pipe(res);
   });
+}
+
+/* ---- Google-tags in <head> van de publieke pagina's ---- */
+function injectHead(html) {
+  var extra = '';
+  if (GOOGLE_SITE_VERIFICATION) extra += '<meta name="google-site-verification" content="' + GOOGLE_SITE_VERIFICATION + '">\n';
+  if (GA_MEASUREMENT_ID) extra += '<script>window.LAMIA_GA=' + JSON.stringify(GA_MEASUREMENT_ID) + ';</script>\n';
+  if (!extra) return html;
+  var i = html.indexOf('</head>');
+  return i < 0 ? html : html.slice(0, i) + extra + html.slice(i);
+}
+
+/* ---- gzip als de browser dat aankan (vrijwel altijd) ---- */
+function sendCompressed(req, res, status, buf, headers) {
+  var h = Object.assign({ 'Vary': 'Accept-Encoding' }, headers);
+  var ae = String((req.headers && req.headers['accept-encoding']) || '');
+  if (/\bgzip\b/.test(ae) && buf.length > 1024) {
+    buf = zlib.gzipSync(buf, { level: 6 });
+    h['Content-Encoding'] = 'gzip';
+  }
+  h['Content-Length'] = buf.length;
+  res.writeHead(status, h);
+  res.end(buf);
+}
+
+/* ---- robots.txt & sitemap.xml (voor Google Search Console) ---- */
+function robotsTxt() {
+  return [
+    '# La Mia Pizzeria — enkel de website en de webshop mogen in Google.',
+    'User-agent: *',
+    'Allow: /',
+    'Disallow: /api/',
+    'Disallow: /beheer',
+    'Disallow: /pos',
+    'Disallow: /keuken',
+    'Disallow: /rapporten',
+    'Disallow: /start',
+    '',
+    'Sitemap: ' + SITE_URL + '/sitemap.xml',
+    ''
+  ].join('\n');
+}
+function lastmod(name) {
+  try { return fs.statSync(path.join(ROOT, name)).mtime.toISOString().slice(0, 10); }
+  catch (e) { return new Date().toISOString().slice(0, 10); }
+}
+function xmlEsc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+function sitemapXml() {
+  var img = function (f, title) {
+    return '    <image:image><image:loc>' + xmlEsc(SITE_URL + '/images/' + f) + '</image:loc><image:title>' + xmlEsc(title) + '</image:title></image:image>';
+  };
+  return '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n' +
+    '  <url>\n    <loc>' + xmlEsc(SITE_URL + '/') + '</loc>\n    <lastmod>' + lastmod('index.html') + '</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>1.0</priority>\n' +
+    img('hero.jpg', 'New York style pizza — La Mia Pizzeria Antwerpen') + '\n' +
+    img('pizza-whole.jpg', 'Hele pizza — La Mia Pizzeria') + '\n' +
+    img('slice-card.jpg', 'Pizza per slice — La Mia Pizzeria') + '\n' +
+    img('pasta.jpg', 'Pasta — La Mia Pizzeria') + '\n' +
+    img('interior.jpg', 'Interieur La Mia Pizzeria, Abdijstraat Antwerpen') + '\n' +
+    '  </url>\n' +
+    '  <url>\n    <loc>' + xmlEsc(SITE_URL + '/order.html') + '</loc>\n    <lastmod>' + lastmod('order.html') + '</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n' +
+    '</urlset>\n';
 }
 
 /* ============================================================================
@@ -1079,6 +1172,9 @@ var server = http.createServer(function (req, res) {
     });
     return;
   }
+  var plain = urlPath.split('?')[0];
+  if (plain === '/robots.txt') return sendCompressed(req, res, 200, Buffer.from(robotsTxt(), 'utf8'), { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
+  if (plain === '/sitemap.xml') return sendCompressed(req, res, 200, Buffer.from(sitemapXml(), 'utf8'), { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
   serveStatic(req, res, urlPath);
 });
 
