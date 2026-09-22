@@ -8,4 +8,4 @@ Disallow: /keuken
 Disallow: /rapporten
 Disallow: /start
 
-Sitemap: https://lamiapizzeria.be/sitemap.xml
+Sitemap: https://www.lamiapizzeria.be/sitemap.xml

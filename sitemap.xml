@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://lamiapizzeria.be/</loc>
+    <loc>https://www.lamiapizzeria.be/</loc>
     <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <image:image><image:loc>https://lamiapizzeria.be/images/hero.jpg</image:loc><image:title>New York style pizza — La Mia Pizzeria Antwerpen</image:title></image:image>
-    <image:image><image:loc>https://lamiapizzeria.be/images/pizza-whole.jpg</image:loc><image:title>Hele pizza — La Mia Pizzeria</image:title></image:image>
-    <image:image><image:loc>https://lamiapizzeria.be/images/slice-card.jpg</image:loc><image:title>Pizza per slice — La Mia Pizzeria</image:title></image:image>
-    <image:image><image:loc>https://lamiapizzeria.be/images/pasta.jpg</image:loc><image:title>Pasta — La Mia Pizzeria</image:title></image:image>
-    <image:image><image:loc>https://lamiapizzeria.be/images/interior.jpg</image:loc><image:title>Interieur La Mia Pizzeria, Abdijstraat Antwerpen</image:title></image:image>
+    <image:image><image:loc>https://www.lamiapizzeria.be/images/hero.jpg</image:loc><image:title>New York style pizza — La Mia Pizzeria Antwerpen</image:title></image:image>
+    <image:image><image:loc>https://www.lamiapizzeria.be/images/pizza-whole.jpg</image:loc><image:title>Hele pizza — La Mia Pizzeria</image:title></image:image>
+    <image:image><image:loc>https://www.lamiapizzeria.be/images/slice-card.jpg</image:loc><image:title>Pizza per slice — La Mia Pizzeria</image:title></image:image>
+    <image:image><image:loc>https://www.lamiapizzeria.be/images/pasta.jpg</image:loc><image:title>Pasta — La Mia Pizzeria</image:title></image:image>
+    <image:image><image:loc>https://www.lamiapizzeria.be/images/interior.jpg</image:loc><image:title>Interieur La Mia Pizzeria, Abdijstraat Antwerpen</image:title></image:image>
   </url>
   <url>
-    <loc>https://lamiapizzeria.be/order.html</loc>
+    <loc>https://www.lamiapizzeria.be/order.html</loc>
     <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>

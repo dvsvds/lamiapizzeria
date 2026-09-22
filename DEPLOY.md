@@ -33,7 +33,7 @@ schijf/volume).
 | `PORT` | Poort waarop de app luistert | `3000` |
 | `ADMIN_PIN` | Beheer-PIN | `1234` |
 | `DELIVERY_FEE` | Leveringskosten in euro | `3.00` |
-| `SITE_URL` | Publiek adres van de site (voor `robots.txt` en `sitemap.xml`) | `https://lamiapizzeria.be` |
+| `SITE_URL` | Publiek adres van de site (voor `robots.txt` en `sitemap.xml`) | `https://www.lamiapizzeria.be` |
 | `GA_MEASUREMENT_ID` | Google Analytics 4 meet-ID (`G-…`); `uit` = geen Analytics | `G-KEFEYWN9YG` |
 | `GOOGLE_SITE_VERIFICATION` | Verificatiecode Google Search Console | *(leeg)* |
 

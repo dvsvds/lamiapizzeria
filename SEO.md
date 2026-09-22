@@ -23,13 +23,17 @@ service → *Variables*). Geen codewijziging nodig.
 
 | Variabele | Wat | Voorbeeld |
 |---|---|---|
-| `SITE_URL` | Publiek adres van de site, zonder slash | `https://lamiapizzeria.be` |
+| `SITE_URL` | Publiek adres van de site, zonder slash | `https://www.lamiapizzeria.be` |
 | `GA_MEASUREMENT_ID` | Google Analytics 4 meet-ID. Staat al in de code (`G-KEFEYWN9YG`); enkel invullen om te overschrijven, of `uit` om Analytics uit te zetten | `G-KEFEYWN9YG` |
 | `GOOGLE_SITE_VERIFICATION` | Verificatiecode van Search Console (de `content`-waarde van de metatag) | `x7Kq…` |
 
 Na het toevoegen van een variabele herstart Railway de app automatisch.
 
-> **Draait de website op Netlify (statisch, zonder server)?** Dan werken de
+> **Hosting (nagekeken 22/09/2026):** `www.lamiapizzeria.be` wijst naar Railway;
+> `lamiapizzeria.be` zonder www is een doorverwijzing van one.com naar www; de
+> Netlify-site *lamiapizza1* heeft geen domein en is enkel een voorvertoning.
+>
+> **Draait de website ooit op Netlify (statisch, zonder server)?** Dan werken de
 > omgevingsvariabelen niet. De Analytics-ID staat daarom óók vast in
 > `analytics.js`, en `robots.txt` en `sitemap.xml` staan als bestanden in de
 > repo. De Search Console-verificatie gebeurt dan via DNS of door de metatag
@@ -63,15 +67,21 @@ meteen welke kanalen (Google, Instagram, …) échte bestellingen opleveren.
 ## Stap 2 — Google Search Console (hoe Google je site ziet)
 
 1. Ga naar **search.google.com/search-console** → **Property toevoegen**.
-2. Kies **URL-voorvoegsel** en vul `https://lamiapizzeria.be/` in (exact het
-   adres uit `SITE_URL`).
-3. Bij verificatie kies je **HTML-tag**. Je krijgt zoiets als
-   `<meta name="google-site-verification" content="x7Kq…">`. Kopieer enkel de
-   waarde tussen de aanhalingstekens bij `content`.
-4. Zet die op Railway als `GOOGLE_SITE_VERIFICATION` en wacht tot de app
-   herstart is (± 1 min). Klik dan in Search Console op **Verifiëren**.
+2. Kies **URL-voorvoegsel** en vul `https://www.lamiapizzeria.be/` in, **mét
+   www** (exact het adres uit `SITE_URL`). De site draait op www; het adres
+   zonder www is enkel een doorverwijzing bij one.com.
+3. ✅ Gedaan op 22/09/2026 via de methode **HTML-bestand**: het bestand
+   `google37c42a199dcaa681.html` staat in de repo en wordt door de server
+   geserveerd. Klik in Search Console op **Verifiëren** zodra de site
+   bijgewerkt is.
+   *(Alternatief, mocht dat ooit nodig zijn: kies **HTML-tag**, kopieer de
+   waarde bij `content` en zet die op Railway als `GOOGLE_SITE_VERIFICATION`.)*
+4. Verificatie mislukt? Open
+   `https://www.lamiapizzeria.be/google37c42a199dcaa681.html` in je browser;
+   je moet één regel tekst zien. Zie je die niet, dan is de nieuwe versie nog
+   niet live.
 5. Ga naar **Sitemaps** (linkermenu), vul `sitemap.xml` in en klik **Verzenden**.
-6. Vraag indexering aan: plak `https://lamiapizzeria.be/` in de zoekbalk
+6. Vraag indexering aan: plak `https://www.lamiapizzeria.be/` in de zoekbalk
    bovenaan → **Indexering aanvragen**. Doe hetzelfde voor `/order.html`.
 
 Na een paar dagen zie je hier op welke zoektermen je verschijnt ("pizza
@@ -90,8 +100,8 @@ Voor een pizzeria is dit de belangrijkste van de drie: hier komen de meeste
 
 1. Ga naar **business.google.com** en claim (of open) *La Mia Pizzeria,
    Abdijstraat 226a, 2020 Antwerpen*.
-2. Zet de **website** op `https://lamiapizzeria.be` en de
-   **bestellink** (menu / online bestellen) op `https://lamiapizzeria.be/order.html`.
+2. Zet de **website** op `https://www.lamiapizzeria.be` en de
+   **bestellink** (menu / online bestellen) op `https://www.lamiapizzeria.be/order.html`.
    Zo krijgt je profiel een "Online bestellen"-knop die naar je eigen webshop
    gaat in plaats van naar een bezorgplatform.
 3. Controleer dat de **openingsuren** exact overeenkomen met de site
@@ -101,18 +111,18 @@ Voor een pizzeria is dit de belangrijkste van de drie: hier komen de meeste
    lokale ranking.
 
 Voeg een UTM-code toe aan de website-link in je profiel om in Analytics te
-zien wat uit Google Maps komt: `https://lamiapizzeria.be/?utm_source=google&utm_medium=bedrijfsprofiel`.
+zien wat uit Google Maps komt: `https://www.lamiapizzeria.be/?utm_source=google&utm_medium=bedrijfsprofiel`.
 
 ## Stap 4 — controleren
 
-- **Structured data**: plak `https://lamiapizzeria.be/` in
+- **Structured data**: plak `https://www.lamiapizzeria.be/` in
   **search.google.com/test/rich-results**. Verwacht: *Restaurant* zonder fouten.
 - **Social preview**: **developers.facebook.com/tools/debug** → URL invullen →
   je ziet de hero-foto en de titel.
 - **Snelheid**: **pagespeed.web.dev** → URL invullen. Kijk vooral naar de
   mobiele score.
-- **robots & sitemap**: open `https://lamiapizzeria.be/robots.txt` en
-  `https://lamiapizzeria.be/sitemap.xml` in de browser.
+- **robots & sitemap**: open `https://www.lamiapizzeria.be/robots.txt` en
+  `https://www.lamiapizzeria.be/sitemap.xml` in de browser.
 
 ## Volgende stappen (nog niet gedaan)
 
