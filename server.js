@@ -41,7 +41,7 @@ var MOLLIE_API_KEY = String(process.env.MOLLIE_API_KEY || '');    // online beta
 
 /* ---- SEO & Google-koppelingen (zie SEO.md) ---- */
 // Publiek adres van de site, zonder slash op het einde. Gebruikt in robots.txt en sitemap.xml.
-var SITE_URL = String(process.env.SITE_URL || 'https://lamiapizzeria.be').replace(/\/+$/, '');
+var SITE_URL = String(process.env.SITE_URL || 'https://www.lamiapizzeria.be').replace(/\/+$/, '');
 // Google Analytics 4 meet-ID (G-XXXXXXX). Zet GA_MEASUREMENT_ID=uit om Analytics uit te schakelen. Wordt op de publieke
 // pagina's in <head> gezet als window.LAMIA_GA; analytics.js doet de rest (met cookie-toestemming).
 var GA_MEASUREMENT_ID = String(process.env.GA_MEASUREMENT_ID || 'G-KEFEYWN9YG').trim(); // property 'webmakers' → lamiapizzeria.be
