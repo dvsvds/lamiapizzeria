@@ -10,7 +10,7 @@ Elke stap hieronder duurt hooguit een paar minuten.
 | Onderdeel | Wat het doet |
 |---|---|
 | `robots.txt` | Zegt Google welke pagina's mogen: de website en de webshop. Beheer, kassa, keuken en rapporten worden geweerd. |
-| `sitemap.xml` | Lijst van de publieke pagina's (met foto's) die je in Search Console indient. Wordt automatisch gemaakt. |
+| `sitemap.xml` | Lijst van de publieke pagina's (met foto's) die je in Search Console indient. De server maakt hem automatisch; er staat ook een statische versie in de repo voor hosting zonder server (Netlify). |
 | Structured data (JSON-LD) | Vertelt Google wat je bent (restaurant), adres, uren, telefoon, rating, socials en dat er online besteld kan worden. Daarmee kan Google een "Bestellen"-knop en je uren tonen. |
 | Social preview | Deel je de site op Instagram/Facebook/WhatsApp, dan verschijnt de hero-foto met titel en tekst (`og:image`). |
 | Webshop-pagina | Eigen titel, omschrijving en canonical (was een kopie van de homepage). |
@@ -28,6 +28,12 @@ service → *Variables*). Geen codewijziging nodig.
 | `GOOGLE_SITE_VERIFICATION` | Verificatiecode van Search Console (de `content`-waarde van de metatag) | `x7Kq…` |
 
 Na het toevoegen van een variabele herstart Railway de app automatisch.
+
+> **Draait de website op Netlify (statisch, zonder server)?** Dan werken de
+> omgevingsvariabelen niet. De Analytics-ID staat daarom óók vast in
+> `analytics.js`, en `robots.txt` en `sitemap.xml` staan als bestanden in de
+> repo. De Search Console-verificatie gebeurt dan via DNS of door de metatag
+> rechtstreeks in `index.html` te zetten.
 
 ## Stap 1 — Google Analytics 4 (bezoekers meten)
 

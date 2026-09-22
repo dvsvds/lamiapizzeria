@@ -539,8 +539,9 @@ function serveStatic(req, res, urlPath) {
 function injectHead(html) {
   var extra = '';
   if (GOOGLE_SITE_VERIFICATION) extra += '<meta name="google-site-verification" content="' + GOOGLE_SITE_VERIFICATION + '">\n';
-  if (GA_MEASUREMENT_ID) extra += '<script>window.LAMIA_GA=' + JSON.stringify(GA_MEASUREMENT_ID) + ';</script>\n';
-  if (!extra) return html;
+  // altijd zetten (ook leeg): zo weet analytics.js dat de server beslist en valt
+  // het niet terug op zijn eigen standaard-ID wanneer Analytics uit staat.
+  extra += '<script>window.LAMIA_GA=' + JSON.stringify(GA_MEASUREMENT_ID) + ';</script>\n';
   var i = html.indexOf('</head>');
   return i < 0 ? html : html.slice(0, i) + extra + html.slice(i);
 }
@@ -558,7 +559,11 @@ function sendCompressed(req, res, status, buf, headers) {
   res.end(buf);
 }
 
-/* ---- robots.txt & sitemap.xml (voor Google Search Console) ---- */
+/* ---- robots.txt & sitemap.xml (voor Google Search Console) ----
+   Er staan ook statische robots.txt en sitemap.xml in de repo, voor wanneer
+   de site zonder server draait (statische hosting zoals Netlify). Deze
+   serverversie gaat voor en vult SITE_URL en de laatste wijzigingsdatum in.
+   Wijzig je de lijst hier, pas dan ook de statische bestanden aan. */
 function robotsTxt() {
   return [
     '# La Mia Pizzeria — enkel de website en de webshop mogen in Google.',

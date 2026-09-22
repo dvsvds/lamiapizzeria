@@ -1,11 +1,10 @@
 /* ============================================================================
    LA MIA PIZZERIA — Google Analytics (GA4) met cookie-toestemming
    ----------------------------------------------------------------------------
-   Dit script staat op de publieke pagina's (index.html en order.html) en doet
-   niets zolang de server geen meet-ID meegeeft. De server zet die ID in
-   `window.LAMIA_GA` wanneer de omgevingsvariabele GA_MEASUREMENT_ID is
-   ingevuld (bv. G-ABC123XYZ). Zo hoeft er nooit code te wijzigen om
-   Analytics aan of uit te zetten.
+   Dit script staat op de publieke pagina's (index.html en order.html). De
+   meet-ID komt van de server (`window.LAMIA_GA`, uit de omgevingsvariabele
+   GA_MEASUREMENT_ID; `uit` schakelt Analytics uit) of, zonder server, van de
+   standaard-ID hieronder.
 
    Privacy (België/EU): statistiek-cookies mogen pas ná toestemming. Daarom:
      1. Google Consent Mode v2 start op "denied" (geen cookies, geen opslag).
@@ -16,7 +15,12 @@
    ========================================================================== */
 (function () {
   'use strict';
-  var ID = window.LAMIA_GA;
+  // De server (server.js) zet window.LAMIA_GA op de publieke pagina's: de ID uit
+  // GA_MEASUREMENT_ID, of leeg als Analytics uit staat. Draait de site als
+  // statische bestanden (bv. Netlify), dan is er geen server en geldt de
+  // standaard-ID hieronder.
+  var STANDAARD_ID = 'G-KEFEYWN9YG';
+  var ID = ('LAMIA_GA' in window) ? window.LAMIA_GA : STANDAARD_ID;
   if (!ID || !/^G-[A-Z0-9]+$/i.test(ID)) return;
 
   var KEY = 'lamia_cookies';           // 'ja' | 'nee'
