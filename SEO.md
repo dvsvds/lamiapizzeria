@@ -70,11 +70,16 @@ meteen welke kanalen (Google, Instagram, …) échte bestellingen opleveren.
 2. Kies **URL-voorvoegsel** en vul `https://www.lamiapizzeria.be/` in, **mét
    www** (exact het adres uit `SITE_URL`). De site draait op www; het adres
    zonder www is enkel een doorverwijzing bij one.com.
-3. Bij verificatie kies je **HTML-tag**. Je krijgt zoiets als
-   `<meta name="google-site-verification" content="x7Kq…">`. Kopieer enkel de
-   waarde tussen de aanhalingstekens bij `content`.
-4. Zet die op Railway als `GOOGLE_SITE_VERIFICATION` en wacht tot de app
-   herstart is (± 1 min). Klik dan in Search Console op **Verifiëren**.
+3. ✅ Gedaan op 22/09/2026 via de methode **HTML-bestand**: het bestand
+   `google37c42a199dcaa681.html` staat in de repo en wordt door de server
+   geserveerd. Klik in Search Console op **Verifiëren** zodra de site
+   bijgewerkt is.
+   *(Alternatief, mocht dat ooit nodig zijn: kies **HTML-tag**, kopieer de
+   waarde bij `content` en zet die op Railway als `GOOGLE_SITE_VERIFICATION`.)*
+4. Verificatie mislukt? Open
+   `https://www.lamiapizzeria.be/google37c42a199dcaa681.html` in je browser;
+   je moet één regel tekst zien. Zie je die niet, dan is de nieuwe versie nog
+   niet live.
 5. Ga naar **Sitemaps** (linkermenu), vul `sitemap.xml` in en klik **Verzenden**.
 6. Vraag indexering aan: plak `https://www.lamiapizzeria.be/` in de zoekbalk
    bovenaan → **Indexering aanvragen**. Doe hetzelfde voor `/order.html`.
