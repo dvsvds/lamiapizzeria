@@ -24,7 +24,7 @@ service → *Variables*). Geen codewijziging nodig.
 | Variabele | Wat | Voorbeeld |
 |---|---|---|
 | `SITE_URL` | Publiek adres van de site, zonder slash | `https://lamiapizzeria.be` |
-| `GA_MEASUREMENT_ID` | Google Analytics 4 meet-ID | `G-ABC123XYZ` |
+| `GA_MEASUREMENT_ID` | Google Analytics 4 meet-ID. Staat al in de code (`G-KEFEYWN9YG`); enkel invullen om te overschrijven, of `uit` om Analytics uit te zetten | `G-KEFEYWN9YG` |
 | `GOOGLE_SITE_VERIFICATION` | Verificatiecode van Search Console (de `content`-waarde van de metatag) | `x7Kq…` |
 
 Na het toevoegen van een variabele herstart Railway de app automatisch.
@@ -36,7 +36,9 @@ Na het toevoegen van een variabele herstart Railway de app automatisch.
    tijdzone *België*, valuta *Euro*.
 3. Kies als platform **Web** en vul de site-URL in. Je krijgt een **meet-ID**
    dat begint met `G-`.
-4. Zet die op Railway als `GA_MEASUREMENT_ID`.
+4. ✅ Gedaan op 22/09/2026: property *webmakers → lamiapizzeria.be*, meet-ID
+   `G-KEFEYWN9YG`, vast in `server.js`. Een andere ID? Zet `GA_MEASUREMENT_ID`
+   op Railway.
 5. Controle: open de site, klik **Oké** in het cookie-bannertje, en kijk in
    Analytics onder **Rapporten → Realtime**. Je ziet jezelf binnen een minuut.
 
