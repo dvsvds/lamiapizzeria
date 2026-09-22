@@ -29,7 +29,11 @@ service → *Variables*). Geen codewijziging nodig.
 
 Na het toevoegen van een variabele herstart Railway de app automatisch.
 
-> **Draait de website op Netlify (statisch, zonder server)?** Dan werken de
+> **Hosting (nagekeken 22/09/2026):** `www.lamiapizzeria.be` wijst naar Railway;
+> `lamiapizzeria.be` zonder www is een doorverwijzing van one.com naar www; de
+> Netlify-site *lamiapizza1* heeft geen domein en is enkel een voorvertoning.
+>
+> **Draait de website ooit op Netlify (statisch, zonder server)?** Dan werken de
 > omgevingsvariabelen niet. De Analytics-ID staat daarom óók vast in
 > `analytics.js`, en `robots.txt` en `sitemap.xml` staan als bestanden in de
 > repo. De Search Console-verificatie gebeurt dan via DNS of door de metatag
@@ -63,8 +67,9 @@ meteen welke kanalen (Google, Instagram, …) échte bestellingen opleveren.
 ## Stap 2 — Google Search Console (hoe Google je site ziet)
 
 1. Ga naar **search.google.com/search-console** → **Property toevoegen**.
-2. Kies **URL-voorvoegsel** en vul `https://www.lamiapizzeria.be/` in (exact het
-   adres uit `SITE_URL`).
+2. Kies **URL-voorvoegsel** en vul `https://www.lamiapizzeria.be/` in, **mét
+   www** (exact het adres uit `SITE_URL`). De site draait op www; het adres
+   zonder www is enkel een doorverwijzing bij one.com.
 3. Bij verificatie kies je **HTML-tag**. Je krijgt zoiets als
    `<meta name="google-site-verification" content="x7Kq…">`. Kopieer enkel de
    waarde tussen de aanhalingstekens bij `content`.
