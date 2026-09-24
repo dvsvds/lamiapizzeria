@@ -36,6 +36,7 @@ schijf/volume).
 | `SITE_URL` | Publiek adres van de site (voor `robots.txt` en `sitemap.xml`) | `https://www.lamiapizzeria.be` |
 | `GA_MEASUREMENT_ID` | Google Analytics 4 meet-ID (`G-…`); `uit` = geen Analytics | `G-KEFEYWN9YG` |
 | `GOOGLE_SITE_VERIFICATION` | Verificatiecode Google Search Console | *(leeg)* |
+| `GTM_CONTAINER_ID` | Google Tag Manager container-ID (`GTM-…`); `uit` = geen Tag Manager | standaard uit `analytics.js` |
 
 Zie **`SEO.md`** voor het stap-voor-stap koppelen van Google Analytics, Search
 Console en het Google Bedrijfsprofiel.
