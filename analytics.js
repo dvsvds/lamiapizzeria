@@ -32,7 +32,7 @@
 (function () {
   'use strict';
   var STANDAARD_GA = 'G-KEFEYWN9YG';
-  var STANDAARD_GTM = '';   // wordt ingevuld zodra de Tag Manager-container bestaat
+  var STANDAARD_GTM = 'GTM-5FHH9C9J';   // container 'www.lamiapizzeria.be'
   var GA = ('LAMIA_GA' in window) ? window.LAMIA_GA : STANDAARD_GA;
   var GTM = ('LAMIA_GTM' in window) ? window.LAMIA_GTM : STANDAARD_GTM;
   if (!GA || !/^G-[A-Z0-9]+$/i.test(GA)) GA = '';

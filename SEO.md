@@ -106,8 +106,9 @@ Facebook, TikTok-pixel, Google Ads-conversies) zonder de code aan te raken.
 1. Ga naar **tagmanager.google.com** → **Account maken**. Accountnaam
    *La Mia Pizzeria*, land *België*. Containernaam `www.lamiapizzeria.be`,
    platform **Web**.
-2. Je krijgt een **container-ID** dat begint met `GTM-`. Die staat vast in
-   `analytics.js` (of zet `GTM_CONTAINER_ID` op Railway om te overschrijven).
+2. ✅ Gedaan op 24/09/2026: container `www.lamiapizzeria.be`, ID
+   `GTM-5FHH9C9J`, vast in `analytics.js` (zet `GTM_CONTAINER_ID` op Railway
+   om te overschrijven, of `uit` om Tag Manager uit te zetten).
 3. Het installatievenster met de twee codefragmenten mag je sluiten: de site
    laadt Tag Manager zelf, mét cookie-toestemming.
 
