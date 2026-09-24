@@ -16,7 +16,7 @@ Elke stap hieronder duurt hooguit een paar minuten.
 | Webshop-pagina | Eigen titel, omschrijving en canonical (was een kopie van de homepage). |
 | Favicon & app-icoon | Het logo in het tabblad en op het startscherm van een telefoon. |
 | Snelheid | Het hero-logo ging van 1,3 MB naar 36 KB (WebP), pagina's worden gecomprimeerd (gzip), foto's blijven 7 dagen in de cache. Snelheid telt mee in de Google-ranking. |
-| Analytics-script | `analytics.js` laadt Google Analytics **pas na toestemming** via een klein cookie-bannertje (verplicht in België/EU). Doet niets zolang er geen meet-ID is ingesteld. |
+| Analytics-script | `analytics.js` laadt Google Analytics en Google Tag Manager **pas na toestemming** via een klein cookie-bannertje (verplicht in België/EU). |
 
 Je zet de Google-koppelingen aan met **omgevingsvariabelen** (Railway → je
 service → *Variables*). Geen codewijziging nodig.
@@ -26,6 +26,7 @@ service → *Variables*). Geen codewijziging nodig.
 | `SITE_URL` | Publiek adres van de site, zonder slash | `https://www.lamiapizzeria.be` |
 | `GA_MEASUREMENT_ID` | Google Analytics 4 meet-ID. Staat al in de code (`G-KEFEYWN9YG`); enkel invullen om te overschrijven, of `uit` om Analytics uit te zetten | `G-KEFEYWN9YG` |
 | `GOOGLE_SITE_VERIFICATION` | Verificatiecode van Search Console (de `content`-waarde van de metatag) | `x7Kq…` |
+| `GTM_CONTAINER_ID` | Google Tag Manager container-ID. Standaard staat in `analytics.js`; enkel invullen om te overschrijven, of `uit` om Tag Manager uit te zetten | `GTM-ABC1234` |
 
 Na het toevoegen van een variabele herstart Railway de app automatisch.
 
@@ -95,6 +96,36 @@ Google ze meet.
 Analytics en Search Console koppelen: in Analytics → **Beheren → Product-
 koppelingen → Search Console** → je property kiezen. Dan zie je zoektermen ook
 in Analytics.
+
+## Stap 2b — Google Tag Manager (voor pixels en advertenties)
+
+Tag Manager is een gereedschapskist: één keer op de site gezet, daarna voeg
+je via tagmanager.google.com meetscripts toe (Meta-pixel voor Instagram en
+Facebook, TikTok-pixel, Google Ads-conversies) zonder de code aan te raken.
+
+1. Ga naar **tagmanager.google.com** → **Account maken**. Accountnaam
+   *La Mia Pizzeria*, land *België*. Containernaam `www.lamiapizzeria.be`,
+   platform **Web**.
+2. Je krijgt een **container-ID** dat begint met `GTM-`. Die staat vast in
+   `analytics.js` (of zet `GTM_CONTAINER_ID` op Railway om te overschrijven).
+3. Het installatievenster met de twee codefragmenten mag je sluiten: de site
+   laadt Tag Manager zelf, mét cookie-toestemming.
+
+**Belangrijk**
+
+- Zet in Tag Manager **géén Google Analytics-tag**. Analytics zit al
+  rechtstreeks op de site; met een tweede tag telt elk bezoek dubbel.
+- Google-tags (Google Ads, Floodlight) luisteren automatisch naar de
+  cookie-toestemming van de site (Consent Mode v2).
+- Niet-Google-tags (Meta, TikTok) doen dat niet vanzelf. Geef ze in Tag
+  Manager bij **Toestemmingsinstellingen** de vereiste toestemming
+  `ad_storage`, of laat ze pas afgaan op de gebeurtenis
+  `toestemming_gegeven`.
+- Deze gebeurtenissen zijn beschikbaar als trigger (Aangepaste gebeurtenis):
+  `bestel_klik`, `bellen`, `bestelling_betaald`, `toestemming_gegeven`,
+  `toestemming_geweigerd`.
+- Controleren: **Voorbeeld** (Preview) in Tag Manager → site-URL invullen →
+  je ziet welke tags afgaan bij welke klik.
 
 ## Stap 3 — Google Bedrijfsprofiel (de kaart en het vakje rechts in Google)
 

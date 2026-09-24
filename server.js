@@ -50,6 +50,13 @@ if (GA_MEASUREMENT_ID && !/^G-[A-Z0-9]+$/i.test(GA_MEASUREMENT_ID)) {
   console.warn('GA_MEASUREMENT_ID ziet er niet uit als een GA4-ID (G-XXXXXXX) en wordt genegeerd: ' + GA_MEASUREMENT_ID);
   GA_MEASUREMENT_ID = '';
 }
+// Google Tag Manager container-ID (GTM-XXXXXXX). Leeg = standaard uit analytics.js; `uit` = geen Tag Manager.
+var GTM_CONTAINER_ID = String(process.env.GTM_CONTAINER_ID || '').trim();
+if (/^(uit|off|none|0)$/i.test(GTM_CONTAINER_ID)) GTM_CONTAINER_ID = 'uit';
+else if (GTM_CONTAINER_ID && !/^GTM-[A-Z0-9]+$/i.test(GTM_CONTAINER_ID)) {
+  console.warn('GTM_CONTAINER_ID ziet er niet uit als een Tag Manager-ID (GTM-XXXXXXX) en wordt genegeerd: ' + GTM_CONTAINER_ID);
+  GTM_CONTAINER_ID = '';
+}
 // Google Search Console: de "content"-waarde van de verificatie-metatag.
 var GOOGLE_SITE_VERIFICATION = String(process.env.GOOGLE_SITE_VERIFICATION || '').trim();
 if (GOOGLE_SITE_VERIFICATION && !/^[A-Za-z0-9_-]+$/.test(GOOGLE_SITE_VERIFICATION)) {
@@ -541,7 +548,11 @@ function injectHead(html) {
   if (GOOGLE_SITE_VERIFICATION) extra += '<meta name="google-site-verification" content="' + GOOGLE_SITE_VERIFICATION + '">\n';
   // altijd zetten (ook leeg): zo weet analytics.js dat de server beslist en valt
   // het niet terug op zijn eigen standaard-ID wanneer Analytics uit staat.
-  extra += '<script>window.LAMIA_GA=' + JSON.stringify(GA_MEASUREMENT_ID) + ';</script>\n';
+  extra += '<script>window.LAMIA_GA=' + JSON.stringify(GA_MEASUREMENT_ID) + ';';
+  // Tag Manager: enkel meegeven als de omgeving iets zegt; anders beslist analytics.js zelf (standaardwaarde).
+  if (GTM_CONTAINER_ID === 'uit') extra += 'window.LAMIA_GTM="";';
+  else if (GTM_CONTAINER_ID) extra += 'window.LAMIA_GTM=' + JSON.stringify(GTM_CONTAINER_ID) + ';';
+  extra += '</script>\n';
   var i = html.indexOf('</head>');
   return i < 0 ? html : html.slice(0, i) + extra + html.slice(i);
 }

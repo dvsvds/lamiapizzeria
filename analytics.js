@@ -1,33 +1,49 @@
 /* ============================================================================
-   LA MIA PIZZERIA — Google Analytics (GA4) met cookie-toestemming
+   LA MIA PIZZERIA — Google Analytics (GA4) + Google Tag Manager, met
+   cookie-toestemming
    ----------------------------------------------------------------------------
-   Dit script staat op de publieke pagina's (index.html en order.html). De
-   meet-ID komt van de server (`window.LAMIA_GA`, uit de omgevingsvariabele
-   GA_MEASUREMENT_ID; `uit` schakelt Analytics uit) of, zonder server, van de
-   standaard-ID hieronder.
+   Dit script staat op de publieke pagina's (index.html en order.html).
 
-   Privacy (België/EU): statistiek-cookies mogen pas ná toestemming. Daarom:
+   Twee Google-koppelingen, elk apart aan of uit te zetten:
+     - Google Analytics 4 (meet-ID G-…): meet bezoekers en de belangrijkste
+       kliks. Zit rechtstreeks op de site.
+     - Google Tag Manager (container-ID GTM-…): gereedschapskist om later
+       extra meetscripts toe te voegen (Meta-pixel, TikTok-pixel, Google
+       Ads) zonder de code van de site aan te passen.
+       ▶ Zet in Tag Manager GÉÉN Analytics-tag: Analytics zit al rechtstreeks
+         op de site; anders wordt elk bezoek dubbel geteld.
+
+   De ID's komen van de server (`window.LAMIA_GA` en `window.LAMIA_GTM`, uit
+   de omgevingsvariabelen GA_MEASUREMENT_ID en GTM_CONTAINER_ID; `uit`
+   schakelt uit) of, zonder server, van de standaardwaarden hieronder.
+
+   Privacy (België/EU): statistiek- en marketingcookies mogen pas ná
+   toestemming. Daarom:
      1. Google Consent Mode v2 start op "denied" (geen cookies, geen opslag).
+        Dat geldt voor Analytics én voor alle Google-tags in Tag Manager.
      2. Een klein bannertje vraagt toestemming; de keuze wordt onthouden.
-     3. Bij "Oké" wordt de toestemming naar "granted" gezet en meet GA gewoon.
-        Bij "Liever niet" blijft alles uit (GA krijgt enkel cookieloze pings,
-        zonder identificatie — dat is hoe Consent Mode werkt).
+     3. Bij "Oké" gaat de toestemming naar "granted". Bij "Liever niet"
+        blijft alles uit.
+     Niet-Google-tags in Tag Manager (Meta, TikTok) luisteren niet vanzelf
+     naar Consent Mode: geef die in Tag Manager bij "Toestemmingsinstellingen"
+     de vereiste toestemming `ad_storage` mee, of laat ze afgaan op de
+     gebeurtenis `toestemming_gegeven` die dit script stuurt.
    ========================================================================== */
 (function () {
   'use strict';
-  // De server (server.js) zet window.LAMIA_GA op de publieke pagina's: de ID uit
-  // GA_MEASUREMENT_ID, of leeg als Analytics uit staat. Draait de site als
-  // statische bestanden (bv. Netlify), dan is er geen server en geldt de
-  // standaard-ID hieronder.
-  var STANDAARD_ID = 'G-KEFEYWN9YG';
-  var ID = ('LAMIA_GA' in window) ? window.LAMIA_GA : STANDAARD_ID;
-  if (!ID || !/^G-[A-Z0-9]+$/i.test(ID)) return;
+  var STANDAARD_GA = 'G-KEFEYWN9YG';
+  var STANDAARD_GTM = '';   // wordt ingevuld zodra de Tag Manager-container bestaat
+  var GA = ('LAMIA_GA' in window) ? window.LAMIA_GA : STANDAARD_GA;
+  var GTM = ('LAMIA_GTM' in window) ? window.LAMIA_GTM : STANDAARD_GTM;
+  if (!GA || !/^G-[A-Z0-9]+$/i.test(GA)) GA = '';
+  if (!GTM || !/^GTM-[A-Z0-9]+$/i.test(GTM)) GTM = '';
+  if (!GA && !GTM) return;
 
   var KEY = 'lamia_cookies';           // 'ja' | 'nee'
   function keuze() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
   function bewaar(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
 
-  /* ---- gtag-basis: consent standaard geweigerd, dan pas de loader ---- */
+  /* ---- dataLayer + consent standaard geweigerd, vóór er iets laadt ---- */
   window.dataLayer = window.dataLayer || [];
   function gtag() { window.dataLayer.push(arguments); }
   window.gtag = window.gtag || gtag;
@@ -35,27 +51,50 @@
     ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied',
     analytics_storage: 'denied', wait_for_update: 500
   });
-  gtag('js', new Date());
-  gtag('config', ID, { anonymize_ip: true, send_page_view: true });
 
-  var s = document.createElement('script');
-  s.async = true;
-  s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(ID);
-  document.head.appendChild(s);
-
-  function toestemming(ja) {
-    gtag('consent', 'update', { analytics_storage: ja ? 'granted' : 'denied' });
+  function laad(src) {
+    var s = document.createElement('script');
+    s.async = true; s.src = src;
+    document.head.appendChild(s);
   }
 
-  /* ---- een paar nuttige gebeurtenissen, naast wat GA zelf al meet ---- */
+  /* ---- Google Analytics 4, rechtstreeks ---- */
+  if (GA) {
+    gtag('js', new Date());
+    gtag('config', GA, { anonymize_ip: true, send_page_view: true });
+    laad('https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(GA));
+  }
+
+  /* ---- Google Tag Manager ---- */
+  if (GTM) {
+    window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+    laad('https://www.googletagmanager.com/gtm.js?id=' + encodeURIComponent(GTM));
+  }
+
+  function toestemming(ja) {
+    gtag('consent', 'update', {
+      analytics_storage: ja ? 'granted' : 'denied',
+      ad_storage: ja ? 'granted' : 'denied',
+      ad_user_data: ja ? 'granted' : 'denied',
+      ad_personalization: ja ? 'granted' : 'denied'
+    });
+    // voor niet-Google-tags in Tag Manager (trigger: aangepaste gebeurtenis)
+    window.dataLayer.push({ event: ja ? 'toestemming_gegeven' : 'toestemming_geweigerd' });
+  }
+
+  /* ---- een paar nuttige gebeurtenissen: naar Analytics én naar Tag Manager ---- */
+  function meet(naam, params) {
+    if (GA) gtag('event', naam, params || {});
+    if (GTM) window.dataLayer.push(Object.assign({ event: naam }, params || {}));
+  }
   document.addEventListener('click', function (e) {
     var a = e.target && e.target.closest ? e.target.closest('a') : null;
     if (!a) return;
     var href = a.getAttribute('href') || '';
-    if (href.indexOf('tel:') === 0) gtag('event', 'bellen', { plaats: a.textContent.trim().slice(0, 40) });
-    else if (/order(\.html)?(\?|#|$)/.test(href)) gtag('event', 'bestel_klik', { plaats: (a.className || a.textContent).trim().slice(0, 40) });
+    if (href.indexOf('tel:') === 0) meet('bellen', { plaats: a.textContent.trim().slice(0, 40) });
+    else if (/order(\.html)?(\?|#|$)/.test(href)) meet('bestel_klik', { plaats: (a.className || a.textContent).trim().slice(0, 40) });
   });
-  if (/[?&]betaald=/.test(location.search)) gtag('event', 'bestelling_betaald');
+  if (/[?&]betaald=/.test(location.search)) meet('bestelling_betaald');
 
   /* ---- toestemmingsbanner ---- */
   var eerder = keuze();
@@ -88,7 +127,7 @@
   var bar = document.createElement('div');
   bar.className = 'cookie-bar';
   bar.setAttribute('role', 'dialog');
-  bar.setAttribute('aria-label', en() ? 'Cookies' : 'Cookies');
+  bar.setAttribute('aria-label', 'Cookies');
   bar.innerHTML = '<p></p><div class="cb-btns"><button type="button" class="nee"></button><button type="button" class="ja"></button></div>';
   bar.querySelector('p').textContent = T.txt;
   bar.querySelector('.nee').textContent = T.nee;
