@@ -80,7 +80,10 @@ meteen welke kanalen (Google, Instagram, …) échte bestellingen opleveren.
    `https://www.lamiapizzeria.be/google37c42a199dcaa681.html` in je browser;
    je moet één regel tekst zien. Zie je die niet, dan is de nieuwe versie nog
    niet live.
-5. Ga naar **Sitemaps** (linkermenu), vul `sitemap.xml` in en klik **Verzenden**.
+5. ✅ Gedaan op 24/09/2026: property `https://www.lamiapizzeria.be/`
+   geverifieerd en `sitemap.xml` ingediend (status Succesvol, 2 pagina's).
+   Twee oudere, niet-geverifieerde properties zonder www staan er nog; die
+   doen niets en mogen weg via Instellingen → Property verwijderen.
 6. Vraag indexering aan: plak `https://www.lamiapizzeria.be/` in de zoekbalk
    bovenaan → **Indexering aanvragen**. Doe hetzelfde voor `/order.html`.
 

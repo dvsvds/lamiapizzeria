@@ -594,7 +594,7 @@ function sitemapXml() {
     '  <url>\n    <loc>' + xmlEsc(SITE_URL + '/') + '</loc>\n    <lastmod>' + lastmod('index.html') + '</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>1.0</priority>\n' +
     img('hero.jpg', 'New York style pizza — La Mia Pizzeria Antwerpen') + '\n' +
     img('pizza-whole.jpg', 'Hele pizza — La Mia Pizzeria') + '\n' +
-    img('slice-card.jpg', 'Pizza per slice — La Mia Pizzeria') + '\n' +
+    img('slice-card.jpg', 'New York pizza — La Mia Pizzeria') + '\n' +
     img('pasta.jpg', 'Pasta — La Mia Pizzeria') + '\n' +
     img('interior.jpg', 'Interieur La Mia Pizzeria, Abdijstraat Antwerpen') + '\n' +
     '  </url>\n' +
