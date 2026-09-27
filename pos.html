@@ -594,11 +594,20 @@
      ============================================================= */
   var LS={cart:'lamia_pos_cart',parked:'lamia_pos_parked',sales:'lamia_pos_sales',
           seq:'lamia_pos_seq',theme:'lamia_pos_theme',closed:'lamia_pos_closed',
-          outbox:'lamia_pos_outbox'};
+          outbox:'lamia_pos_outbox',salesDay:'lamia_pos_salesday'};
   var state={ lines:[], type:'afhalen', table:'', discount:{pct:0,eur:0}, cust:{name:'',phone:'',address:''}, prepriced:false, onlinePaid:false };
   var parked=[], sales=[], seq={date:'',n:0};
 
   function today(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  // "Zakendag": we zijn open tot 02:00, dus alles vóór 05:00 telt nog bij de vorige dag.
+  // Zo splitst een nachtje werken niet over twee dagen, en sluit de dag pas 's ochtends vanzelf af.
+  function bizDay(){ var d=new Date(); if(d.getHours()<5){ d.setDate(d.getDate()-1); } return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  // Automatische dagafsluiting: bij een nieuwe zakendag wordt de dagomzet vanzelf op nul gezet.
+  function rolloverIfNewDay(){
+    var sd=load(LS.salesDay,'');
+    if(sd && sd!==bizDay() && sales.length){ sales=[]; save(LS.sales,sales); }
+    save(LS.salesDay,bizDay());
+  }
   function load(k,def){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):def; }catch(e){ return def; } }
   function save(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
   function saveCart(){ save(LS.cart,state); }
@@ -609,11 +618,12 @@
     if(c&&c.lines){ state=c; if(!state.discount) state.discount={pct:0,eur:0}; if(!state.cust) state.cust={name:'',phone:'',address:''}; if(typeof state.prepriced!=='boolean') state.prepriced=false; if(typeof state.onlinePaid!=='boolean') state.onlinePaid=false; }
     parked=load(LS.parked,[]);
     sales=load(LS.sales,[]);
+    rolloverIfNewDay();  // dag automatisch afsluiten als het een nieuwe zakendag is
     seq=load(LS.seq,{date:'',n:0});
-    if(seq.date!==today()){ seq={date:today(),n:0}; save(LS.seq,seq); }
+    if(seq.date!==bizDay()){ seq={date:bizDay(),n:0}; save(LS.seq,seq); }
   }
-  function nextOrderNo(){ if(seq.date!==today()){ seq={date:today(),n:0}; } seq.n++; seq.date=today(); save(LS.seq,seq); return seq.n; }
-  function currentOrderNo(){ return (seq.date!==today()?0:seq.n)+1; }
+  function nextOrderNo(){ if(seq.date!==bizDay()){ seq={date:bizDay(),n:0}; } seq.n++; seq.date=bizDay(); save(LS.seq,seq); return seq.n; }
+  function currentOrderNo(){ return (seq.date!==bizDay()?0:seq.n)+1; }
 
   /* =============================================================
      3. HELPERS
@@ -1096,6 +1106,7 @@
   };
 
   function finalizeSale(pay){
+    rolloverIfNewDay();  // nieuwe zakendag? dan eerst de vorige dag afsluiten (dagomzet op nul)
     var no=nextOrderNo();
     var t=payTotals;
     var sale={
@@ -1294,6 +1305,7 @@
     return r;
   }
   function openReport(){
+    rolloverIfNewDay();  // dagrapport openen op een nieuwe dag → vorige dag is al afgesloten
     var r=reportData();
     var b=$('#reportBody');
     var opened=sales.length?new Date(sales[0].ts):new Date();
