@@ -173,3 +173,12 @@ zien wat uit Google Maps komt: `https://www.lamiapizzeria.be/?utm_source=google&
   `hreflang`.
 - **Reviews op de site.** De rating 4,7 (260 reviews) staat vast in de code;
   werk die af en toe bij of koppel ze aan het Bedrijfsprofiel.
+
+## Metingen (elke 1e en 15e van de maand)
+
+Bron: Search Console → Prestaties, en Analytics → Home. Schermfoto's van de
+manager; vergelijk telkens met de vorige rij.
+
+| Datum | Periode | Klikken | Vertoningen | Positie | Analytics: gebruikers (7 d) | Opmerkingen |
+|---|---|---|---|---|---|---|
+| 01/10/2026 | 23–28 sep (7 d) | 10 | 7.350 | 2,4 | 24 | Nulmeting. 6.720 vertoningen op het losse woord "pizza" zonder klik (groot blok, niet bruikbaar). Klikken enkel op de eigen naam. "pizza antwerpen" 30 vertoningen / 0 klikken, "pasta" 102 / 0, "takeaway" 19 / 0, "pizza in hoboken" 1 / 1. Favicon zichtbaar in Google. Bedrijfsprofiel ingevuld. Google Ads nog niet gestart. Actie: bezorggebied-sectie met buurten (PR #79). |
