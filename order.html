@@ -64,7 +64,14 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   },
   "geo": { "@type": "GeoCoordinates", "latitude": 51.1861375, "longitude": 4.3874416 },
   "hasMap": "https://www.google.com/maps/place/LA+MIA+PIZZERIA/@51.1861375,4.3874416,17z",
-  "areaServed": { "@type": "City", "name": "Antwerpen" },
+  "areaServed": [
+    { "@type": "City", "name": "Antwerpen" },
+    { "@type": "Place", "name": "Kiel, Antwerpen" },
+    { "@type": "Place", "name": "Hoboken" },
+    { "@type": "Place", "name": "Wilrijk" },
+    { "@type": "Place", "name": "Antwerpen-Zuid" },
+    { "@type": "Place", "name": "Berchem" }
+  ],
   "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.7", "reviewCount": "260" },
   "openingHoursSpecification": [
     { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "11:30", "closes": "02:00" },
