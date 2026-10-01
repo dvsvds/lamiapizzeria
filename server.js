@@ -38,6 +38,10 @@ var SESSION_HOURS = 12;
 var DELIVERY_FEE = parseFloat(process.env.DELIVERY_FEE || '0.00'); // leveringskosten (vervangen door 30% korting bij levering)
 var MIN_ORDER = parseFloat(process.env.MIN_ORDER || '20.00');      // minimum bestelbedrag (levering)
 var MOLLIE_API_KEY = String(process.env.MOLLIE_API_KEY || '');    // online betalen (Mollie); leeg = uit
+// Leveringszone: enkel leveren binnen deze straal (km) rond de zaak (Abdijstraat 226a, 2020 Antwerpen).
+var SHOP_LAT = parseFloat(process.env.SHOP_LAT || '51.1861375');
+var SHOP_LON = parseFloat(process.env.SHOP_LON || '4.3874416');
+var DELIVERY_RADIUS_KM = parseFloat(process.env.DELIVERY_RADIUS_KM || '8');
 
 /* ---- SEO & Google-koppelingen (zie SEO.md) ---- */
 // Publiek adres van de site, zonder slash op het einde. Gebruikt in robots.txt en sitemap.xml.
@@ -629,6 +633,52 @@ function orderRow(id) {
   return o;
 }
 
+// Afstand (km) tussen twee coördinaten (haversine).
+function haversineKm(lat1, lon1, lat2, lon2) {
+  function toRad(d) { return d * Math.PI / 180; }
+  var R = 6371;
+  var dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+// Adres → coördinaten via OpenStreetMap Nominatim. Geeft {lat,lon} of null.
+// null = onzeker/onbereikbaar → wij laten de bestelling dan gewoon door (geen omzet verliezen).
+function geocode(address) {
+  return new Promise(function (resolve) {
+    try {
+      var q = encodeURIComponent(String(address || '').trim() + ', België');
+      var options = {
+        method: 'GET', hostname: 'nominatim.openstreetmap.org',
+        path: '/search?format=json&limit=1&countrycodes=be&q=' + q,
+        headers: { 'User-Agent': 'LaMiaPizzeria/1.0 (https://www.lamiapizzeria.be)', 'Accept': 'application/json' },
+        timeout: 6000
+      };
+      var rq = https.request(options, function (r) {
+        var data = '';
+        r.on('data', function (c) { data += c; });
+        r.on('end', function () {
+          try {
+            var arr = JSON.parse(data);
+            if (arr && arr[0] && arr[0].lat) return resolve({ lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon) });
+          } catch (e) { }
+          resolve(null);
+        });
+      });
+      rq.on('error', function () { resolve(null); });
+      rq.on('timeout', function () { rq.destroy(); resolve(null); });
+      rq.end();
+    } catch (e) { resolve(null); }
+  });
+}
+// Ligt een leveradres binnen de leveringszone? { ok, distanceKm, found }
+async function deliveryCheck(address) {
+  var geo = await geocode(address);
+  if (!geo) return { ok: true, found: false, distanceKm: null }; // onzeker → doorlaten
+  var dist = haversineKm(SHOP_LAT, SHOP_LON, geo.lat, geo.lon);
+  return { ok: dist <= DELIVERY_RADIUS_KM + 0.05, found: true, distanceKm: Math.round(dist * 10) / 10 };
+}
+
 // Kalenderdag (YYYY-MM-DD) in de Belgische tijdzone, voor het per-dag overzicht.
 function belgiumDate(iso) {
   try {
@@ -672,7 +722,14 @@ async function handleApi(req, res, urlPath) {
   if (seg[0] === 'menu' && method === 'GET') {
     var cats = allCategories();
     var prods = allProducts().filter(function (p) { return p.available; });
-    return sendJson(res, 200, { categories: cats, products: prods, config: { deliveryFee: DELIVERY_FEE, minOrder: MIN_ORDER, open: isOpenNow(), online: !!MOLLIE_API_KEY } });
+    return sendJson(res, 200, { categories: cats, products: prods, config: { deliveryFee: DELIVERY_FEE, minOrder: MIN_ORDER, open: isOpenNow(), online: !!MOLLIE_API_KEY, deliveryRadiusKm: DELIVERY_RADIUS_KM } });
+  }
+
+  /* ---------- publiek: leveradres binnen de zone? ---------- */
+  if (seg[0] === 'check-delivery' && method === 'GET') {
+    var qd = parseQuery(urlPath);
+    var dc = await deliveryCheck(qd.address || '');
+    return sendJson(res, 200, { ok: dc.ok, found: dc.found, distanceKm: dc.distanceKm, radiusKm: DELIVERY_RADIUS_KM });
   }
 
   /* ---------- publiek: bestelling plaatsen (webshop) ---------- */
@@ -687,6 +744,13 @@ async function handleApi(req, res, urlPath) {
     // buiten de openingsuren mag de webshop niet bestellen; de kassa (ingelogd personeel) wel
     if (source === 'web' && !isOpenNow()) {
       return sendJson(res, 403, { error: 'We zijn momenteel gesloten. Online bestellen kan tijdens de openingsuren: ma–vr vanaf 11:30, za–zo vanaf 14:00, elke dag tot 02:00.', closed: true });
+    }
+    // Leveringszone: de webshop mag enkel leveren binnen DELIVERY_RADIUS_KM van de zaak.
+    if (source === 'web' && type === 'leveren') {
+      var dc = await deliveryCheck((ob.customer && ob.customer.address) || '');
+      if (dc.found && !dc.ok) {
+        return sendJson(res, 400, { error: 'Sorry, dit adres ligt buiten onze leveringszone (max ' + DELIVERY_RADIUS_KM + ' km van de zaak). Kies afhalen, of een adres dichterbij.', outOfZone: true, distanceKm: dc.distanceKm });
+      }
     }
     var subtotal = 0;
     var priceError = null;

@@ -1138,6 +1138,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
         <label class="co-f co-full"><span>Adres *</span><input name="adres" placeholder="Straat + nummer"></label>
         <label class="co-f"><span>Postcode *</span><input name="postcode"></label>
         <label class="co-f"><span>Gemeente *</span><input name="gemeente"></label>
+        <div class="co-full" id="coZoneNote" style="font-size:.78rem;color:var(--muted-2);margin-top:.1rem">🛵 We leveren enkel binnen 8 km van de zaak.</div>
       </div>
       <div class="co-seg" id="coTime">
         <button type="button" class="on" data-t="asap">Zo snel mogelijk</button>
@@ -1966,14 +1967,29 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
       if(!window.fetch){ if(btn)btn.disabled=false; orderError('Bestellen vereist een internetverbinding.'); return; }
       // Bestelling naar de database (verschijnt op kassa, keuken en in rapporten).
       // Bij een fout NIET doen alsof de bestelling gelukt is — de klant moet het weten.
-      fetch('api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-        .then(function(r){ return r.text().then(function(t){ var j={}; try{ j=t?JSON.parse(t):{}; }catch(e){} return {ok:r.ok,j:j}; }); })
-        .then(function(res){ if(btn)btn.disabled=false;
-          if(res.ok && res.j && res.j.checkoutUrl){ window.location.href=res.j.checkoutUrl; return; } // online betalen → naar Mollie
-          if(res.ok && res.j && res.j.no){ showConfirm(res.j.no, res.j.eta||localEta); }
-          else { orderError((res.j&&res.j.error)||'Bestelling kon niet geplaatst worden. Probeer opnieuw.'); }
-        })
-        .catch(function(){ if(btn)btn.disabled=false; orderError('Geen verbinding met de server. Probeer opnieuw.'); });
+      function doPlace(){
+        fetch('api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+          .then(function(r){ return r.text().then(function(t){ var j={}; try{ j=t?JSON.parse(t):{}; }catch(e){} return {ok:r.ok,j:j}; }); })
+          .then(function(res){ if(btn)btn.disabled=false;
+            if(res.ok && res.j && res.j.checkoutUrl){ window.location.href=res.j.checkoutUrl; return; } // online betalen → naar Mollie
+            if(res.ok && res.j && res.j.no){ showConfirm(res.j.no, res.j.eta||localEta); }
+            else { orderError((res.j&&res.j.error)||'Bestelling kon niet geplaatst worden. Probeer opnieuw.'); }
+          })
+          .catch(function(){ if(btn)btn.disabled=false; orderError('Geen verbinding met de server. Probeer opnieuw.'); });
+      }
+      if(mode==='leveren'){
+        // adres vooraf checken: we leveren enkel binnen de zone (max 8 km)
+        fetch('api/check-delivery?address='+encodeURIComponent(addr))
+          .then(function(r){ return r.json(); })
+          .then(function(d){
+            if(d && d.found && !d.ok){
+              if(btn)btn.disabled=false;
+              var km=d.distanceKm?(' — dit adres ligt op ± '+String(d.distanceKm).replace('.',',')+' km'):'';
+              orderError('Sorry, we leveren enkel binnen '+(d.radiusKm||8)+' km van de zaak'+km+'. Kies afhalen, of een adres dichterbij.');
+            } else { doPlace(); } // binnen zone of onzeker → doorgaan (server checkt ook)
+          })
+          .catch(function(){ doPlace(); }); // check onbereikbaar → doorgaan, server doet de eindcontrole
+      } else { doPlace(); }
     });
 
     /* ---------- BEVESTIGING ---------- */
