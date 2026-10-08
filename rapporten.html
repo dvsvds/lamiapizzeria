@@ -174,13 +174,16 @@
   function dayStart(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
   function addDays(d,n){ var x=new Date(d); x.setDate(x.getDate()+n); return x; }
   function fmtDay(d){ return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
+  // taalkeuze (gedeeld met i18n-admin.js) → periodenamen meteen in de juiste taal tonen
+  var EN=(function(){ try{ return localStorage.getItem('lamia_admin_lang')==='en'; }catch(e){ return false; } })();
+  function L(nl,en){ return EN?en:nl; }
 
   function setRange(key){
     var now=new Date(), s, e, label;
-    if(key==='today'){ s=dayStart(now); e=addDays(s,1); label='Vandaag · '+fmtDay(s); }
-    else if(key==='yesterday'){ e=dayStart(now); s=addDays(e,-1); label='Gisteren · '+fmtDay(s); }
-    else if(key==='week'){ var wd=(now.getDay()+6)%7; s=addDays(dayStart(now),-wd); e=addDays(dayStart(now),1); label='Deze week · vanaf '+fmtDay(s); }
-    else if(key==='month'){ s=new Date(now.getFullYear(),now.getMonth(),1); e=addDays(dayStart(now),1); label='Deze maand · '+fmtDay(s)+' → '+fmtDay(now); }
+    if(key==='today'){ s=dayStart(now); e=addDays(s,1); label=L('Vandaag · ','Today · ')+fmtDay(s); }
+    else if(key==='yesterday'){ e=dayStart(now); s=addDays(e,-1); label=L('Gisteren · ','Yesterday · ')+fmtDay(s); }
+    else if(key==='week'){ var wd=(now.getDay()+6)%7; s=addDays(dayStart(now),-wd); e=addDays(dayStart(now),1); label=L('Deze week · vanaf ','This week · from ')+fmtDay(s); }
+    else if(key==='month'){ s=new Date(now.getFullYear(),now.getMonth(),1); e=addDays(dayStart(now),1); label=L('Deze maand · ','This month · ')+fmtDay(s)+' → '+fmtDay(now); }
     range={from:s.toISOString(), to:e.toISOString(), label:label};
     load();
   }
@@ -188,7 +191,7 @@
     var f=$('#cFrom').value, t=$('#cTo').value;
     if(!f||!t){ return; }
     var s=new Date(f+'T00:00:00'), e=addDays(new Date(t+'T00:00:00'),1);
-    range={from:s.toISOString(), to:e.toISOString(), label:'Aangepast · '+fmtDay(s)+' → '+fmtDay(new Date(t+'T00:00:00'))};
+    range={from:s.toISOString(), to:e.toISOString(), label:L('Aangepast · ','Custom · ')+fmtDay(s)+' → '+fmtDay(new Date(t+'T00:00:00'))};
     [].forEach.call(document.querySelectorAll('#periods .p'),function(x){x.classList.remove('on');});
     load();
   }
@@ -250,7 +253,7 @@
       h+='<tr><td>'+k+'%</td><td class="rr">'+num(n)+'</td><td class="rr">'+num(b)+'</td><td class="rr">'+num(g)+'</td></tr>';
     });
     h+='<tr class="rt-tot"><td>Tot.</td><td class="rr">'+num(rev-vatTot)+'</td><td class="rr">'+num(vatTot)+'</td><td class="rr">'+num(rev)+'</td></tr></table>';
-    h+='<hr><div class="rt-c">Afgedrukt '+new Date().toLocaleString('nl-BE')+'</div>';
+    h+='<hr><div class="rt-c">'+L('Afgedrukt','Printed')+' '+new Date().toLocaleString(EN?'en-GB':'nl-BE')+'</div>';
     document.getElementById('reportTicket').innerHTML=h;
   }
   $('#btnTicket').onclick=function(){
@@ -344,7 +347,7 @@
 
   function load(){
     $('#periodLabel').textContent=range.label;
-    var ph=$('#printHead'); if(ph){ ph.innerHTML='<b>La Mia Pizzeria — Dagrapport</b><br>'+esc(range.label||''); }
+    var ph=$('#printHead'); if(ph){ ph.innerHTML='<b>La Mia Pizzeria — '+L('Dagrapport','Day report')+'</b><br>'+esc(range.label||''); }
     fetch('api/admin/report?from='+encodeURIComponent(range.from)+'&to='+encodeURIComponent(range.to),{credentials:'same-origin'})
       .then(function(r){ if(r.status===401){ showLogin(); return null; } return r.json(); })
       .then(function(j){ if(j) render(j); });

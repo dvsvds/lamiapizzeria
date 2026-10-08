@@ -92,6 +92,22 @@
     '🧮 btw (in de omzet begrepen)': '🧮 VAT (included in turnover)', 'btw 6%': 'VAT 6%', 'btw 12%': 'VAT 12%', 'btw 21%': 'VAT 21%',
     'totaal btw': 'Total VAT', '🍕 omzet per categorie': '🍕 Turnover per category',
     'geen bestellingen in deze periode.': 'No orders in this period.',
+    // --- rapporten: knoppen, BTW-tabel, per dag/week, per artikel ---
+    '🔑 pin wijzigen': '🔑 Change PIN', '🧾 ticket (bon)': '🧾 Ticket (receipt)', '🖨 afdrukken': '🖨 Print',
+    'tarief': 'Rate', 'netto-omzet': 'Net turnover', 'btw': 'VAT', 'bruto-omzet': 'Gross turnover',
+    '🍕 verkoop per artikel': '🍕 Sales per item', 'verkoop per artikel': 'Sales per item',
+    'artikel': 'Item', 'aantal': 'Qty', 'omzet': 'Turnover', 'aandeel': 'Share',
+    '📅 per dag': '📅 Per day', 'per dag': 'Per day', '📆 per week': '📆 Per week', 'per week': 'Per week',
+    'datum': 'Date', 'bons': 'Orders', 'week': 'Week',
+    '📈 verkoop per dag': '📈 Sales per day', 'verkoop per dag': 'Sales per day',
+    '✖ geannuleerde bonnen': '✖ Cancelled orders', 'geannuleerde bonnen': 'Cancelled orders',
+    'bedrag (niet in de omzet)': 'Amount (not in turnover)', 'grafiek per dag voor': 'Daily chart for',
+    // --- rapporten-ticket (bon) ---
+    'dagrapport': 'Day report', 'omzet per kanaal': 'Turnover per channel', 'omzet per betaalwijze': 'Turnover per payment method',
+    'cash-overzicht': 'Cash balance', 'startsaldo': 'Start balance', 'cash verkoop': 'Cash sales',
+    'totaal cash': 'Total in cash', 'geteld': 'Counted', 'verschil': 'Difference',
+    'thuisbezorgd': 'Delivery', 'afhaling': 'Takeaway', 'onbetaald': 'Unpaid', 'gem.': 'avg.', 'tot.': 'Tot.',
+    'netto': 'Net', 'bruto': 'Gross', 'afgedrukt': 'Printed', 'aangepast': 'Custom',
     // --- standaard categorielabels ---
     'alles': 'All', "pizza's": 'Pizzas', "pasta's": 'Pastas', 'burgers': 'Burgers', 'broodjes': 'Sandwiches',
     'kapsalon': 'Kapsalon', 'lookbrood': 'Garlic bread', 'snacks': 'Snacks', 'frieten': 'Fries',
