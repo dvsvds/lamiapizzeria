@@ -1149,13 +1149,15 @@ async function handleApi(req, res, urlPath) {
         byPay: { cash: 0, card: 0, online: 0, onbetaald: 0 },
         bySource: { web: 0, pos: 0 },
         byType: { afhalen: 0, leveren: 0, terplaatse: 0 },
-        byCat: {}, vat: {}, byDay: {}, byWeek: {},
+        byCat: {}, vat: {}, vatGross: {}, byDay: {}, byWeek: {},
         // per artikel: hoeveel stuks en hoeveel omzet over de hele periode,
         // plus per dag het aantal stuks — zodat de zaakvoerder van op afstand
         // kan volgen wat er verkoopt en hoe dat van dag tot dag beweegt.
         byItem: {}, byItemDay: {},
         geannuleerd: { count: 0, amount: 0 }
       };
+      var kindCache = {};
+      function kindFor(cat) { if (!(cat in kindCache)) kindCache[cat] = catKind(cat); return kindCache[cat]; }
       rows.forEach(function (o) {
         if (o.pay_status === 'open' || o.pay_status === 'expired' || o.pay_status === 'canceled' || o.pay_status === 'failed') return; // niet-betaalde online bestellingen tellen niet mee
         // geannuleerde bonnen tellen niet mee in de omzet, maar blijven wel zichtbaar
@@ -1182,6 +1184,8 @@ async function handleApi(req, res, urlPath) {
         bw.revenue += o.total || 0; bw.count++; bw.cash += cAmt; bw.card += kAmt; bw.online += oAmt; bw.onbetaald += uAmt;
         var vat = o.vat ? JSON.parse(o.vat) : {};
         Object.keys(vat).forEach(function (r) { rep.vat[r] = (rep.vat[r] || 0) + vat[r]; });
+        // bruto-omzet per BTW-tarief (incl. BTW), zelfde verdeling als bij het plaatsen → telt exact op tot de omzet
+        var f2 = (o.subtotal > 0) ? ((o.subtotal - (o.discount || 0)) / o.subtotal) : 0;
         (o.items ? JSON.parse(o.items) : []).forEach(function (it) {
           var c = it.cat || 'onbekend'; rep.byCat[c] = (rep.byCat[c] || 0) + (it.unit * it.qty);
           // per artikel optellen; de naam is wat er op de bon stond
@@ -1191,11 +1195,14 @@ async function handleApi(req, res, urlPath) {
           bi.qty += qty; bi.revenue += bedrag;
           var bid = rep.byItemDay[naam] || (rep.byItemDay[naam] = {});
           bid[day] = (bid[day] || 0) + qty;
+          var gk = String(Math.round(vatRateFor(kindFor(c), o.type) * 100));
+          rep.vatGross[gk] = (rep.vatGross[gk] || 0) + bedrag * f2;
         });
+        if ((o.delivery || 0) > 0) rep.vatGross['6'] = (rep.vatGross['6'] || 0) + o.delivery; // levering = eten 6%
       });
       function r2(x) { return Math.round(x * 100) / 100; }
       rep.revenue = r2(rep.revenue); rep.discount = r2(rep.discount); rep.delivery = r2(rep.delivery);
-      ['byPay', 'bySource', 'byType', 'byCat', 'vat'].forEach(function (g) {
+      ['byPay', 'bySource', 'byType', 'byCat', 'vat', 'vatGross'].forEach(function (g) {
         Object.keys(rep[g]).forEach(function (k) { rep[g][k] = r2(rep[g][k]); });
       });
       Object.keys(rep.byDay).forEach(function (day) {
