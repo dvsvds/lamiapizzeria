@@ -95,7 +95,20 @@
     svg text{fill:#000!important}
     svg rect{fill:#555!important}
     svg line{stroke:#999!important}
+    #reportTicket{display:none}
+    /* Ticketmodus (bonprinter): enkel een compacte bon tonen */
+    body.tp header,body.tp .periods,body.tp .pagehead,body.tp .print-head,body.tp #content{display:none!important}
+    body.tp #reportTicket{display:block;width:72mm;margin:0;padding:2mm 3mm;color:#000;background:#fff;font-family:'Courier New',monospace;font-size:16px;line-height:1.5;font-weight:700}
+    body.tp #reportTicket .rt-c{text-align:center}
+    body.tp #reportTicket .rt-title{font-size:22px;letter-spacing:1px}
+    body.tp #reportTicket .rt-sub{font-size:14px}
+    body.tp #reportTicket table{width:100%;border-collapse:collapse}
+    body.tp #reportTicket td{padding:2px 0;vertical-align:top}
+    body.tp #reportTicket .rr{text-align:right}
+    body.tp #reportTicket .big{font-size:20px;font-weight:800}
+    body.tp #reportTicket hr{border:0;border-top:1px dashed #000;margin:6px 0}
   }
+  #reportTicket{display:none}
 </style>
 </head>
 <body>
@@ -122,11 +135,13 @@
       <button class="p" id="cApply">Toon</button>
     </span>
     <span class="spacer" style="flex:1"></span>
+    <button class="tbtn" id="btnTicket">🧾 Ticket (bon)</button>
     <button class="tbtn" id="btnPrint">🖨 Afdrukken</button>
     <button class="tbtn gold" id="btnExport">⬇ Export CSV</button>
   </div>
 
   <div id="content"></div>
+  <div id="reportTicket" aria-hidden="true"></div>
 </div>
 
 <div class="login" id="login" style="display:none">
@@ -147,6 +162,7 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 
   var range={from:null,to:null,label:''};
+  var lastRep=null; // laatst geladen rapportdata (voor het ticket-afdrukken)
 
   function dayStart(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
   function addDays(d,n){ var x=new Date(d); x.setDate(x.getDate()+n); return x; }
@@ -181,6 +197,38 @@
     window.location='api/admin/export?from='+encodeURIComponent(range.from)+'&to='+encodeURIComponent(range.to);
   };
   $('#btnPrint').onclick=function(){ window.print(); };
+  // Compacte bon (voor de bonprinter): totalen van de gekozen periode.
+  function buildTicket(){
+    var r=lastRep; if(!r) return;
+    var vatKeys=Object.keys(r.vat||{}).sort();
+    var vatTot=vatKeys.reduce(function(a,k){return a+r.vat[k];},0);
+    var h='';
+    h+='<div class="rt-c"><div class="rt-title">LA MIA PIZZERIA</div><div class="rt-sub">DAGRAPPORT</div><div class="rt-sub">'+esc(range.label||'')+'</div></div>';
+    h+='<hr><table>';
+    h+='<tr><td>Aantal bons</td><td class="rr">'+r.count+'</td></tr>';
+    h+='<tr><td class="big">OMZET</td><td class="rr big">'+euro(r.revenue)+'</td></tr>';
+    h+='</table><hr><table>';
+    h+='<tr><td>Cash</td><td class="rr">'+euro(r.byPay.cash)+'</td></tr>';
+    h+='<tr><td>Kaart</td><td class="rr">'+euro(r.byPay.card)+'</td></tr>';
+    if(r.byPay.online) h+='<tr><td>Online</td><td class="rr">'+euro(r.byPay.online)+'</td></tr>';
+    if(r.byPay.onbetaald) h+='<tr><td>Bij afhaling/lev.</td><td class="rr">'+euro(r.byPay.onbetaald)+'</td></tr>';
+    h+='</table><hr><table>';
+    h+='<tr><td>Ter plaatse</td><td class="rr">'+euro(r.byType.terplaatse)+'</td></tr>';
+    h+='<tr><td>Afhalen</td><td class="rr">'+euro(r.byType.afhalen)+'</td></tr>';
+    h+='<tr><td>Leveren</td><td class="rr">'+euro(r.byType.leveren)+'</td></tr>';
+    h+='</table><hr><table>';
+    vatKeys.forEach(function(k){ if(r.vat[k]>0.0001) h+='<tr><td>BTW '+k+'%</td><td class="rr">'+euro(r.vat[k])+'</td></tr>'; });
+    h+='<tr><td class="big">Totaal BTW</td><td class="rr big">'+euro(vatTot)+'</td></tr>';
+    h+='</table><hr><div class="rt-c">Afgedrukt '+new Date().toLocaleString('nl-BE')+'</div>';
+    document.getElementById('reportTicket').innerHTML=h;
+  }
+  $('#btnTicket').onclick=function(){
+    if(!lastRep||!lastRep.count){ alert('Geen cijfers om af te drukken voor deze periode.'); return; }
+    buildTicket();
+    document.body.classList.add('tp');
+    setTimeout(function(){ window.print(); }, 60);
+  };
+  window.addEventListener('afterprint', function(){ document.body.classList.remove('tp'); });
 
   function row(label,val){ return '<tr><td>'+label+'</td><td>'+euro(val)+'</td></tr>'; }
 
@@ -273,6 +321,7 @@
 
   function render(j){
     var r=j.report, cl=j.catLabels||{};
+    lastRep=r;
     var avg=r.count?r.revenue/r.count:0;
     var vatTotal=Object.keys(r.vat).reduce(function(a,k){return a+r.vat[k];},0);
     var h='';
