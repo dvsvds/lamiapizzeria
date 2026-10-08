@@ -105,9 +105,12 @@
     body.tp #reportTicket table{width:100%;border-collapse:collapse}
     body.tp #reportTicket td{padding:2px 0;vertical-align:top}
     body.tp #reportTicket .rr{text-align:right}
-    body.tp #reportTicket .rt-vat{font-size:12px;margin-top:2px}
-    body.tp #reportTicket .rt-vat td{padding:1px 0}
-    body.tp #reportTicket .rt-vat .rr{padding-left:4px}
+    body.tp #reportTicket .rt-b{font-weight:800;margin-top:3px}
+    body.tp #reportTicket .b{font-weight:800}
+    body.tp #reportTicket .rt-tbl,body.tp #reportTicket .rt-vat{font-size:12px;width:100%;margin-top:2px}
+    body.tp #reportTicket .rt-tbl td,body.tp #reportTicket .rt-vat td{padding:1px 0}
+    body.tp #reportTicket .rt-tbl .rr,body.tp #reportTicket .rt-vat .rr{padding-left:5px}
+    body.tp #reportTicket .rt-hd td{font-weight:800;border-bottom:1px solid #000}
     body.tp #reportTicket .rt-tot td{font-weight:800;border-top:1px solid #000}
     body.tp #reportTicket .big{font-size:20px;font-weight:800}
     body.tp #reportTicket hr{border:0;border-top:1px dashed #000;margin:6px 0}
@@ -201,36 +204,52 @@
     window.location='api/admin/export?from='+encodeURIComponent(range.from)+'&to='+encodeURIComponent(range.to);
   };
   $('#btnPrint').onclick=function(){ window.print(); };
-  // Compacte bon (voor de bonprinter): totalen van de gekozen periode.
+  // Volledig dagrapport-ticket (bonprinter), in het boekhoudformaat.
   function buildTicket(){
     var r=lastRep; if(!r) return;
-    var vatKeys=Object.keys(r.vat||{}).sort();
-    var vatTot=vatKeys.reduce(function(a,k){return a+r.vat[k];},0);
+    function num(n){ return (Math.round((n||0)*100)/100).toFixed(2).replace('.',','); }
+    function pct(n){ return (Math.round((n||0)*10)/10).toString().replace('.',',')+'%'; }
+    var rev=r.revenue||0, vat=r.vat||{}, vg=r.vatGross||{};
+    var vatTot=['6','12','21'].reduce(function(a,k){return a+(vat[k]||0);},0);
     var h='';
-    h+='<div class="rt-c"><div class="rt-title">LA MIA PIZZERIA</div><div class="rt-sub">DAGRAPPORT</div><div class="rt-sub">'+esc(range.label||'')+'</div></div>';
+    h+='<div class="rt-c"><div class="rt-title">LA MIA PIZZERIA</div>'+
+       '<div class="rt-sub">Abdijstraat 226a, 2020 Antwerpen</div>'+
+       '<div class="rt-sub">Tel. 03 644 23 31 · BTW BE 1013.153.914</div>'+
+       '<div class="rt-sub">www.lamiapizzeria.be</div></div>';
+    h+='<hr><div class="rt-b">DAGRAPPORT</div><div>'+esc(range.label||'')+'</div>';
     h+='<hr><table>';
     h+='<tr><td>Aantal bons</td><td class="rr">'+r.count+'</td></tr>';
-    h+='<tr><td class="big">OMZET</td><td class="rr big">'+euro(r.revenue)+'</td></tr>';
-    h+='</table><hr><table>';
-    h+='<tr><td>Cash</td><td class="rr">'+euro(r.byPay.cash)+'</td></tr>';
-    h+='<tr><td>Kaart</td><td class="rr">'+euro(r.byPay.card)+'</td></tr>';
-    if(r.byPay.online) h+='<tr><td>Online</td><td class="rr">'+euro(r.byPay.online)+'</td></tr>';
-    if(r.byPay.onbetaald) h+='<tr><td>Bij afhaling/lev.</td><td class="rr">'+euro(r.byPay.onbetaald)+'</td></tr>';
-    h+='</table><hr><table>';
-    h+='<tr><td>Ter plaatse</td><td class="rr">'+euro(r.byType.terplaatse)+'</td></tr>';
-    h+='<tr><td>Afhalen</td><td class="rr">'+euro(r.byType.afhalen)+'</td></tr>';
-    h+='<tr><td>Leveren</td><td class="rr">'+euro(r.byType.leveren)+'</td></tr>';
-    h+='</table><hr>';
-    // BTW: netto-omzet / BTW / bruto-omzet per tarief (boekhoudformaat)
-    function num(n){ return (Math.round((n||0)*100)/100).toFixed(2).replace('.',','); }
-    var vg=r.vatGross||{};
-    h+='<table class="rt-vat"><tr><td>BTW</td><td class="rr">Netto</td><td class="rr">BTW</td><td class="rr">Bruto</td></tr>';
+    h+='<tr><td class="big">OMZET</td><td class="rr big">€ '+num(rev)+'</td></tr></table>';
+    // omzet per kanaal (type)
+    h+='<hr><div class="rt-b">Omzet per kanaal</div><table class="rt-tbl">';
+    h+='<tr class="rt-hd"><td></td><td class="rr">€ (n)</td><td class="rr">gem.</td><td class="rr">%</td></tr>';
+    [['leveren','Thuisbezorgd'],['afhalen','Afhaling'],['terplaatse','Ter plaatse']].forEach(function(t){
+      var amt=r.byType[t[0]]||0, cnt=(r.byTypeCount&&r.byTypeCount[t[0]])||0;
+      if(amt>0||cnt>0) h+='<tr><td>'+t[1]+'</td><td class="rr">'+num(amt)+' ('+cnt+')</td><td class="rr">'+num(cnt?amt/cnt:0)+'</td><td class="rr">'+pct(rev?amt/rev*100:0)+'</td></tr>';
+    });
+    h+='<tr class="rt-tot"><td>Totaal</td><td class="rr">'+num(rev)+' ('+r.count+')</td><td class="rr">'+num(r.count?rev/r.count:0)+'</td><td class="rr">100%</td></tr></table>';
+    // omzet per betaalwijze
+    h+='<hr><div class="rt-b">Omzet per betaalwijze</div><table class="rt-tbl">';
+    h+='<tr class="rt-hd"><td></td><td class="rr">€ (n)</td><td class="rr">gem.</td><td class="rr">%</td></tr>';
+    [['cash','Cash'],['card','Kaart'],['online','Online'],['onbetaald','Onbetaald']].forEach(function(p){
+      var amt=r.byPay[p[0]]||0, cnt=(r.byPayCount&&r.byPayCount[p[0]])||0;
+      if(amt>0||cnt>0) h+='<tr><td>'+p[1]+'</td><td class="rr">'+num(amt)+' ('+cnt+')</td><td class="rr">'+num(cnt?amt/cnt:0)+'</td><td class="rr">'+pct(rev?amt/rev*100:0)+'</td></tr>';
+    });
+    h+='<tr class="rt-tot"><td>Totaal</td><td class="rr">'+num(rev)+' ('+r.count+')</td><td class="rr">'+num(r.count?rev/r.count:0)+'</td><td class="rr">100%</td></tr></table>';
+    // cash-overzicht
+    h+='<hr><div class="rt-b">Cash-overzicht</div><table>';
+    h+='<tr><td>Startsaldo</td><td class="rr">€ 0,00</td></tr>';
+    h+='<tr><td>Cash verkoop</td><td class="rr">€ '+num(r.byPay.cash)+'</td></tr>';
+    h+='<tr><td class="b">Totaal cash</td><td class="rr b">€ '+num(r.byPay.cash)+'</td></tr>';
+    h+='<tr><td>Geteld</td><td class="rr">€ 0,00</td></tr>';
+    h+='<tr><td>Verschil</td><td class="rr">€ 0,00</td></tr></table>';
+    // BTW: netto / btw / bruto per tarief
+    h+='<hr><div class="rt-b">BTW</div><table class="rt-vat"><tr class="rt-hd"><td></td><td class="rr">Netto</td><td class="rr">BTW</td><td class="rr">Bruto</td></tr>';
     ['6','12','21'].forEach(function(k){
-      var g=vg[k]||0, b=(r.vat&&r.vat[k])||0, n=g-b;
+      var g=vg[k]||0, b=vat[k]||0, n=g-b;
       h+='<tr><td>'+k+'%</td><td class="rr">'+num(n)+'</td><td class="rr">'+num(b)+'</td><td class="rr">'+num(g)+'</td></tr>';
     });
-    h+='<tr class="rt-tot"><td>Tot.</td><td class="rr">'+num(r.revenue-vatTot)+'</td><td class="rr">'+num(vatTot)+'</td><td class="rr">'+num(r.revenue)+'</td></tr>';
-    h+='</table>';
+    h+='<tr class="rt-tot"><td>Tot.</td><td class="rr">'+num(rev-vatTot)+'</td><td class="rr">'+num(vatTot)+'</td><td class="rr">'+num(rev)+'</td></tr></table>';
     h+='<hr><div class="rt-c">Afgedrukt '+new Date().toLocaleString('nl-BE')+'</div>';
     document.getElementById('reportTicket').innerHTML=h;
   }
