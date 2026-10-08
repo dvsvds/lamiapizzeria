@@ -105,6 +105,10 @@
     body.tp #reportTicket table{width:100%;border-collapse:collapse}
     body.tp #reportTicket td{padding:2px 0;vertical-align:top}
     body.tp #reportTicket .rr{text-align:right}
+    body.tp #reportTicket .rt-vat{font-size:12px;margin-top:2px}
+    body.tp #reportTicket .rt-vat td{padding:1px 0}
+    body.tp #reportTicket .rt-vat .rr{padding-left:4px}
+    body.tp #reportTicket .rt-tot td{font-weight:800;border-top:1px solid #000}
     body.tp #reportTicket .big{font-size:20px;font-weight:800}
     body.tp #reportTicket hr{border:0;border-top:1px dashed #000;margin:6px 0}
   }
@@ -216,10 +220,18 @@
     h+='<tr><td>Ter plaatse</td><td class="rr">'+euro(r.byType.terplaatse)+'</td></tr>';
     h+='<tr><td>Afhalen</td><td class="rr">'+euro(r.byType.afhalen)+'</td></tr>';
     h+='<tr><td>Leveren</td><td class="rr">'+euro(r.byType.leveren)+'</td></tr>';
-    h+='</table><hr><table>';
-    vatKeys.forEach(function(k){ if(r.vat[k]>0.0001) h+='<tr><td>BTW '+k+'%</td><td class="rr">'+euro(r.vat[k])+'</td></tr>'; });
-    h+='<tr><td class="big">Totaal BTW</td><td class="rr big">'+euro(vatTot)+'</td></tr>';
-    h+='</table><hr><div class="rt-c">Afgedrukt '+new Date().toLocaleString('nl-BE')+'</div>';
+    h+='</table><hr>';
+    // BTW: netto-omzet / BTW / bruto-omzet per tarief (boekhoudformaat)
+    function num(n){ return (Math.round((n||0)*100)/100).toFixed(2).replace('.',','); }
+    var vg=r.vatGross||{};
+    h+='<table class="rt-vat"><tr><td>BTW</td><td class="rr">Netto</td><td class="rr">BTW</td><td class="rr">Bruto</td></tr>';
+    ['6','12','21'].forEach(function(k){
+      var g=vg[k]||0, b=(r.vat&&r.vat[k])||0, n=g-b;
+      h+='<tr><td>'+k+'%</td><td class="rr">'+num(n)+'</td><td class="rr">'+num(b)+'</td><td class="rr">'+num(g)+'</td></tr>';
+    });
+    h+='<tr class="rt-tot"><td>Tot.</td><td class="rr">'+num(r.revenue-vatTot)+'</td><td class="rr">'+num(vatTot)+'</td><td class="rr">'+num(r.revenue)+'</td></tr>';
+    h+='</table>';
+    h+='<hr><div class="rt-c">Afgedrukt '+new Date().toLocaleString('nl-BE')+'</div>';
     document.getElementById('reportTicket').innerHTML=h;
   }
   $('#btnTicket').onclick=function(){
@@ -366,12 +378,19 @@
        (r.delivery?('<tr><td class="muted">waarvan leveringskosten</td><td class="muted">'+euro(r.delivery)+'</td></tr>'):'')+
        (r.discount?('<tr><td class="muted">korting gegeven</td><td class="muted">-'+euro(r.discount)+'</td></tr>'):'')+
        '</tbody></table></div>';
-    // BTW
+    // BTW — netto-omzet / BTW / bruto-omzet per tarief (voor de boekhouding)
+    var vg=r.vatGross||{};
     var vatRows='';
-    ['6','12','21'].forEach(function(k){ if(r.vat[k]) vatRows+=row('BTW '+k+'%', r.vat[k]); });
-    h+='<div class="panelbox"><h3>🧮 BTW (in de omzet begrepen)</h3><table><tbody>'+
-       (vatRows||'<tr><td class="muted">geen</td><td></td></tr>')+
-       '</tbody><tfoot><tr><td>Totaal BTW</td><td>'+euro(vatTotal)+'</td></tr></tfoot></table></div>';
+    ['6','12','21'].forEach(function(k){
+      var gross=vg[k]||0, btw=r.vat[k]||0, net=gross-btw;
+      if(gross>0.0001||btw>0.0001){
+        vatRows+='<tr><td>BTW '+k+'%</td><td class="rt">'+euro(net)+'</td><td class="rt">'+euro(btw)+'</td><td class="rt">'+euro(gross)+'</td></tr>';
+      }
+    });
+    h+='<div class="panelbox"><h3>🧮 BTW (in de omzet begrepen)</h3><div style="overflow-x:auto"><table>'+
+       '<thead><tr><th>Tarief</th><th class="rt">Netto-omzet</th><th class="rt">BTW</th><th class="rt">Bruto-omzet</th></tr></thead><tbody>'+
+       (vatRows||'<tr><td class="muted">geen</td><td></td><td></td><td></td></tr>')+
+       '</tbody><tfoot><tr><td>Totaal</td><td class="rt">'+euro(r.revenue-vatTotal)+'</td><td class="rt">'+euro(vatTotal)+'</td><td class="rt">'+euro(r.revenue)+'</td></tr></tfoot></table></div></div>';
     h+='</div>';
 
     // per week (enkel tonen als de periode meer dan één week beslaat)
