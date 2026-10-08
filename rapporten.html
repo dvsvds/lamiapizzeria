@@ -79,6 +79,23 @@
   .login button{width:100%;margin-top:.9rem;background:var(--gold);border:0;border-radius:12px;color:#241708;font-family:'Anton';font-size:1.2rem;padding:.8rem;letter-spacing:.5px}
   .login .lerr{color:var(--red);font-size:.82rem;font-weight:700;margin-top:.7rem;min-height:1rem}
   @media(max-width:720px){ .kpis{grid-template-columns:1fr} .grid2{grid-template-columns:1fr} }
+  .print-head{display:none}
+  @media print{
+    header,.periods,.login,.toast,.pagehead{display:none!important}
+    body{background:#fff!important;color:#000!important}
+    .wrap{max-width:100%!important;margin:0!important;padding:0!important}
+    .print-head{display:block;margin:0 0 .8rem;color:#000}
+    .print-head b{font-size:1.3rem}
+    .kpis,.grid2{gap:.5rem!important}
+    .kpi,.panelbox{background:#fff!important;color:#000!important;border:1px solid #999!important;box-shadow:none!important;break-inside:avoid;page-break-inside:avoid;margin-bottom:.5rem}
+    .kpi .k,.kpi .v,.panelbox h3,.panelbox td,.panelbox th,.panelbox tfoot td{color:#000!important}
+    .kpi .v{color:#000!important}
+    table{color:#000!important}
+    a{color:#000!important;text-decoration:none}
+    svg text{fill:#000!important}
+    svg rect{fill:#555!important}
+    svg line{stroke:#999!important}
+  }
 </style>
 </head>
 <body>
@@ -93,6 +110,7 @@
 
 <div class="wrap">
   <div class="pagehead"><h1>Rapporten</h1><p id="periodLabel">—</p></div>
+  <div class="print-head" id="printHead"></div>
 
   <div class="periods" id="periods">
     <button class="p on" data-r="today">Vandaag</button>
@@ -104,6 +122,7 @@
       <button class="p" id="cApply">Toon</button>
     </span>
     <span class="spacer" style="flex:1"></span>
+    <button class="tbtn" id="btnPrint">🖨 Afdrukken</button>
     <button class="tbtn gold" id="btnExport">⬇ Export CSV</button>
   </div>
 
@@ -161,6 +180,7 @@
     if(!range.from) return;
     window.location='api/admin/export?from='+encodeURIComponent(range.from)+'&to='+encodeURIComponent(range.to);
   };
+  $('#btnPrint').onclick=function(){ window.print(); };
 
   function row(label,val){ return '<tr><td>'+label+'</td><td>'+euro(val)+'</td></tr>'; }
 
@@ -245,6 +265,7 @@
 
   function load(){
     $('#periodLabel').textContent=range.label;
+    var ph=$('#printHead'); if(ph){ ph.innerHTML='<b>La Mia Pizzeria — Dagrapport</b><br>'+esc(range.label||''); }
     fetch('api/admin/report?from='+encodeURIComponent(range.from)+'&to='+encodeURIComponent(range.to),{credentials:'same-origin'})
       .then(function(r){ if(r.status===401){ showLogin(); return null; } return r.json(); })
       .then(function(j){ if(j) render(j); });
