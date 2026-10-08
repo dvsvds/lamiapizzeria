@@ -1147,8 +1147,10 @@ async function handleApi(req, res, urlPath) {
       var rep = {
         count: 0, revenue: 0, discount: 0, delivery: 0,
         byPay: { cash: 0, card: 0, online: 0, onbetaald: 0 },
+        byPayCount: { cash: 0, card: 0, online: 0, onbetaald: 0 },
         bySource: { web: 0, pos: 0 },
         byType: { afhalen: 0, leveren: 0, terplaatse: 0 },
+        byTypeCount: { afhalen: 0, leveren: 0, terplaatse: 0 },
         byCat: {}, vat: {}, vatGross: {}, byDay: {}, byWeek: {},
         // per artikel: hoeveel stuks en hoeveel omzet over de hele periode,
         // plus per dag het aantal stuks — zodat de zaakvoerder van op afstand
@@ -1165,6 +1167,7 @@ async function handleApi(req, res, urlPath) {
         rep.count++; rep.revenue += o.total || 0; rep.discount += o.discount || 0; rep.delivery += o.delivery || 0;
         rep.bySource[o.source] = (rep.bySource[o.source] || 0) + (o.total || 0);
         rep.byType[o.type] = (rep.byType[o.type] || 0) + (o.total || 0);
+        rep.byTypeCount[o.type] = (rep.byTypeCount[o.type] || 0) + 1;
         // betaalwijze uitsplitsen (één keer berekenen, toepassen op totaal én per dag)
         var pay = o.pay ? JSON.parse(o.pay) : null;
         var cAmt = 0, kAmt = 0, oAmt = 0, uAmt = 0;
@@ -1174,6 +1177,9 @@ async function handleApi(req, res, urlPath) {
         else if (pay.method === 'online') oAmt = o.total || 0; // online via de website (Mollie)
         else cAmt = o.total || 0;
         rep.byPay.cash += cAmt; rep.byPay.card += kAmt; rep.byPay.online += oAmt; rep.byPay.onbetaald += uAmt;
+        // aantal bons per betaalwijze (één bon telt onder zijn hoofdmethode)
+        var pm = (!pay) ? 'onbetaald' : (pay.method === 'card' || pay.method === 'split') ? 'card' : (pay.method === 'online') ? 'online' : 'cash';
+        rep.byPayCount[pm] = (rep.byPayCount[pm] || 0) + 1;
         // per dag
         var day = belgiumDate(o.created_at);
         var bd = rep.byDay[day] || (rep.byDay[day] = { revenue: 0, count: 0, cash: 0, card: 0, online: 0, onbetaald: 0 });
