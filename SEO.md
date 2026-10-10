@@ -235,7 +235,7 @@ Eén pagina per buurt plus één over halal, zodat Google de zaak toont bij
 | Bing Webmaster Tools | Site importeren uit Search Console (ChatGPT/Copilot zoeken via Bing) |
 | intravel.net | Profiel claimen; omschrijving "100% halal New York style pizza"; drive-thru en buffet weg |
 | wanderlog.com | Omschrijving gaat over een La Mia in Great Neck (VS) en link is `/#/`; melden |
-| Google Bedrijfsprofiel | Sluitingsuur moet **02:00** zijn (gidsen tonen 02:30) |
+| Google Bedrijfsprofiel | ✅ 10/10/2026: uren op 02:00; hoofdcategorie Pizzeria + extra categorieën (pizzabezorging, afhaal, halal, Italiaans) |
 | TripAdvisor, Bing Places, Apple Maps | Profiel aanmaken, zelfde naam/adres/uren |
 | tablejourney.com (halal Antwerpen) | Vermelding aanvragen |
 
