@@ -591,6 +591,60 @@ function sendCompressed(req, res, status, buf, headers) {
    de site zonder server draait (statische hosting zoals Netlify). Deze
    serverversie gaat voor en vult SITE_URL en de laatste wijzigingsdatum in.
    Wijzig je de lijst hier, pas dan ook de statische bestanden aan. */
+/* ---- /llms.txt: samenvatting van de zaak voor AI-assistenten ----
+   ChatGPT, Perplexity, Claude … lezen dit om vragen als "halal pizza
+   Antwerpen" correct te beantwoorden. Het menu komt live uit de database,
+   dus prijzen kloppen altijd met de webshop. De leverprijs (+€ 6 op pizza en
+   pasta) staat in order.html als PIZZA_SURCHARGE; pas hem hier mee aan. */
+function llmsTxt() {
+  var euro = function (n) { return '€ ' + (Math.round(n * 100) / 100).toFixed(2).replace('.', ',').replace(',00', ''); };
+  var cats = allCategories();
+  var prods = allProducts().filter(function (p) { return p.available; });
+  var menu = cats.map(function (c) {
+    var items = prods.filter(function (p) { return p.cat === c.id; });
+    if (!items.length) return '';
+    return '### ' + c.label + '\n' + items.map(function (p) {
+      var prijs = p.sizes && p.sizes.length === 3
+        ? 'small ' + euro(p.sizes[0]) + ' / medium ' + euro(p.sizes[1]) + ' / large ' + euro(p.sizes[2])
+        : euro(p.price);
+      return '- ' + p.name + (p.descr ? ' — ' + p.descr : '') + ': ' + prijs;
+    }).join('\n') + '\n';
+  }).filter(Boolean).join('\n');
+  var pagina = function (f, t) { return '- [' + t + '](' + SITE_URL + '/' + f + ')'; };
+  return [
+    '# La Mia Pizzeria',
+    '',
+    '> New York style pizzeria in Antwerpen (Kiel, 2020). Huisgemaakt deeg, al het vlees is 100% halal (ook pepperoni, salami, ham en spek). Afhalen, ter plaatse eten of laten bezorgen tot 8 km rond de zaak, elke dag open tot 02:00. Online bestellen en betalen via www.lamiapizzeria.be.',
+    '',
+    '## Feiten',
+    '- Adres: Abdijstraat 226a, 2020 Antwerpen, België',
+    '- Telefoon: +32 3 644 23 31',
+    '- E-mail: info.lamiapizzeria@mail.com',
+    '- Openingsuren: maandag–vrijdag 11:30–02:00, zaterdag–zondag 14:00–02:00 (feestdagen kunnen afwijken)',
+    '- Halal: al het vlees is 100% halal. Er wordt geen alcohol geschonken.',
+    '- Keuken: New York style pizza (small, medium, large), pasta, burgers, broodjes, kapsalon, snacks, desserts, ijs',
+    '- Vegetarisch: o.a. Margherita, Veggie, Funghi, Italiano, Quattro Formaggi. Veganistisch en glutenvrij op aanvraag.',
+    '- Bezorggebied: tot ' + DELIVERY_RADIUS_KM + ' km rond de zaak, o.a. Kiel, Hoboken, Wilrijk, Edegem, Berchem en Antwerpen-Zuid',
+    '- Levering: geen aparte bezorgkosten; pizza en pasta kosten bij levering € 6 meer dan bij afhalen, daarna 30% korting op de hele online bestelling. Minimum ' + euro(MIN_ORDER) + ' na korting.',
+    '- Betalen: online met Bancontact of kaart; in de zaak cash of kaart',
+    '- Afhaaldeals (promo\'s) gelden enkel voor afhalen',
+    '',
+    '## Pagina\'s',
+    pagina('', 'Homepage met menu, openingsuren en ligging'),
+    pagina('order', 'Online bestellen (webshop)'),
+    pagina('halal-pizza-antwerpen', 'Halal pizza in Antwerpen'),
+  ].concat(AREA_PAGES.filter(function (f) { return f.indexOf('halal') !== 0; }).map(function (f) {
+    var slug = f.replace(/\.html$/, '');
+    var naam = slug.replace(/^pizza-/, '').split('-').map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join('-');
+    return pagina(slug, 'Pizza bezorgen in ' + naam);
+  })).concat([
+    '',
+    '## Menu (afhaalprijzen, live uit de kassa)',
+    '',
+    menu
+  ]).join('\n');
+}
+
 function robotsTxt() {
   return [
     '# La Mia Pizzeria — enkel de website en de webshop mogen in Google.',
@@ -1283,6 +1337,7 @@ var server = http.createServer(function (req, res) {
   }
   var plain = urlPath.split('?')[0];
   if (plain === '/robots.txt') return sendCompressed(req, res, 200, Buffer.from(robotsTxt(), 'utf8'), { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
+  if (plain === '/llms.txt') return sendCompressed(req, res, 200, Buffer.from(llmsTxt(), 'utf8'), { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
   if (plain === '/sitemap.xml') return sendCompressed(req, res, 200, Buffer.from(sitemapXml(), 'utf8'), { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
   serveStatic(req, res, urlPath);
 });
