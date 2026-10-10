@@ -52,11 +52,26 @@
   .brand small{display:block;color:var(--gold);font-size:.56rem;letter-spacing:.28em;font-weight:800;text-transform:uppercase}
   .clock{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:700;font-size:.9rem;min-width:132px}
   .topbar .spacer{flex:1}
+  /* Op smallere schermen (tablet staand, kleine laptop) liepen de knoppen
+     rechts buiten beeld. Nu worden ze compacter en lopen ze desnoods door op
+     een tweede regel, zodat elke knop bereikbaar blijft. */
+  .topbar{flex-wrap:wrap;row-gap:.45rem}
+  @media (max-width:1280px){
+    .topbar{gap:.5rem;padding:.5rem .7rem}
+    .clock{min-width:0;font-size:.82rem}
+    .tbtn{padding:.45rem .6rem;font-size:.78rem}
+  }
   .tbtn{border:1px solid var(--line-2);background:var(--panel);color:var(--cream);border-radius:10px;padding:.5rem .8rem;font-weight:800;font-size:.82rem;display:inline-flex;align-items:center;gap:.4rem;transition:.12s}
   .tbtn:hover{border-color:var(--gold);color:var(--gold)}
   .tbtn .badge{background:var(--coral);color:#fff;border-radius:999px;font-size:.68rem;padding:.05rem .42rem;font-weight:800}
   /* Bonnen die nog niet bij de server geraakten. Alleen zichtbaar als er iets wacht. */
-  .tbtn.sync{background:var(--coral);color:#fff;border-color:var(--coral);cursor:default;font-weight:800}
+  .tbtn.sync{background:var(--coral);color:#fff;border-color:var(--coral);font-weight:800}
+  .tbtn.sync:hover{color:#fff;filter:brightness(1.08)}
+  .koppelbar{display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap;flex:0 0 auto;
+    padding:.6rem .9rem;background:var(--coral);color:#fff;font-size:.9rem;font-weight:600}
+  .koppelbar b{font-weight:800}
+  .koppelbar .tbtn{background:#fff;color:#7a1810;border-color:#fff}
+  .koppelbar .tbtn:hover{color:#7a1810;filter:brightness(.95)}
   /* Verschijnt enkel zolang dit toestel niet aan de server gekoppeld is. */
   .tbtn.koppel{border-color:var(--gold);color:var(--gold)}
   .tbtn.koppel:hover{background:var(--gold);color:#1a1206}
@@ -111,6 +126,7 @@
   .tk-meta .chip{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--gold);
     border:1px solid var(--line-2);border-radius:999px;padding:.28rem .6rem;background:var(--panel)}
   .tk-meta input{width:70px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;color:var(--cream);padding:.3rem .5rem;font-weight:700;font-size:.85rem}
+  .tk-meta input.invalid{border-color:var(--coral);box-shadow:0 0 0 2px rgba(229,55,43,.25)}
   .tk-meta label{font-size:.75rem;color:var(--muted);font-weight:700;display:inline-flex;align-items:center;gap:.35rem}
   .cust-fields{display:flex;flex-direction:column;gap:.4rem;width:100%;margin-top:.2rem}
   .cust-fields input{width:100%!important;box-sizing:border-box}
@@ -272,7 +288,7 @@
     </div>
     <span class="clock" id="clock">—</span>
     <span class="spacer"></span>
-    <span class="tbtn sync" id="syncBadge" style="display:none" role="status" aria-live="polite"></span>
+    <button class="tbtn sync" id="syncBadge" style="display:none" aria-live="polite"></button>
     <button class="tbtn koppel" id="btnKoppel" style="display:none" title="Dit toestel één keer aan de server koppelen met de beheer-PIN">🔌 Koppelen</button>
     <button class="tbtn" id="btnOnline" title="Online bestellingen van de website">🌐 Online <span class="badge" id="onlineBadge" style="display:none">0</span></button>
     <button class="tbtn" id="btnPark2" title="Bekijk geparkeerde bons">🅿️ Geparkeerd <span class="badge" id="parkBadge" style="display:none">0</span></button>
@@ -281,6 +297,12 @@
     <button class="tbtn" id="btnFull" title="Volledig scherm (kiosk)">⛶ Scherm</button>
     <button class="tbtn" id="btnTheme" title="Licht / donker">🌙</button>
     <a class="tbtn" href="index.html" title="Terug naar site">↩ Site</a>
+  </div>
+  <!-- Enkel zichtbaar zolang dit toestel niet gekoppeld is: dan gaan bonnen
+       niet naar de keuken en het dagrapport, en dat moet je meteen zien. -->
+  <div class="koppelbar" id="koppelBar" style="display:none" role="alert">
+    <span>⚠️ <b>Deze kassa is niet gekoppeld.</b> Afgerekende bonnen gaan niet naar de keuken en niet naar het dagrapport tot je koppelt.</span>
+    <button class="tbtn" id="btnKoppelBar">🔌 Nu koppelen</button>
   </div>
 
   <div class="main">
@@ -886,8 +908,8 @@
     metaEl.innerHTML=h;
     var ti=$('#tblInp'); if(ti) ti.oninput=function(){ state.table=this.value; saveCart(); };
     var cn=$('#cNaam'); if(cn) cn.oninput=function(){ state.cust.name=this.value; saveCart(); };
-    var ct=$('#cTel'); if(ct) ct.oninput=function(){ state.cust.phone=this.value; saveCart(); };
-    var ca=$('#cAdres'); if(ca) ca.oninput=function(){ state.cust.address=this.value; saveCart(); };
+    var ct=$('#cTel'); if(ct) ct.oninput=function(){ state.cust.phone=this.value; this.classList.remove('invalid'); saveCart(); };
+    var ca=$('#cAdres'); if(ca) ca.oninput=function(){ state.cust.address=this.value; this.classList.remove('invalid'); saveCart(); };
   }
   function renderTicket(){
     renderMeta();
@@ -935,6 +957,12 @@
   /* =============================================================
      7. ORDER TYPE / WISSEN / KORTING
      ============================================================= */
+  // Type van de bon wisselen zonder klik (bv. na het afrekenen van een levering).
+  function zetType(t){
+    state.type=t;
+    $('#otype').querySelectorAll('button').forEach(function(x){ x.classList.toggle('active',x.getAttribute('data-type')===t); });
+    renderGrid();
+  }
   $('#otype').addEventListener('click',function(e){
     var b=e.target.closest('button'); if(!b) return;
     state.type=b.getAttribute('data-type');
@@ -1027,8 +1055,23 @@
      9. AFREKENEN / BETALING
      ============================================================= */
   var payMethod='cash', tender=0, payTotals=null;
+  // Een levering zonder adres of telefoon komt in de keuken aan zonder dat de
+  // bezorger weet waar hij heen moet. Eerst die twee velden laten invullen.
+  function leverGegevensOk(){
+    if(state.type!=='leveren' || state.onlinePaid) return true;
+    var c=state.cust||{};
+    var mist=[];
+    if(String(c.address||'').trim().length<5) mist.push('cAdres');
+    if(String(c.phone||'').replace(/\D/g,'').length<8) mist.push('cTel');
+    ['cAdres','cTel'].forEach(function(id){ var el=$('#'+id); if(el) el.classList.toggle('invalid',mist.indexOf(id)>=0); });
+    if(!mist.length) return true;
+    toast(mist.indexOf('cAdres')>=0?'Vul eerst het leveradres in':'Vul eerst het telefoonnummer in');
+    var eerste=$('#'+mist[0]); if(eerste) eerste.focus();
+    return false;
+  }
   function openPay(){
     if(!state.lines.length) return;
+    if(!leverGegevensOk()) return;
     if(state.onlinePaid){
       // Al online betaald via de website (Mollie) — niet opnieuw laten afrekenen,
       // meteen de bon afsluiten en afdrukken met de vermelding "ONLINE BETAALD".
@@ -1122,7 +1165,11 @@
     buildReceipt(sale);
     closeOv('#ovPay');
     // reset bon
-    state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; state.onlinePaid=false; renderTicket(); saveCart();
+    state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; state.onlinePaid=false;
+    // Na een levering terug naar afhalen: anders kreeg de volgende klant aan de
+    // toog ongemerkt de leverprijzen (+€ 6 per pizza, −30%).
+    if(state.type==='leveren') zetType('afhalen');
+    renderTicket(); saveCart();
     // Ook het zoekveld leegmaken: bleef de vorige zoekterm staan, dan begon de
     // volgende klant op een gefilterde kaart met maar een handvol producten.
     if(searchTerm){ searchTerm=''; $('#search').value=''; renderGrid(); }
@@ -1146,7 +1193,7 @@
   var flushing=false, flushTimer=null;
   // activate() woont in het online-blok verderop; die zet de serververbinding op.
   // Hij wordt daar aan posActivate gehangen zodat de wachtrij hem ook kan gebruiken.
-  var posActivate=null;
+  var posActivate=null, posKoppel=null;
   function tryActivate(){ if(posActivate) posActivate(); }
 
   function saveOutbox(){ save(LS.outbox,outbox); updateSyncBadge(); }
@@ -1159,7 +1206,7 @@
     outbox.push({
       no:'K-'+String(no).padStart(4,'0'), ts:sale.ts, tries:0,
       body:{
-        source:'pos', no:'K-'+String(no).padStart(4,'0'), clientKey:sleutel,
+        source:'pos', no:'K-'+String(no).padStart(4,'0'), clientKey:sleutel, ts:sale.ts,
         type:sale.type, table:sale.table,
         customer:{ name:(sale.cust&&sale.cust.name)||'', phone:(sale.cust&&sale.cust.phone)||'', address:(sale.cust&&sale.cust.address)||'' },
         items:sale.lines.map(function(l){return {name:l.name,cat:l.cat,opts:l.opts,note:l.note,unit:l.unit,qty:l.qty};}),
@@ -1177,6 +1224,7 @@
     if(!serverSession){ tryActivate(); return; }   // eerst weer verbinding maken
     flushing=true;
     var item=outbox[0];
+    if(item.body && !item.body.ts) item.body.ts=item.ts;   // oudere bonnen in de rij hadden nog geen verkooptijd
     fetch('api/orders',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(item.body)})
       .then(function(r){
         if(r.ok){
@@ -1221,8 +1269,30 @@
     if(!outbox.length){ b.style.display='none'; b.textContent=''; b.removeAttribute('title'); return; }
     b.style.display='';
     b.textContent='⏳ '+outbox.length+' niet verstuurd';
-    b.title=outbox.length+' afgerekende bon(nen) wachten op de server. De kassa probeert het vanzelf opnieuw.';
+    b.title=outbox.length+' afgerekende bon(nen) wachten op de server. Tik voor uitleg.';
   }
+
+  // Tik op "niet verstuurd": tonen welke bonnen wachten en waarom, met een
+  // knop om meteen opnieuw te proberen (of eerst te koppelen).
+  $('#syncBadge').onclick=function(){
+    if(!outbox.length) return;
+    var lijst=outbox.slice(0,8).map(function(x){
+      var t=new Date(x.ts); var uur=isNaN(t)?'':(' · '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'));
+      var tot=(x.body&&x.body.pay)?(' · '+euro((x.body.pay.cash||0)+(x.body.pay.card||0))):'';
+      return '• '+x.no+uur+tot;
+    }).join('\n')+(outbox.length>8?'\n… en nog '+(outbox.length-8):'');
+    var waarom=serverSession
+      ? 'De server is even niet bereikbaar (wifi of internet weg). De kassa probeert het elke 20 seconden opnieuw.'
+      : 'Deze kassa is niet gekoppeld. Zolang dat zo is, komen deze bonnen niet in de keuken en niet in het dagrapport.';
+    askConfirm({
+      title:outbox.length===1?'1 bon niet verstuurd':outbox.length+' bonnen niet verstuurd',
+      msg:waarom+'\n\n'+lijst+'\n\nDe bonnen blijven op dit toestel bewaard. Wis de browsergegevens van deze kassa niet tot ze verstuurd zijn.',
+      ok:serverSession?'Nu opnieuw proberen':'Nu koppelen'
+    }).then(function(ja){
+      if(!ja) return;
+      if(!serverSession && posKoppel) posKoppel(); else flushOutbox();
+    });
+  };
 
   // Zodra het toestel weer online is: meteen proberen in plaats van wachten.
   window.addEventListener('online',function(){ if(!serverSession) tryActivate(); flushOutbox(); });
@@ -1843,13 +1913,16 @@
         });
     }
     posActivate=activate;   // de verkoop-wachtrij probeert het stil opnieuw
+    posKoppel=koppelMetPin; // en de "niet verstuurd"-melding kan laten koppelen
 
-    // Knop die enkel verschijnt zolang dit toestel niet gekoppeld is.
+    // Knop en waarschuwingsbalk die enkel verschijnen zolang dit toestel niet gekoppeld is.
     function bijwerkenKoppelKnop(){
-      var b=$('#btnKoppel'); if(!b) return;
-      b.style.display=serverSession?'none':'';
+      // De oude knop bovenaan blijft verborgen: de waarschuwingsbalk neemt die rol over.
+      var b=$('#btnKoppel'); if(b) b.style.display='none';
+      var bar=$('#koppelBar'); if(bar) bar.style.display=serverSession?'none':'';
     }
     var bk=$('#btnKoppel'); if(bk) bk.onclick=function(){ koppelMetPin(); };
+    var bkb=$('#btnKoppelBar'); if(bkb) bkb.onclick=function(){ koppelMetPin(); };
 
     $('#btnOnline').onclick=function(){
       stopAlarm(); // personeel heeft gereageerd → alarm stopt
