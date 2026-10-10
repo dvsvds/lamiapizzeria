@@ -69,6 +69,13 @@ if (GOOGLE_SITE_VERIFICATION && !/^[A-Za-z0-9_-]+$/.test(GOOGLE_SITE_VERIFICATIO
 }
 // Enkel deze pagina's zijn publiek en krijgen de Google-tags; beheer/kassa/keuken nooit.
 var PUBLIC_PAGES = { 'index.html': 1, 'order.html': 1 };
+// Buurtpagina's (pizza-hoboken.html, …, halal-pizza-antwerpen.html), gemaakt door
+// tools/buurtpaginas.js. Ze worden hier opgezocht, zodat een nieuwe buurt
+// vanzelf publiek is en in de sitemap komt.
+var AREA_PAGES = fs.readdirSync(__dirname).filter(function (f) {
+  return /^(halal-)?pizza-[a-z0-9-]+\.html$/.test(f);
+}).sort();
+AREA_PAGES.forEach(function (f) { PUBLIC_PAGES[f] = 1; });
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -472,7 +479,7 @@ var MIME = {
 // Enkel deze extensies zijn publiek serveerbaar (blokkeert .db, .key, .json, .md, Dockerfile, …)
 var SERVE_EXT = { '.html': 1, '.js': 1, '.css': 1, '.png': 1, '.jpg': 1, '.jpeg': 1, '.svg': 1, '.ico': 1, '.webp': 1, '.woff': 1, '.woff2': 1, '.mp4': 1, '.webm': 1 };
 // Deze mappen bevatten interne bestanden en worden nooit geserveerd
-var BLOCK_DIR = { data: 1, lib: 1, node_modules: 1, '.git': 1 };
+var BLOCK_DIR = { data: 1, lib: 1, node_modules: 1, '.git': 1, tools: 1 };
 function serveStatic(req, res, urlPath) {
   var rel;
   try { rel = decodeURIComponent(urlPath.split('?')[0]); }
@@ -619,6 +626,9 @@ function sitemapXml() {
     img('interior.jpg', 'Interieur La Mia Pizzeria, Abdijstraat Antwerpen') + '\n' +
     '  </url>\n' +
     '  <url>\n    <loc>' + xmlEsc(SITE_URL + '/order.html') + '</loc>\n    <lastmod>' + lastmod('order.html') + '</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n' +
+    AREA_PAGES.map(function (f) {
+      return '  <url>\n    <loc>' + xmlEsc(SITE_URL + '/' + f.replace(/\.html$/, '')) + '</loc>\n    <lastmod>' + lastmod(f) + '</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>\n';
+    }).join('') +
     '</urlset>\n';
 }
 

@@ -162,14 +162,33 @@ zien wat uit Google Maps komt: `https://www.lamiapizzeria.be/?utm_source=google&
 - **robots & sitemap**: open `https://www.lamiapizzeria.be/robots.txt` en
   `https://www.lamiapizzeria.be/sitemap.xml` in de browser.
 
+## Buurtpagina's (okt 2026)
+
+Eén pagina per buurt plus één over halal, zodat Google de zaak toont bij
+"pizza + buurt"-zoekopdrachten en niet enkel op de eigen naam:
+
+`/pizza-kiel` · `/pizza-hoboken` · `/pizza-wilrijk` · `/pizza-edegem` ·
+`/pizza-berchem` · `/pizza-antwerpen-zuid` · `/halal-pizza-antwerpen`
+
+- Ze worden gemaakt door `tools/buurtpaginas.js`. **Pas de tekst of de feiten
+  (korting, minimum, uren) daar aan** en draai `node tools/buurtpaginas.js`;
+  bewerk de .html-bestanden niet met de hand.
+- Adres, uren en rating in de structured data komen uit `index.html`. Na een
+  wijziging daar het script opnieuw draaien.
+- De server vindt de pagina's vanzelf: ze krijgen Analytics en komen in
+  `/sitemap.xml`. Een nieuwe buurt toevoegen = een blok in `BUURTEN` erbij.
+- De homepage linkt naar alle buurten (sectie Bezorgen) en naar de
+  halal-pagina (onder het menu).
+- **Na de livegang:** in Search Console bij elke nieuwe URL *Indexering
+  aanvragen*, en de sitemap opnieuw indienen.
+- Wordt de korting van 30% ooit stopgezet, pas `FEIT.korting` aan én de
+  zinnen in `BUURTEN` die ze noemen.
+
 ## Volgende stappen (nog niet gedaan)
 
 - **Meer tekst per gerecht/categorie.** De foto's van de deals en secties zijn
   nu CSS-achtergronden; Google ziet ze niet als afbeeldingen. Echte `<img>`-tags
   met alt-tekst zouden ook Google Afbeeldingen voeden.
-- **Aparte pagina's per zoekintentie** (bv. `/pizza-bezorgen-antwerpen`,
-  `/halal-pizza-antwerpen`) als je op die termen wilt scoren. Nu is alles één
-  pagina.
 - **Engelse versie op een eigen URL.** De EN-knop wisselt de taal in de
   browser; Google indexeert enkel het Nederlands. Wil je ook Engelstalige
   bezoekers via Google, dan moet EN een eigen adres krijgen (bv. `/en/`) met

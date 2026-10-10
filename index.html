@@ -352,6 +352,11 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   .zone-list li{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1rem 1.1rem;text-align:center}
   .zone-list li strong{display:block;color:var(--cream);font-size:1.08rem}
   .zone-list li span{display:block;color:var(--muted);font-size:.84rem;margin-top:.3rem}
+  .zone-list{grid-template-columns:repeat(2,1fr)}
+  @media(min-width:760px){.zone-list{grid-template-columns:repeat(3,1fr)}}
+  .zone-list li{padding:0}
+  .zone-list li a{display:block;padding:1rem 1.1rem;border-radius:14px;transition:border-color .15s ease}
+  .zone-list li:hover{border-color:var(--red)}
   .zone-note{text-align:center;color:var(--muted);max-width:640px;margin:0 auto 1.5rem;font-size:.95rem}
   .zones .btn{display:inline-flex;margin:0 auto}
   .zones .wrap{text-align:center}
@@ -1350,7 +1355,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
       <div class="m-row"><div><div class="m-name">Grote fles 1,5L</div><div class="m-desc">Cola, Fanta …</div></div><div class="m-price">€ 4</div></div>
     </div>
         </details>
-    <p class="halal-note">🥩 <b>Al ons vlees is 100% halal.</b> Onze pepperoni, salami, ham en spek zijn halal varianten.</p>
+    <p class="halal-note">🥩 <b>Al ons vlees is 100% halal.</b> Onze pepperoni, salami, ham en spek zijn halal varianten. <a href="halal-pizza-antwerpen" style="text-decoration:underline">Meer over halal pizza</a></p>
     <p class="menu-note">Pizza's ook glutenvrij of veganistisch op aanvraag. Voedselallergie? Meld het ons even. Alle prijzen in euro; het menu kan wijzigen.</p>
   </div>
 </section>
@@ -1444,11 +1449,12 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
       <p>Vanuit de Abdijstraat in Antwerpen-Zuid bezorgen we warm aan huis in de buurten rondom. Bestel online voor levering en krijg 30% korting op je hele bestelling.</p>
     </div>
     <ul class="zone-list">
-      <li><strong>Kiel</strong><span>Onze eigen buurt, rond de Abdijstraat</span></li>
-      <li><strong>Hoboken</strong><span>Pizza bezorgen in Hoboken</span></li>
-      <li><strong>Wilrijk</strong><span>Pizza bezorgen in Wilrijk</span></li>
-      <li><strong>Antwerpen-Zuid</strong><span>Het Zuid en omgeving</span></li>
-      <li><strong>Berchem</strong><span>Pizza bezorgen in Berchem</span></li>
+      <li><a href="pizza-kiel"><strong>Kiel</strong><span>Onze eigen buurt, rond de Abdijstraat</span></a></li>
+      <li><a href="pizza-hoboken"><strong>Hoboken</strong><span>Pizza bezorgen in Hoboken</span></a></li>
+      <li><a href="pizza-wilrijk"><strong>Wilrijk</strong><span>Pizza bezorgen in Wilrijk</span></a></li>
+      <li><a href="pizza-edegem"><strong>Edegem</strong><span>Pizza bezorgen in Edegem</span></a></li>
+      <li><a href="pizza-antwerpen-zuid"><strong>Antwerpen-Zuid</strong><span>Het Zuid en omgeving</span></a></li>
+      <li><a href="pizza-berchem"><strong>Berchem</strong><span>Pizza bezorgen in Berchem</span></a></li>
     </ul>
     <p class="zone-note">We leveren tot 8 km rond de zaak, minimum € 20 na korting. Liever afhalen? Je bestelling staat klaar aan de Abdijstraat 226a, elke dag tot 02:00.</p>
     <a href="order.html" class="btn btn-yellow">🛵 Bestel voor levering →</a>
@@ -1681,7 +1687,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   var DICT = {
     "bezorgen":"Delivery","bezorgen & afhalen":"Delivery & pickup","pizza bezorgen in antwerpen":"Pizza delivery in Antwerp",
     "vanuit de abdijstraat in antwerpen-zuid bezorgen we warm aan huis in de buurten rondom. bestel online voor levering en krijg 30% korting op je hele bestelling.":"From Abdijstraat in Antwerp-Zuid we deliver hot to your door in the surrounding neighbourhoods. Order online for delivery and get 30% off your whole order.",
-    "onze eigen buurt, rond de abdijstraat":"Our own neighbourhood, around Abdijstraat","pizza bezorgen in hoboken":"Pizza delivery in Hoboken","pizza bezorgen in wilrijk":"Pizza delivery in Wilrijk","het zuid en omgeving":"Het Zuid and surroundings","pizza bezorgen in berchem":"Pizza delivery in Berchem",
+    "onze eigen buurt, rond de abdijstraat":"Our own neighbourhood, around Abdijstraat","pizza bezorgen in hoboken":"Pizza delivery in Hoboken","pizza bezorgen in wilrijk":"Pizza delivery in Wilrijk","pizza bezorgen in edegem":"Pizza delivery in Edegem","meer over halal pizza":"More about halal pizza","het zuid en omgeving":"Het Zuid and surroundings","pizza bezorgen in berchem":"Pizza delivery in Berchem",
     "we leveren tot 8 km rond de zaak, minimum € 20 na korting. liever afhalen? je bestelling staat klaar aan de abdijstraat 226a, elke dag tot 02:00.":"We deliver up to 8 km from the shop, minimum € 20 after discount. Prefer pickup? Your order is ready at Abdijstraat 226a, every day until 2:00.",
     "🛵 bestel voor levering →":"🛵 Order for delivery →",
     // nav / footer
