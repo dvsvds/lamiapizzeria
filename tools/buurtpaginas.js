@@ -32,16 +32,6 @@ var FEIT = {
   uren: [['Maandag – vrijdag', '11:30 – 02:00'], ['Zaterdag – zondag', '14:00 – 02:00']]
 };
 
-/* ---- Pizza's die we uitlichten (namen en toppings zoals op het menu) ---- */
-var FAVORIETEN = [
-  ['Soprano', 'Halal pepperoni, halal salami, hete honing'],
-  ['Godfather', 'Halal pepperoni, halal ham, halal spek'],
-  ['La Mia Garlic', 'Kip, spinazie, ricotta, knoflook-roomsaus'],
-  ['BBQ Kip', 'Rode ui, paprika, BBQ-saus'],
-  ['Quattro Formaggi', 'Mozzarella, ricotta, gorgonzola, goudse kaas'],
-  ['Margarita', 'Tomatensaus, mozzarella']
-];
-
 var HALAL_PIZZAS = [
   ['Pepperoni', 'Tomatensaus, mozzarella, halal pepperoni'],
   ['Godfather', 'Halal pepperoni, halal ham, halal spek'],
@@ -58,7 +48,7 @@ var HALAL_PIZZAS = [
    vogelvlucht te berekenen. */
 var BUURTEN = [
   {
-    slug: 'pizza-kiel', naam: 'Kiel', postcode: '2020',
+    slug: 'pizza-kiel', naam: 'Kiel', postcode: '2020', postcodes: ['2020'],
     punt: { lat: 51.1880, lon: 4.3880 },
     titel: 'Pizza bezorgen in Kiel (2020) | La Mia Pizzeria',
     omschrijving: 'New York style pizza uit de Abdijstraat, midden op het Kiel. Bezorgd of afhalen, 100% halal, elke dag open tot 02:00. Online 30% korting bij levering.',
@@ -68,15 +58,20 @@ var BUURTEN = [
       'We zitten zelf in de Abdijstraat, dus voor wie op het Kiel woont is dit de pizzeria om de hoek. Of je nu rond het Kielpark woont, in de buurt van de Sint-Bernardsesteenweg of richting het Olympisch Stadion: je bestelling is meteen bij je.',
       'Afhalen gaat hier het snelst. Bestel online, kies afhalen en je pizza staat klaar aan de toonbank. Liever thuis blijven? Dan bezorgen we, met 30% korting op je hele online bestelling.'
     ],
+    extra: ['Afhalen of bezorgen op het Kiel?', [
+      'Woon je op wandelafstand, dan is afhalen vaak de beste keuze. Onze afhaaldeals gelden namelijk alleen als je zelf komt: de Familiedeal met drie large pizza\'s, de Duo\'s met twee pizza\'s, de Pasta Deal. Die vind je niet bij levering.',
+      'Bezorgen loont dan weer voor een gewone bestelling van de kaart: online krijg je 30% korting op alles. Na een match in het Olympisch Stadion of een zomeravond in het Kielpark kan het nog laat: we zijn elke dag open tot 02:00.'
+    ]],
     wijken: ['Abdijstraat en omgeving', 'Kielpark', 'Sint-Bernardsesteenweg', 'Rond het Olympisch Stadion', 'Kielsevest', 'Beerschot'],
     afhalen: 'Je vindt ons in de Abdijstraat 226a. Vanuit het Kiel ben je er te voet of met de fiets in een paar minuten.',
     vragen: [
       ['Kan ik ook afhalen?', 'Ja. Bestel online en kies "afhalen", of bel ons op 03 644 23 31. Je pizza staat klaar aan de Abdijstraat 226a. Afhalen kan elke dag tot 02:00.'],
-      ['Kan ik ter plaatse eten?', 'Ja, je kan bij ons binnen of op het terras eten. Kom gewoon langs tijdens de openingsuren.']
+      ['Kan ik ter plaatse eten?', 'Ja, je kan bij ons binnen of op het terras eten. Kom gewoon langs tijdens de openingsuren.'],
+      ['Gelden de deals ook bij levering?', 'Nee, de afhaaldeals gelden enkel als je zelf komt afhalen. Bij levering krijg je wel 30% korting op je hele online bestelling van de gewone kaart.']
     ]
   },
   {
-    slug: 'pizza-hoboken', naam: 'Hoboken', postcode: '2660',
+    slug: 'pizza-hoboken', naam: 'Hoboken', postcode: '2660', postcodes: ['2660'],
     punt: { lat: 51.1730, lon: 4.3470 },
     titel: 'Pizza bezorgen in Hoboken (2660) | La Mia Pizzeria',
     omschrijving: 'Pizza bestellen in Hoboken: New York style pizza, pasta en snacks, 100% halal. We bezorgen in heel Hoboken, elke dag tot 02:00. Online 30% korting bij levering.',
@@ -86,32 +81,41 @@ var BUURTEN = [
       'Hoboken ligt vlak naast ons. Via de Sint-Bernardsesteenweg zijn we snel bij je, of je nu rond de Kioskplaats woont, in Moretusburg of in Polderstad.',
       'Bestel je online voor levering, dan krijg je 30% korting op je hele bestelling. Het minimum voor levering is € 20 na korting.'
     ],
-    wijken: ['Kioskplaats', 'Kapelstraat', 'Moretusburg', 'Polderstad', 'Sint-Bernardsesteenweg', 'Hoboken-centrum'],
+    extra: ['Van de Kioskplaats tot aan de Schelde', [
+      'Hoboken is een eigen district, ten zuidwesten van het Kiel. De Sint-Bernardsesteenweg loopt van onze buurt dwars door Hoboken, en dat is ook de route van onze bezorgers. Het centrum rond de Kioskplaats en de Kapelstraat ligt op zo\'n 3 km in vogelvlucht.',
+      'Ook verder richting de Schelde, in Polderstad en rond Hoboken-Polder, en in het zuiden bij Fort 8 bezorgen we gewoon. Twijfel je over je straat, vul dan je adres in de webshop in: je ziet meteen of het binnen onze zone van 8 km valt.'
+    ]],
+    wijken: ['Kioskplaats', 'Kapelstraat', 'Moretusburg', 'Polderstad', 'Hoboken-Polder', 'Fort 8'],
     afhalen: 'Zelf afhalen? Rij of fiets via de Sint-Bernardsesteenweg richting het Kiel; we zitten in de Abdijstraat 226a.',
     vragen: [
-      ['Leveren jullie in heel Hoboken?', 'We bezorgen tot 8 km rond de zaak, en Hoboken ligt daar ruim binnen. In de webshop zie je meteen of je adres in de zone valt.']
+      ['Leveren jullie in heel Hoboken?', 'We bezorgen tot 8 km rond de zaak, en Hoboken ligt daar ruim binnen. In de webshop zie je meteen of je adres in de zone valt.'],
+      ['Wat is de snelste weg om af te halen vanuit Hoboken?', 'Via de Sint-Bernardsesteenweg richting het Kiel. Daar sla je af naar de Abdijstraat; we zitten op nummer 226a.']
     ]
   },
   {
-    slug: 'pizza-wilrijk', naam: 'Wilrijk', postcode: '2610',
+    slug: 'pizza-wilrijk', naam: 'Wilrijk', postcode: '2610', postcodes: ['2610'],
     punt: { lat: 51.1690, lon: 4.3920 },
     titel: 'Pizza bezorgen in Wilrijk (2610) | La Mia Pizzeria',
-    omschrijving: 'Pizza bestellen in Wilrijk: van de Bist tot Valaar en de campussen. New York style pizza, 100% halal, bezorgd tot 02:00. Online 30% korting bij levering.',
+    omschrijving: 'Pizza bestellen in Wilrijk: van de Bist tot Valaar en campus Drie Eiken. New York style pizza, 100% halal, bezorgd tot 02:00. Online 30% korting bij levering.',
     h1: 'Pizza bezorgen in Wilrijk',
     lead: 'Laat studeren, laat thuis of gewoon zin in pizza? We bezorgen in Wilrijk elke dag tot 02:00, vers uit onze oven op het Kiel, een paar minuten verderop.',
     tekst: [
-      'Wilrijk grenst aan het Kiel, dus we zijn er snel. We bezorgen rond de Bist, in Valaar, Neerland en Oosterveld, en ook bij de campussen Drie Eiken en Middelheim van de Universiteit Antwerpen.',
+      'Wilrijk grenst aan het Kiel, dus we zijn er snel. We bezorgen rond de Bist, in Valaar, Neerland en Oosterveld, en ook op campus Drie Eiken van de Universiteit Antwerpen.',
       'Op kot of samen met vrienden? Onze deals met twee of drie pizza\'s, lookbrood en drank zijn gemaakt om te delen. Online bestellen voor levering geeft 30% korting op alles.'
     ],
-    wijken: ['De Bist', 'Valaar', 'Neerland', 'Oosterveld', 'Campus Drie Eiken', 'Campus Middelheim'],
+    extra: ['Van de Bist tot Fort 6', [
+      'Wilrijk is het district direct ten zuiden van ons; de Bist, het hart van Wilrijk, ligt op amper 2 km in vogelvlucht. Via de Boomsesteenweg ben je in een handomdraai bij ons.',
+      'We bezorgen in heel Wilrijk: de woonwijken van Valaar en Neerland, Oosterveld, de buurt rond Fort 6 en de studentenkoten rond campus Drie Eiken. Studeer je er en bestel je met vrienden? Online bestellen voor levering geeft 30% korting op de hele bestelling.'
+    ]],
+    wijken: ['De Bist', 'Valaar', 'Neerland', 'Oosterveld', 'Campus Drie Eiken', 'Fort 6'],
     afhalen: 'Afhalen kan aan de Abdijstraat 226a op het Kiel, een paar minuten van Wilrijk.',
     vragen: [
       ['Leveren jullie ook op de campus of op kot?', 'Ja, zolang het adres binnen 8 km van de zaak ligt. Vul je exacte adres in, met kotnummer of gebouw in de opmerking, zodat de bezorger je meteen vindt.'],
-      ['Hebben jullie deals voor een groep?', 'Ja. Kijk bij de afhaaldeals en promo\'s in de webshop: van een Duo tot de Familiedeal met drie large pizza\'s, lookbrood en frisdrank.']
+      ['Hebben jullie deals voor een groep?', 'Ja. Kijk bij de afhaaldeals en promo\'s in de webshop: van een Duo tot de Familiedeal met drie large pizza\'s, lookbrood en frisdrank. Die deals gelden bij afhalen.']
     ]
   },
   {
-    slug: 'pizza-edegem', naam: 'Edegem', postcode: '2650',
+    slug: 'pizza-edegem', naam: 'Edegem', postcode: '2650', postcodes: ['2650'],
     punt: { lat: 51.1560, lon: 4.4430 },
     titel: 'Pizza bezorgen in Edegem (2650) | La Mia Pizzeria',
     omschrijving: 'Ook in Edegem bezorgen we New York style pizza, pasta en snacks. 100% halal, elke dag tot 02:00. Bestel online voor levering en krijg 30% korting.',
@@ -121,14 +125,19 @@ var BUURTEN = [
       'Van Elsdonk tot Buizegem en rond het UZA: Edegem valt binnen de 8 km die we rond de zaak bezorgen. Woon je aan de uiterste rand, dan zegt de webshop je meteen of je adres binnen de zone ligt.',
       'Wie laat thuiskomt, kan bij ons nog terecht: we zijn elke dag open tot 02:00. Online bestellen voor levering geeft 30% korting op je hele bestelling.'
     ],
-    wijken: ['Edegem-centrum', 'Elsdonk', 'Buizegem', 'Rond het UZA', 'Hof ter Linden', 'Mechelsesteenweg'],
+    extra: ['Net over de stadsgrens', [
+      'Edegem is geen district van Antwerpen maar een eigen gemeente, ten zuidoosten van Wilrijk. Onze bezorgers rijden er via Wilrijk naartoe; het centrum ligt op zo\'n 5 km in vogelvlucht van de zaak. Dat is verder dan Hoboken of Berchem, maar nog ruim binnen onze zone van 8 km.',
+      'Langs de Mechelsesteenweg, in Elsdonk, rond Fort 5 en Hof ter Linden en bij het UZA bezorgen we gewoon. Voor de straten helemaal aan de zuidrand van Edegem is het slim om eerst je adres in de webshop in te vullen.'
+    ]],
+    wijken: ['Edegem-centrum', 'Elsdonk', 'Buizegem', 'Rond het UZA', 'Fort 5', 'Mechelsesteenweg'],
     afhalen: 'Afhalen kan aan de Abdijstraat 226a in Antwerpen (2020), via Wilrijk richting het Kiel.',
     vragen: [
-      ['Edegem is geen Antwerpen. Leveren jullie er toch?', 'Ja. We kijken niet naar de gemeente maar naar de afstand: alles binnen 8 km van de zaak. Het grootste deel van Edegem valt daarbinnen; de webshop controleert je adres.']
+      ['Edegem is geen Antwerpen. Leveren jullie er toch?', 'Ja. We kijken niet naar de gemeente maar naar de afstand: alles binnen 8 km van de zaak. Het grootste deel van Edegem valt daarbinnen; de webshop controleert je adres.'],
+      ['Leveren jullie aan het UZA?', 'Ja, het UZA ligt binnen onze zone. Zet in de opmerking bij je bestelling de ingang of afdeling waar de bezorger je kan treffen.']
     ]
   },
   {
-    slug: 'pizza-berchem', naam: 'Berchem', postcode: '2600',
+    slug: 'pizza-berchem', naam: 'Berchem', postcode: '2600', postcodes: ['2600'],
     punt: { lat: 51.1993, lon: 4.4322 },
     titel: 'Pizza bezorgen in Berchem (2600) | La Mia Pizzeria',
     omschrijving: 'Pizza bestellen in Berchem: rond het station, Zurenborg en de Driekoningenstraat. New York style, 100% halal, tot 02:00. Online 30% korting bij levering.',
@@ -138,14 +147,20 @@ var BUURTEN = [
       'Berchem ligt ten oosten van ons, ruim binnen onze bezorgzone. We leveren rond het station, in de Driekoningenstraat, langs de Grote Steenweg en in het Berchemse deel van Zurenborg.',
       'Bestel online voor levering en je krijgt 30% korting op je hele bestelling. Het minimum is € 20 na korting.'
     ],
-    wijken: ['Station Berchem', 'Driekoningenstraat', 'Grote Steenweg', 'Zurenborg', 'Berchem-centrum', 'Uitbreidingstraat'],
+    extra: ['Rond het station en in Zurenborg', [
+      'Berchem is een eigen district, op ongeveer 3,5 km in vogelvlucht van onze zaak. Het station van Berchem vormt er het middelpunt, met de Driekoningenstraat en de Grote Steenweg als drukke winkelstraten.',
+      'Ook in Zurenborg, met de Cogels-Osylei en zijn opvallende herenhuizen, bezorgen we. Werk je op een kantoor rond het station? Zet de bedrijfsnaam en verdieping in de opmerking, dan vindt de bezorger je meteen.'
+    ]],
+    wijken: ['Station Berchem', 'Driekoningenstraat', 'Grote Steenweg', 'Zurenborg', 'Cogels-Osylei', 'Uitbreidingstraat'],
     afhalen: 'Afhalen? Je vindt ons in de Abdijstraat 226a op het Kiel, aan de zuidkant van de stad.',
     vragen: [
-      ['Leveren jullie ook in Zurenborg?', 'Ja. Zurenborg ligt deels in Berchem en deels in Antwerpen, en beide delen vallen binnen onze zone van 8 km.']
+      ['Leveren jullie ook in Zurenborg?', 'Ja. Zurenborg ligt deels in Berchem en deels in Antwerpen, en beide delen vallen binnen onze zone van 8 km.'],
+      ['Leveren jullie op kantoor rond het station?', 'Ja. Geef de bedrijfsnaam, het gebouw of de verdieping mee in de opmerking bij je bestelling.'],
+      ['Loont het om vanuit Berchem zelf af te halen?', 'Dat kan, de zaak ligt op zo\'n 3,5 km in vogelvlucht. Wie afhaalt, kan kiezen uit de afhaaldeals zoals de Duo\'s en de Familiedeal; wie laat bezorgen in Berchem, krijgt online 30% korting op de gewone kaart.']
     ]
   },
   {
-    slug: 'pizza-antwerpen-zuid', naam: 'Antwerpen-Zuid', postcode: '2000',
+    slug: 'pizza-antwerpen-zuid', naam: 'Antwerpen-Zuid', postcode: '2000', postcodes: ['2000', '2018'],
     punt: { lat: 51.2089, lon: 4.3943 },
     titel: 'Pizza bezorgen op het Zuid (Antwerpen) | La Mia Pizzeria',
     omschrijving: 'Pizza bestellen op het Zuid: rond het KMSKA, de Waalse en Vlaamse Kaai en Nieuw Zuid. New York style, 100% halal, tot 02:00. Online 30% korting bij levering.',
@@ -155,10 +170,15 @@ var BUURTEN = [
       'Van de Leopold De Waelplaats en het KMSKA tot de Vlaamse en Waalse Kaai en de nieuwe torens van Nieuw Zuid: het hele Zuid valt binnen onze bezorgzone.',
       'We zijn elke dag open tot 02:00, dus ook laat op de avond kan je nog bestellen. Online voor levering krijg je 30% korting op je hele bestelling.'
     ],
+    extra: ['Musea, kaaien en Nieuw Zuid', [
+      'Het Zuid is de buurt van musea en terrassen: het KMSKA, het FOMU aan de Waalse Kaai en het M HKA liggen er op wandelafstand van elkaar. Vanuit onze zaak is het zo\'n 2,5 km in vogelvlucht.',
+      'Nieuw Zuid, de nieuwe woonwijk langs de Schelde, en de appartementen rond de Gedempte Zuiderdokken horen er ook bij. Woon je in een appartementsgebouw, zet dan je bel of verdieping in de opmerking.'
+    ]],
     wijken: ['Leopold De Waelplaats', 'Rond het KMSKA', 'Vlaamse Kaai', 'Waalse Kaai', 'Nieuw Zuid', 'Gedempte Zuiderdokken'],
     afhalen: 'Afhalen kan aan de Abdijstraat 226a, een paar minuten rijden of fietsen naar het zuiden.',
     vragen: [
-      ['Leveren jullie ook op kantoor?', 'Ja, op elk adres binnen 8 km van de zaak. Zet de bedrijfsnaam of verdieping in de opmerking bij je bestelling.']
+      ['Leveren jullie ook op kantoor?', 'Ja, op elk adres binnen 8 km van de zaak. Zet de bedrijfsnaam of verdieping in de opmerking bij je bestelling.'],
+      ['Kan ik na middernacht nog bestellen op het Zuid?', 'Ja. We zijn elke dag open tot 02:00, en zolang we open zijn kan je online bestellen voor levering of afhalen.']
     ]
   }
 ];
@@ -413,7 +433,8 @@ function buurtPagina(b) {
   var afstand = km(ZAAK, b.punt);
   afstand = afstand < 1 ? null : (Math.round(afstand * 2) / 2).toString().replace('.', ',');
   var crumb = 'Pizza bezorgen in ' + b.naam;
-  var vragen = b.vragen.concat(gedeeldeVragen());
+  // enkel de buurtvragen: de algemene vragen (halal, uren, kosten) staan op de homepage
+  var vragen = b.vragen;
   b.ld = ldVoor(b, crumb, vragen);
   return kop(b) + header() + hero(b, 'New York pizza · ' + b.naam + ' ' + b.postcode, crumb) +
     '<main>\n' +
@@ -424,18 +445,28 @@ function buurtPagina(b) {
     '    <ul class="wijken" aria-label="Waar we bezorgen in ' + esc(b.naam) + '">\n' +
     b.wijken.map(function (w) { return '      <li>' + esc(w) + '</li>\n'; }).join('') +
     '    </ul>\n  </div>\n  ' + feitenKaart(afstand, b.naam) + '\n  </div>\n</section>\n' +
-    '<section class="blok alt">\n  <div class="wrap">\n' +
+    '<section class="blok alt">\n  <div class="wrap prose">\n' +
+    '    <span class="kicker">In de buurt</span>\n' +
+    '    <h2>' + esc(b.extra[0]) + '</h2>\n' +
+    b.extra[1].map(function (t) { return '    <p>' + esc(t) + '</p>\n'; }).join('') +
+    '    <p>' + esc(b.afhalen) + '</p>\n' +
+    '  </div>\n</section>\n' +
+    '<section class="blok">\n  <div class="wrap">\n' +
     '    <span class="kicker">Van ons menu</span>\n' +
-    '    <h2>Wat bestel je?</h2>\n' +
-    '    <p class="muted" style="max-width:62ch">New York style pizza\'s met huisgemaakt deeg, in small, medium of large. Daarnaast pasta, burgers, kapsalon, snacks en desserts. Een greep uit de kaart:</p>\n' +
-    pizzaLijst(FAVORIETEN) +
+    '    <h2>Wat bestel je in ' + esc(b.naam) + '?</h2>\n' +
+    // De server vult dit blok met de pizza's die in deze postcodes het vaakst
+    // besteld worden (server.js: populairBlok). Te weinig bestellingen → deze tekst blijft.
+    '    <!--populair:' + b.postcodes.join(',') + ':' + esc(b.naam) + '-->\n' +
+    '    <p class="muted" style="max-width:62ch;margin-bottom:1.4rem">New York style pizza\'s met huisgemaakt deeg in small, medium en large, en daarnaast pasta, burgers, kapsalon, snacks en desserts.</p>\n' +
+    '    <!--/populair-->\n' +
     '    <a href="/#menu" class="btn btn-red">Bekijk het volledige menu met prijzen</a>\n' +
     '  </div>\n</section>\n' +
-    '<section class="blok">\n  <div class="wrap cols">\n  <div>\n' +
+    '<section class="blok alt">\n  <div class="wrap cols">\n  <div>\n' +
     '    <span class="kicker">Veelgestelde vragen</span>\n' +
     '    <h2>Vragen uit ' + esc(b.naam) + '</h2>\n' + faqHtml(vragen) +
-    '  </div>\n  <div>\n  ' + urenKaart() + '\n    <p class="muted" style="margin-top:1rem">' + esc(b.afhalen) + '</p>\n  </div>\n  </div>\n</section>\n' +
-    '<section class="blok alt">\n  <div class="wrap">\n' +
+    '    <p class="muted" style="margin-top:1rem">Meer over halal, bezorgkosten en openingsuren: <a href="/#faq">veelgestelde vragen</a>.</p>\n' +
+    '  </div>\n  <div>\n  ' + urenKaart() + '\n  </div>\n  </div>\n</section>\n' +
+    '<section class="blok">\n  <div class="wrap">\n' +
     '    <span class="kicker">Ook in de buurt</span>\n    <h2>We bezorgen ook in</h2>\n' + andereLinks(b.slug) +
     '  </div>\n</section>\n</main>\n' + staart();
 }

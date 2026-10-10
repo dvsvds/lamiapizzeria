@@ -11,7 +11,7 @@ Elke stap hieronder duurt hooguit een paar minuten.
 |---|---|
 | `robots.txt` | Zegt Google welke pagina's mogen: de website en de webshop. Beheer, kassa, keuken en rapporten worden geweerd. |
 | `sitemap.xml` | Lijst van de publieke pagina's (met foto's) die je in Search Console indient. De server maakt hem automatisch; er staat ook een statische versie in de repo voor hosting zonder server (Netlify). |
-| Structured data (JSON-LD) | Vertelt Google wat je bent (restaurant), adres, uren, telefoon, rating, socials en dat er online besteld kan worden. Daarmee kan Google een "Bestellen"-knop en je uren tonen. |
+| Structured data (JSON-LD) | Vertelt Google wat je bent (restaurant), adres, uren, telefoon, menu en dat er online besteld kan worden. Daarmee kan Google een "Bestellen"-knop en je uren tonen. |
 | Social preview | Deel je de site op Instagram/Facebook/WhatsApp, dan verschijnt de hero-foto met titel en tekst (`og:image`). |
 | Webshop-pagina | Eigen titel, omschrijving en canonical (was een kopie van de homepage). |
 | Favicon & app-icoon | Het logo in het tabblad en op het startscherm van een telefoon. |
@@ -183,6 +183,24 @@ Eén pagina per buurt plus één over halal, zodat Google de zaak toont bij
   aanvragen*, en de sitemap opnieuw indienen.
 - Wordt de korting van 30% ooit stopgezet, pas `FEIT.korting` aan én de
   zinnen in `BUURTEN` die ze noemen.
+
+## Lokale SEO (okt 2026)
+
+- **Buurtpagina's uniek gemaakt** (was 32–44%, nu 60–67% unieke tekst): per
+  buurt een eigen sectie "In de buurt", eigen vragen, en de algemene vragen
+  staan enkel nog op de homepage (`/#faq`).
+- **"Wat bestel je in …?"**: de server vult dit op elke buurtpagina met de 5
+  pizza's die het vaakst geleverd worden naar die postcode(s), de laatste 4
+  maanden (`populairHtml()` in server.js; minimum 8 bestellingen, anders vaste
+  tekst). Enkel namen, geen aantallen of klantgegevens.
+- **Menu-schema** (`Menu` → `MenuSection` → `MenuItem` met prijzen per maat)
+  op homepage en webshop, live uit de database (`menuLd()` in server.js).
+- **Socials verwijderd** uit footer en structured data: de accounts
+  `facebook.com/lamiapizzeria` (Zweedse zaak) en `instagram.com/lamiapizzeria`
+  ("La Mia Pizza & Wings") waren niet van de zaak. Echte accounts later
+  toevoegen in `sameAs` (index.html + order.html) en in de footer.
+- Volledige analyse: `LOCAL-SEO-ANALYSE-lamiapizzeria.be.md` in de map
+  boven de repo (C:/Users/m/lamiapizzeria).
 
 ## Structured data (schema-check okt 2026)
 

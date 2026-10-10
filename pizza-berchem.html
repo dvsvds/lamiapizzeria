@@ -118,11 +118,6 @@ footer p+p{margin-top:.4rem}
    "telephone": "+3236442331",
    "email": "info.lamiapizzeria@mail.com",
    "url": "https://www.lamiapizzeria.be/",
-   "sameAs": [
-    "https://www.instagram.com/lamiapizzeria/",
-    "https://www.facebook.com/lamiapizzeria",
-    "https://www.tiktok.com/@lamiapizzeria"
-   ],
    "address": {
     "@type": "PostalAddress",
     "streetAddress": "Abdijstraat 226a",
@@ -190,7 +185,9 @@ footer p+p{margin-top:.4rem}
      "closes": "02:00"
     }
    ],
-   "hasMenu": "https://www.lamiapizzeria.be/#menu",
+   "hasMenu": {
+    "@id": "https://www.lamiapizzeria.be/#menu"
+   },
    "acceptsReservations": false,
    "potentialAction": {
     "@type": "OrderAction",
@@ -253,26 +250,18 @@ footer p+p{margin-top:.4rem}
     },
     {
      "@type": "Question",
-     "name": "Wat kost bezorgen?",
+     "name": "Leveren jullie op kantoor rond het station?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Er zijn geen aparte bezorgkosten. Pizza's en pasta's hebben bij levering wel een leverprijs (€ 6 meer dan bij afhalen); daarna krijg je 30% korting op je hele online bestelling. Het minimum voor levering is € 20 na korting. De webshop toont altijd de juiste prijs voor afhalen of levering."
+      "text": "Ja. Geef de bedrijfsnaam, het gebouw of de verdieping mee in de opmerking bij je bestelling."
      }
     },
     {
      "@type": "Question",
-     "name": "Is alles halal?",
+     "name": "Loont het om vanuit Berchem zelf af te halen?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Ja, al ons vlees is 100% halal. Ook onze pepperoni, salami, ham en spek zijn halal varianten."
-     }
-    },
-    {
-     "@type": "Question",
-     "name": "Tot hoe laat kan ik bestellen?",
-     "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "Elke dag tot 02:00. Van maandag tot vrijdag zijn we open vanaf 11:30, in het weekend vanaf 14:00."
+      "text": "Dat kan, de zaak ligt op zo'n 3,5 km in vogelvlucht. Wie afhaalt, kan kiezen uit de afhaaldeals zoals de Duo's en de Familiedeal; wie laat bezorgen in Berchem, krijgt online 30% korting op de gewone kaart."
      }
     }
    ]
@@ -318,7 +307,7 @@ footer p+p{margin-top:.4rem}
       <li>Driekoningenstraat</li>
       <li>Grote Steenweg</li>
       <li>Zurenborg</li>
-      <li>Berchem-centrum</li>
+      <li>Cogels-Osylei</li>
       <li>Uitbreidingstraat</li>
     </ul>
   </div>
@@ -336,32 +325,35 @@ footer p+p{margin-top:.4rem}
   </div>
 </section>
 <section class="blok alt">
-  <div class="wrap">
-    <span class="kicker">Van ons menu</span>
-    <h2>Wat bestel je?</h2>
-    <p class="muted" style="max-width:62ch">New York style pizza's met huisgemaakt deeg, in small, medium of large. Daarnaast pasta, burgers, kapsalon, snacks en desserts. Een greep uit de kaart:</p>
-<ul class="pizzas">
-  <li><b>Soprano</b><span>Halal pepperoni, halal salami, hete honing</span></li>
-  <li><b>Godfather</b><span>Halal pepperoni, halal ham, halal spek</span></li>
-  <li><b>La Mia Garlic</b><span>Kip, spinazie, ricotta, knoflook-roomsaus</span></li>
-  <li><b>BBQ Kip</b><span>Rode ui, paprika, BBQ-saus</span></li>
-  <li><b>Quattro Formaggi</b><span>Mozzarella, ricotta, gorgonzola, goudse kaas</span></li>
-  <li><b>Margarita</b><span>Tomatensaus, mozzarella</span></li>
-</ul>
-    <a href="/#menu" class="btn btn-red">Bekijk het volledige menu met prijzen</a>
+  <div class="wrap prose">
+    <span class="kicker">In de buurt</span>
+    <h2>Rond het station en in Zurenborg</h2>
+    <p>Berchem is een eigen district, op ongeveer 3,5 km in vogelvlucht van onze zaak. Het station van Berchem vormt er het middelpunt, met de Driekoningenstraat en de Grote Steenweg als drukke winkelstraten.</p>
+    <p>Ook in Zurenborg, met de Cogels-Osylei en zijn opvallende herenhuizen, bezorgen we. Werk je op een kantoor rond het station? Zet de bedrijfsnaam en verdieping in de opmerking, dan vindt de bezorger je meteen.</p>
+    <p>Afhalen? Je vindt ons in de Abdijstraat 226a op het Kiel, aan de zuidkant van de stad.</p>
   </div>
 </section>
 <section class="blok">
+  <div class="wrap">
+    <span class="kicker">Van ons menu</span>
+    <h2>Wat bestel je in Berchem?</h2>
+    <!--populair:2600:Berchem-->
+    <p class="muted" style="max-width:62ch;margin-bottom:1.4rem">New York style pizza's met huisgemaakt deeg in small, medium en large, en daarnaast pasta, burgers, kapsalon, snacks en desserts.</p>
+    <!--/populair-->
+    <a href="/#menu" class="btn btn-red">Bekijk het volledige menu met prijzen</a>
+  </div>
+</section>
+<section class="blok alt">
   <div class="wrap cols">
   <div>
     <span class="kicker">Veelgestelde vragen</span>
     <h2>Vragen uit Berchem</h2>
 <div class="faq">
   <details><summary>Leveren jullie ook in Zurenborg?</summary><p>Ja. Zurenborg ligt deels in Berchem en deels in Antwerpen, en beide delen vallen binnen onze zone van 8 km.</p></details>
-  <details><summary>Wat kost bezorgen?</summary><p>Er zijn geen aparte bezorgkosten. Pizza's en pasta's hebben bij levering wel een leverprijs (€ 6 meer dan bij afhalen); daarna krijg je 30% korting op je hele online bestelling. Het minimum voor levering is € 20 na korting. De webshop toont altijd de juiste prijs voor afhalen of levering.</p></details>
-  <details><summary>Is alles halal?</summary><p>Ja, al ons vlees is 100% halal. Ook onze pepperoni, salami, ham en spek zijn halal varianten.</p></details>
-  <details><summary>Tot hoe laat kan ik bestellen?</summary><p>Elke dag tot 02:00. Van maandag tot vrijdag zijn we open vanaf 11:30, in het weekend vanaf 14:00.</p></details>
+  <details><summary>Leveren jullie op kantoor rond het station?</summary><p>Ja. Geef de bedrijfsnaam, het gebouw of de verdieping mee in de opmerking bij je bestelling.</p></details>
+  <details><summary>Loont het om vanuit Berchem zelf af te halen?</summary><p>Dat kan, de zaak ligt op zo'n 3,5 km in vogelvlucht. Wie afhaalt, kan kiezen uit de afhaaldeals zoals de Duo's en de Familiedeal; wie laat bezorgen in Berchem, krijgt online 30% korting op de gewone kaart.</p></details>
 </div>
+    <p class="muted" style="margin-top:1rem">Meer over halal, bezorgkosten en openingsuren: <a href="/#faq">veelgestelde vragen</a>.</p>
   </div>
   <div>
   <div class="card">
@@ -374,11 +366,10 @@ footer p+p{margin-top:.4rem}
     <p class="muted" style="font-size:.85rem;margin-top:.8rem">Uren kunnen op feestdagen afwijken.</p>
     <p style="margin-top:1rem"><a href="https://www.google.com/maps/search/?api=1&amp;query=La+Mia+Pizzeria+Abdijstraat+226a+2020+Antwerpen" rel="noopener">Route via Google Maps →</a></p>
   </div>
-    <p class="muted" style="margin-top:1rem">Afhalen? Je vindt ons in de Abdijstraat 226a op het Kiel, aan de zuidkant van de stad.</p>
   </div>
   </div>
 </section>
-<section class="blok alt">
+<section class="blok">
   <div class="wrap">
     <span class="kicker">Ook in de buurt</span>
     <h2>We bezorgen ook in</h2>
