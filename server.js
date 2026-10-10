@@ -501,7 +501,9 @@ function serveStatic(req, res, urlPath) {
     // afbeeldingen/fonts mogen kort gecachet worden (schelen bandbreedte, veranderen zelden).
     var noCache = (ext === '.html' || ext === '.js' || ext === '.css');
     var type = MIME[ext] || 'application/octet-stream';
-    var cache = noCache ? 'no-cache, no-store, must-revalidate' : 'public, max-age=604800'; // 7 dagen
+    // no-cache (niet no-store): de browser vraagt elke keer de nieuwste versie,
+    // maar mag de pagina wel bewaren voor de terugknop (back/forward cache).
+    var cache = noCache ? 'no-cache, must-revalidate' : 'public, max-age=604800'; // 7 dagen
 
     // Video's worden met byte-ranges opgehaald. Safari en iOS weigeren een
     // video af te spelen als de server daar niet met 206 op antwoordt.
@@ -532,7 +534,10 @@ function serveStatic(req, res, urlPath) {
       return fs.readFile(file, function (err2, buf) {
         if (err2) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Niet gevonden'); }
         if (ext === '.html' && PUBLIC_PAGES[base]) buf = Buffer.from(injectHead(buf.toString('utf8')), 'utf8');
-        sendCompressed(req, res, 200, buf, { 'Content-Type': type, 'Cache-Control': cache });
+        var hdr = { 'Content-Type': type, 'Cache-Control': cache };
+        // kassa, keuken, beheer, rapporten …: nooit in Google, ook niet als iemand ernaar linkt
+        if (ext === '.html' && !PUBLIC_PAGES[base] && !/^google[0-9a-f]+\.html$/.test(base)) hdr['X-Robots-Tag'] = 'noindex, nofollow';
+        sendCompressed(req, res, 200, buf, hdr);
       });
     }
 

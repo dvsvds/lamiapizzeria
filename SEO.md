@@ -16,6 +16,9 @@ Elke stap hieronder duurt hooguit een paar minuten.
 | Webshop-pagina | Eigen titel, omschrijving en canonical (was een kopie van de homepage). |
 | Favicon & app-icoon | Het logo in het tabblad en op het startscherm van een telefoon. |
 | Snelheid | Het hero-logo ging van 1,3 MB naar 36 KB (WebP), pagina's worden gecomprimeerd (gzip), foto's blijven 7 dagen in de cache. Snelheid telt mee in de Google-ranking. |
+| Snelheid (okt 2026) | Alle foto's als WebP, kaartfoto's op 800 px (± 70% kleiner). De hero-video (1,3 MB) laadt pas nadat de pagina klaar is, en niet bij spaarstand of 2G. HTML met `no-cache` i.p.v. `no-store`, zodat de terugknop meteen werkt. Lighthouse mobiel: 4,8 → 2,6 MB, Speed Index 3,6 → 1,9 s. De JPG's blijven bestaan voor social previews en de sitemap. |
+| Koppen | De H1 bevat nu "New York pizza · Antwerpen" (homepage en webshop); de webshop-H1 is Nederlands ("Bestel je pizza online"). |
+| Interne pagina's | Kassa, keuken, beheer en rapporten krijgen naast `robots.txt` ook de header `X-Robots-Tag: noindex`. |
 | Analytics-script | `analytics.js` laadt Google Analytics en Google Tag Manager **pas na toestemming** via een klein cookie-bannertje (verplicht in België/EU). |
 
 Je zet de Google-koppelingen aan met **omgevingsvariabelen** (Railway → je
