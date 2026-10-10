@@ -606,9 +606,10 @@
   ];
   var CATMAP={}; CATS.forEach(function(x){CATMAP[x.c]=x;});
 
-  // BTW-tarief (België, prijzen incl. BTW): drank 21%, eten ter plaatse 12%, eten afhaal/levering 6%.
+  // BTW-tarief (België, prijzen incl. BTW): ter plaatse eten 12% en drank 21%;
+  // afhalen en levering 6% voor eten én alcoholvrije drank (zelfde regel als server.js).
   var DRINK_CATS={drink:1};
-  function vatRate(cat){ if(DRINK_CATS[cat]) return 0.21; return (state.type==='terplaatse')?0.12:0.06; }
+  function vatRate(cat){ if(state.type==='terplaatse') return DRINK_CATS[cat]?0.21:0.12; return 0.06; }
 
   // true zodra de kassa een geldige sessie heeft (via 🌐 Online / PIN). Enkel dan
   // worden afgerekende bonnen centraal doorgestuurd (server weigert POS zonder login).

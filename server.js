@@ -203,8 +203,20 @@ function catKind(catId) {
   var r = db.prepare('SELECT kind FROM categories WHERE id=?').get(catId);
   return r && r.kind === 'drink' ? 'drink' : 'food';
 }
-// BTW-tarief (België, prijzen incl. BTW): drank 21%, eten ter plaatse 12%, eten afhaal/levering 6%
-function vatRateFor(kind, type) { return kind === 'drink' ? 0.21 : (type === 'terplaatse' ? 0.12 : 0.06); }
+// BTW-tarief (België, prijzen incl. BTW):
+//   ter plaatse (restaurantdienst): eten 12%, dranken 21%
+//   afhalen / levering:             eten én alcoholvrije dranken 6%
+//                                   (KB nr. 20, tabel A, rubriek X: water, frisdrank, sap, koffie …)
+// Tot oktober 2026 rekende het systeem dranken altijd aan 21%, ook bij afhalen.
+// oudeDrankRegel=true geeft dat oude tarief terug, zodat rapporten over die
+// bonnen blijven kloppen met de BTW die toen bewaard is.
+// Let op: alcoholische dranken (bier >0,5%, andere >1,2%) zijn altijd 21%. Die
+// staan niet op de kaart; komen ze er ooit bij, dan is een eigen soort nodig.
+function vatRateFor(kind, type, oudeDrankRegel) {
+  if (type === 'terplaatse') return kind === 'drink' ? 0.21 : 0.12;
+  if (kind === 'drink' && oudeDrankRegel) return 0.21;
+  return 0.06;
+}
 // enkel een geldige hex-kleur toelaten (voorkomt HTML-injectie via het kleurveld)
 function hexColor(c) { return (typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c)) ? c : '#e6b24c'; }
 
@@ -1365,7 +1377,9 @@ async function handleApi(req, res, urlPath) {
           bi.qty += qty; bi.revenue += bedrag;
           var bid = rep.byItemDay[naam] || (rep.byItemDay[naam] = {});
           bid[day] = (bid[day] || 0) + qty;
-          var gk = String(Math.round(vatRateFor(kindFor(c), o.type) * 100));
+          // een afhaal-/leverbon met 21% BTW is van vóór de correctie: oude regel gebruiken
+          var oudeRegel = o.type !== 'terplaatse' && Object.prototype.hasOwnProperty.call(vat, '21');
+          var gk = String(Math.round(vatRateFor(kindFor(c), o.type, oudeRegel) * 100));
           rep.vatGross[gk] = (rep.vatGross[gk] || 0) + bedrag * f2;
         });
         if ((o.delivery || 0) > 0) rep.vatGross['6'] = (rep.vatGross['6'] || 0) + o.delivery; // levering = eten 6%
