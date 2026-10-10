@@ -184,6 +184,17 @@ Eén pagina per buurt plus één over halal, zodat Google de zaak toont bij
 - Wordt de korting van 30% ooit stopgezet, pas `FEIT.korting` aan én de
   zinnen in `BUURTEN` die ze noemen.
 
+## Structured data (schema-check okt 2026)
+
+- Homepage: `Restaurant` + `WebSite` (sitenaam "La Mia Pizzeria") + `FAQPage`.
+- Bestelpagina: `Restaurant` (zelfde blok als de homepage; wijzig beide).
+- Buurtpagina's: `Restaurant` (overgenomen uit index.html), `WebPage`,
+  `BreadcrumbList`, `FAQPage`.
+- Geen `aggregateRating`, zie hierboven. FAQ-uitklappers toont Google sinds mei
+  2026 niet meer; het FAQ-schema blijft voor AI-assistenten.
+- Controle: search.google.com/test/rich-results → "Lokaal bedrijf" en
+  "Broodkruimelpaden" zonder fouten.
+
 ## AI-zoekmachines (ChatGPT, Perplexity, Gemini) — okt 2026
 
 - **`/llms.txt`**: samenvatting voor AI-assistenten (feiten, uren, bezorgregels,
@@ -222,8 +233,9 @@ Zoektest 10/10/2026: La Mia komt niet voor bij "beste pizza Antwerpen",
   browser; Google indexeert enkel het Nederlands. Wil je ook Engelstalige
   bezoekers via Google, dan moet EN een eigen adres krijgen (bv. `/en/`) met
   `hreflang`.
-- **Reviews op de site.** De rating 4,7 (260 reviews) staat vast in de code;
-  werk die af en toe bij of koppel ze aan het Bedrijfsprofiel.
+- **Reviews op de site.** De rating 4,7 (260 Google-reviews) staat als
+  zichtbare tekst op de homepage; werk die af en toe bij. Bewust **niet** in de
+  structured data: Google staat geen ratings toe die van een andere site komen.
 
 ## Metingen (elke 1e en 15e van de maand)
 

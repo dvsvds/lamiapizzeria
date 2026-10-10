@@ -390,7 +390,7 @@ function ldVoor(p, crumb, vragen, extra) {
   var graph = [r, {
     '@type': 'WebPage', '@id': SITE + '/' + p.slug, url: SITE + '/' + p.slug,
     name: p.titel, description: p.omschrijving, inLanguage: 'nl-BE',
-    about: { '@id': r['@id'] }, isPartOf: { '@type': 'WebSite', url: SITE + '/', name: 'La Mia Pizzeria' }
+    about: { '@id': r['@id'] }, isPartOf: { '@id': SITE + '/#website' }
   }, {
     '@type': 'BreadcrumbList', itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'La Mia Pizzeria', item: SITE + '/' },
