@@ -959,6 +959,17 @@ async function handleApi(req, res, urlPath) {
 
     var cust = ob.customer || {};
     var now = new Date().toISOString();
+    // Kassabonnen kunnen even in de wachtrij van het toestel gestaan hebben (wifi
+    // weg, toestel nog niet gekoppeld). Dan telt het moment van verkoop, niet van
+    // aankomst: anders belandt een bon van 23:55 die om 00:10 binnenkomt in het
+    // dagrapport van de verkeerde dag. Enkel een geloofwaardig tijdstip
+    // aanvaarden: niet in de toekomst, niet ouder dan 48 uur.
+    if (source === 'pos' && ob.ts) {
+      var tsMs = Date.parse(String(ob.ts));
+      if (!isNaN(tsMs) && tsMs <= Date.now() + 5 * 60 * 1000 && tsMs >= Date.now() - 48 * 3600 * 1000) {
+        now = new Date(tsMs).toISOString();
+      }
+    }
     var providedNo = (source === 'pos' && ob.no) ? String(ob.no).slice(0, 20) : null;
     // De kassa bewaart bonnen die niet verstuurd raakten en probeert het later opnieuw.
     // Zo'n herkansing mag geen tweede bon aanmaken: kent de database dit bonnummer al,
