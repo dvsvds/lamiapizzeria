@@ -184,6 +184,35 @@ Eén pagina per buurt plus één over halal, zodat Google de zaak toont bij
 - Wordt de korting van 30% ooit stopgezet, pas `FEIT.korting` aan én de
   zinnen in `BUURTEN` die ze noemen.
 
+## AI-zoekmachines (ChatGPT, Perplexity, Gemini) — okt 2026
+
+- **`/llms.txt`**: samenvatting voor AI-assistenten (feiten, uren, bezorgregels,
+  pagina's en het volledige menu met prijzen). De server maakt hem live uit de
+  database, dus prijzen uit beheer kloppen altijd. Vaste tekst: `llmsTxt()` in
+  `server.js`.
+- **FAQ op de homepage** (`#faq`) met FAQPage-structured data: halal, soort
+  pizza, bezorggebied, kosten, uren, online betalen, vegetarisch.
+- **Leverprijs eerlijk vermeld**: pizza en pasta kosten bij levering € 6 meer
+  (`PIZZA_SURCHARGE` in `order.html`), daarna 30% korting. Wijzigt dat, pas
+  dan ook `FEIT.leverprijs` (tools/buurtpaginas.js), `llmsTxt()` en de
+  homepage-FAQ aan.
+- Alle AI-crawlers (GPTBot, OAI-SearchBot, PerplexityBot, ClaudeBot, …) mogen
+  de site lezen.
+
+**Buiten de site (weegt het zwaarst).** AI-antwoorden komen vooral uit gidsen:
+
+| Waar | Wat |
+|---|---|
+| Bing Webmaster Tools | Site importeren uit Search Console (ChatGPT/Copilot zoeken via Bing) |
+| intravel.net | Profiel claimen; omschrijving "100% halal New York style pizza"; drive-thru en buffet weg |
+| wanderlog.com | Omschrijving gaat over een La Mia in Great Neck (VS) en link is `/#/`; melden |
+| Google Bedrijfsprofiel | Sluitingsuur moet **02:00** zijn (gidsen tonen 02:30) |
+| TripAdvisor, Bing Places, Apple Maps | Profiel aanmaken, zelfde naam/adres/uren |
+| tablejourney.com (halal Antwerpen) | Vermelding aanvragen |
+
+Zoektest 10/10/2026: La Mia komt niet voor bij "beste pizza Antwerpen",
+"halal pizza Antwerpen" of "pizza bezorgen Hoboken". Herhaal maandelijks.
+
 ## Volgende stappen (nog niet gedaan)
 
 - **Meer tekst per gerecht/categorie.** De foto's van de deals en secties zijn

@@ -25,6 +25,7 @@ var ZAAK = { lat: 51.1861375, lon: 4.3874416 }; // Abdijstraat 226a
 var FEIT = {
   korting: '30%',            // korting op online bestellingen voor levering
   minimum: '€ 20',           // minimum voor levering, na korting (server: MIN_ORDER)
+  leverprijs: '€ 6',         // pizza's en pasta's kosten zoveel meer bij levering (order.html: PIZZA_SURCHARGE)
   straal: 8,                 // km rond de zaak (server: DELIVERY_RADIUS_KM)
   tel: '+3236442331',
   telTekst: '03 644 23 31',
@@ -83,7 +84,7 @@ var BUURTEN = [
     lead: 'Vanuit het Kiel rijden we zo Hoboken in. New York style pizza met huisgemaakt deeg, warm aan je deur, elke dag tot 02:00.',
     tekst: [
       'Hoboken ligt vlak naast ons. Via de Sint-Bernardsesteenweg zijn we snel bij je, of je nu rond de Kioskplaats woont, in Moretusburg of in Polderstad.',
-      'Bestel je online voor levering, dan krijg je 30% korting op je hele bestelling. Bezorgkosten rekenen we niet aan; het minimum is € 20 na korting.'
+      'Bestel je online voor levering, dan krijg je 30% korting op je hele bestelling. Het minimum voor levering is € 20 na korting.'
     ],
     wijken: ['Kioskplaats', 'Kapelstraat', 'Moretusburg', 'Polderstad', 'Sint-Bernardsesteenweg', 'Hoboken-centrum'],
     afhalen: 'Zelf afhalen? Rij of fiets via de Sint-Bernardsesteenweg richting het Kiel; we zitten in de Abdijstraat 226a.',
@@ -135,7 +136,7 @@ var BUURTEN = [
     lead: 'Van het station van Berchem tot Zurenborg: we bezorgen New York style pizza in heel Berchem, elke dag tot 02:00.',
     tekst: [
       'Berchem ligt ten oosten van ons, ruim binnen onze bezorgzone. We leveren rond het station, in de Driekoningenstraat, langs de Grote Steenweg en in het Berchemse deel van Zurenborg.',
-      'Bestel online voor levering en je krijgt 30% korting op je hele bestelling, zonder bezorgkosten. Het minimum is € 20 na korting.'
+      'Bestel online voor levering en je krijgt 30% korting op je hele bestelling. Het minimum is € 20 na korting.'
     ],
     wijken: ['Station Berchem', 'Driekoningenstraat', 'Grote Steenweg', 'Zurenborg', 'Berchem-centrum', 'Uitbreidingstraat'],
     afhalen: 'Afhalen? Je vindt ons in de Abdijstraat 226a op het Kiel, aan de zuidkant van de stad.',
@@ -318,7 +319,7 @@ function hero(p, eyebrow, crumb) {
     '      <a href="order.html" class="btn btn-yellow">🛵 Bestel online</a>\n' +
     '      <a href="tel:' + FEIT.tel + '" class="btn btn-ghost">📞 ' + FEIT.telTekst + '</a>\n' +
     '    </div>\n' +
-    '    <ul class="chips"><li>' + FEIT.korting + ' korting bij online levering</li><li>Geen bezorgkosten</li><li>100% halal</li><li>Elke dag tot 02:00</li></ul>\n' +
+    '    <ul class="chips"><li>' + FEIT.korting + ' korting bij online levering</li><li>Afhalen of bezorgen</li><li>100% halal</li><li>Elke dag tot 02:00</li></ul>\n' +
     '  </div>\n</section>\n';
 }
 
@@ -327,7 +328,7 @@ function feitenKaart(afstand, naam) {
   return '<div class="card">\n    <h3>Bezorgen in ' + esc(naam) + '</h3>\n    <ul class="facts">\n' +
     (afstand ? rij('📍', '<b>± ' + afstand + ' km</b> in vogelvlucht van onze zaak') : '') +
     rij('🛵', '<b>' + FEIT.korting + ' korting</b> op je hele online bestelling voor levering') +
-    rij('💶', 'Geen bezorgkosten, minimum <b>' + FEIT.minimum + '</b> na korting') +
+    rij('💶', 'Minimum <b>' + FEIT.minimum + '</b> na korting; pizza en pasta hebben bij levering een leverprijs') +
     rij('🗺️', 'We bezorgen tot <b>' + FEIT.straal + ' km</b> rond de Abdijstraat') +
     rij('🕑', 'Elke dag open <b>tot 02:00</b>') +
     rij('💳', 'Online betalen met Bancontact of kaart') +
@@ -378,7 +379,7 @@ function staart() {
 
 function gedeeldeVragen() {
   return [
-    ['Wat kost bezorgen?', 'Niets. We rekenen geen bezorgkosten aan, en als je online bestelt voor levering krijg je ' + FEIT.korting + ' korting op je hele bestelling. Het minimum voor levering is ' + FEIT.minimum + ' na korting.'],
+    ['Wat kost bezorgen?', 'Er zijn geen aparte bezorgkosten. Pizza\'s en pasta\'s hebben bij levering wel een leverprijs (' + FEIT.leverprijs + ' meer dan bij afhalen); daarna krijg je ' + FEIT.korting + ' korting op je hele online bestelling. Het minimum voor levering is ' + FEIT.minimum + ' na korting. De webshop toont altijd de juiste prijs voor afhalen of levering.'],
     ['Is alles halal?', 'Ja, al ons vlees is 100% halal. Ook onze pepperoni, salami, ham en spek zijn halal varianten.'],
     ['Tot hoe laat kan ik bestellen?', 'Elke dag tot 02:00. Van maandag tot vrijdag zijn we open vanaf 11:30, in het weekend vanaf 14:00.']
   ];
