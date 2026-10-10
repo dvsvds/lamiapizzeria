@@ -540,7 +540,12 @@ function serveStatic(req, res, urlPath) {
     if (ext === '.html' || ext === '.js' || ext === '.css' || ext === '.svg') {
       return fs.readFile(file, function (err2, buf) {
         if (err2) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Niet gevonden'); }
-        if (ext === '.html' && PUBLIC_PAGES[base]) buf = Buffer.from(injectHead(buf.toString('utf8')), 'utf8');
+        if (ext === '.html' && PUBLIC_PAGES[base]) {
+          var page = injectHead(buf.toString('utf8'));
+          if (base === 'index.html' || base === 'order.html') page = page.replace('</head>', function () { return menuLd() + '</head>'; });
+          if (page.indexOf('<!--populair:') >= 0) page = fillPopulair(page);
+          buf = Buffer.from(page, 'utf8');
+        }
         var hdr = { 'Content-Type': type, 'Cache-Control': cache };
         // kassa, keuken, beheer, rapporten …: nooit in Google, ook niet als iemand ernaar linkt
         if (ext === '.html' && !PUBLIC_PAGES[base] && !/^google[0-9a-f]+\.html$/.test(base)) hdr['X-Robots-Tag'] = 'noindex, nofollow';
@@ -571,6 +576,85 @@ function injectHead(html) {
   extra += '</script>\n';
   var i = html.indexOf('</head>');
   return i < 0 ? html : html.slice(0, i) + extra + html.slice(i);
+}
+
+/* ---- Menu als structured data (homepage + webshop) ----
+   Live uit de kassa-database, zodat Google en AI-assistenten dezelfde
+   gerechten en prijzen zien als in de webshop. 10 minuten gecachet. */
+var menuLdCache = { t: 0, html: '' };
+function menuLd() {
+  if (menuLdCache.html && Date.now() - menuLdCache.t < 10 * 60 * 1000) return menuLdCache.html;
+  var prijs = function (n) { return (Math.round(n * 100) / 100).toFixed(2); };
+  var maten = ['Small', 'Medium', 'Large'];
+  var prods = allProducts().filter(function (p) { return p.available; });
+  var secties = allCategories().filter(function (c) { return c.id !== 'saus'; }).map(function (c) {
+    return {
+      '@type': 'MenuSection', name: c.label,
+      hasMenuItem: prods.filter(function (p) { return p.cat === c.id; }).map(function (p) {
+        var item = { '@type': 'MenuItem', name: p.name };
+        if (p.descr) item.description = p.descr;
+        item.offers = (p.sizes && p.sizes.length === 3)
+          ? p.sizes.map(function (v, i) { return { '@type': 'Offer', name: maten[i], price: prijs(v), priceCurrency: 'EUR' }; })
+          : { '@type': 'Offer', price: prijs(p.price), priceCurrency: 'EUR' };
+        return item;
+      })
+    };
+  }).filter(function (s) { return s.hasMenuItem.length; });
+  var menu = {
+    '@context': 'https://schema.org', '@type': 'Menu', '@id': SITE_URL + '/#menu',
+    name: 'Menu La Mia Pizzeria', url: SITE_URL + '/#menu', inLanguage: 'nl-BE',
+    hasMenuSection: secties
+  };
+  menuLdCache = { t: Date.now(), html: '<script type="application/ld+json">' + JSON.stringify(menu).replace(/</g, '\\u003c') + '</script>\n' };
+  return menuLdCache.html;
+}
+
+/* ---- "Wat bestel je in …?" op de buurtpagina's ----
+   De buurtpagina's bevatten <!--populair:2660:Hoboken--> … <!--/populair-->.
+   Zijn er genoeg leveringen naar die postcodes (laatste 4 maanden), dan komt
+   daar de top 5 van de meest bestelde pizza's; anders blijft de vaste tekst.
+   Enkel namen en volgorde, geen aantallen of klantgegevens. 30 min. gecachet. */
+var POPULAIR_MIN_ORDERS = 8;
+var populairCache = {};
+function populairHtml(codes, naam) {
+  var key = codes.join(',');
+  var c = populairCache[key];
+  if (c && Date.now() - c.t < 30 * 60 * 1000) return c.html;
+  var html = null;
+  try {
+    var since = new Date(Date.now() - 120 * 864e5).toISOString();
+    var rows = db.prepare("SELECT cust_address, items FROM orders WHERE type='leveren' AND voided_at IS NULL AND (source != 'web' OR pay_status = 'paid') AND created_at >= ?").all(since);
+    var pc = new RegExp('\\b(' + codes.join('|') + ')\\b');
+    var pizzas = {};
+    allProducts().forEach(function (p) { if (p.cat === 'pizza' && p.available) pizzas[p.name] = p; });
+    var telling = {}, orders = 0;
+    rows.forEach(function (r) {
+      if (!pc.test(r.cust_address || '')) return;
+      var its; try { its = JSON.parse(r.items || '[]'); } catch (e) { return; }
+      var had = false;
+      its.forEach(function (it) {
+        if (!pizzas[it.name]) return;
+        had = true; telling[it.name] = (telling[it.name] || 0) + (it.qty || 1);
+      });
+      if (had) orders++;
+    });
+    if (orders >= POPULAIR_MIN_ORDERS) {
+      var top = Object.keys(telling).sort(function (a, b) { return telling[b] - telling[a]; }).slice(0, 5);
+      html = '<p class="muted" style="max-width:62ch">De pizza\'s die in ' + escHtml(naam) + ' het vaakst bij ons besteld worden, de voorbije vier maanden:</p>\n' +
+        '    <ol class="pizzas">\n' + top.map(function (n) {
+          return '      <li><b>' + escHtml(n) + '</b><span>' + escHtml(pizzas[n].descr || '') + '</span></li>';
+        }).join('\n') + '\n    </ol>\n';
+    }
+  } catch (e) { html = null; }
+  populairCache[key] = { t: Date.now(), html: html };
+  return html;
+}
+function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function fillPopulair(html) {
+  return html.replace(/<!--populair:([\d,]+):([^>]*?)-->([\s\S]*?)<!--\/populair-->/g, function (m, codes, naam, vast) {
+    var naamTxt = naam.replace(/&amp;/g, '&');
+    return populairHtml(codes.split(','), naamTxt) || vast;
+  });
 }
 
 /* ---- gzip als de browser dat aankan (vrijwel altijd) ---- */
