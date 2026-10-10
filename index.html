@@ -69,10 +69,10 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
     { "@type": "Place", "name": "Kiel, Antwerpen" },
     { "@type": "Place", "name": "Hoboken" },
     { "@type": "Place", "name": "Wilrijk" },
+    { "@type": "Place", "name": "Edegem" },
     { "@type": "Place", "name": "Antwerpen-Zuid" },
     { "@type": "Place", "name": "Berchem" }
   ],
-  "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.7", "reviewCount": "260" },
   "openingHoursSpecification": [
     { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "11:30", "closes": "02:00" },
     { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Saturday","Sunday"], "opens": "14:00", "closes": "02:00" }
@@ -95,6 +95,18 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
       "http://purl.org/goodrelations/v1#DeliveryModeOwnFleet"
     ]
   }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://www.lamiapizzeria.be/#website",
+  "name": "La Mia Pizzeria",
+  "alternateName": ["La Mia Pizzeria Antwerpen", "lamiapizzeria.be"],
+  "url": "https://www.lamiapizzeria.be/",
+  "inLanguage": "nl-BE",
+  "publisher": { "@id": "https://www.lamiapizzeria.be/#restaurant" }
 }
 </script>
 <script type="application/ld+json">
