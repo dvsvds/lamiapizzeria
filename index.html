@@ -219,7 +219,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   .hero{position:relative;overflow:hidden;text-align:center;padding:clamp(4rem,10vw,7.5rem) 0 clamp(3.5rem,8vw,6rem);
     background:
       linear-gradient(rgba(20,17,16,.72), rgba(20,17,16,.82) 55%, rgba(20,17,16,.94)),
-      url("images/hero.jpg") center 35%/cover no-repeat,
+      url("images/hero.webp") center 35%/cover no-repeat,
       var(--ink);}
   .hero::after{content:"";position:absolute;inset:0;opacity:.05;pointer-events:none;
     background-image:radial-gradient(var(--cream) 1.4px,transparent 1.5px);background-size:28px 28px}
@@ -227,6 +227,8 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   .eyebrow{display:inline-flex;align-items:center;gap:.6rem;text-transform:uppercase;letter-spacing:.26em;
     font-size:.72rem;font-weight:700;color:var(--gold);margin-bottom:1.1rem}
   .eyebrow::before,.eyebrow::after{content:"";width:30px;height:1px;background:var(--gold);opacity:.55}
+  /* eyebrow binnen de h1: zelfde look als ervoor, maar telt mee als kop voor Google */
+  h1 .eyebrow{display:flex;justify-content:center;font-family:'Manrope',"Segoe UI",Helvetica,Arial,sans-serif;line-height:1.4;text-shadow:0 1px 8px rgba(0,0,0,.6)}
   .hero h1{font-size:clamp(3.4rem,10vw,7rem);line-height:.98;letter-spacing:1px;color:var(--coral);margin-bottom:.7rem;text-shadow:0 2px 20px rgba(0,0,0,.5)}
   .hero .tagline{font-size:clamp(1.05rem,2.6vw,1.4rem);color:#f6ede0;margin-bottom:.4rem;font-style:italic}
   .hero p.lead{font-size:1.02rem;max-width:560px;margin:0 auto 2rem;color:#dccdbb}
@@ -328,7 +330,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   .about .stat span{font-size:.82rem;color:var(--muted-2)}
   .about-visual{border-radius:var(--radius);min-height:360px;box-shadow:var(--sh);position:relative;overflow:hidden;
     display:flex;align-items:flex-end;justify-content:center;border:1px solid var(--line);
-    background:url("images/interior.jpg") center/cover no-repeat;}
+    background:url("images/interior.webp") center/cover no-repeat;}
   .about-visual::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(15,12,11,.85))}
   .about-visual .tag{position:relative;background:rgba(20,17,16,.85);color:#f6ede0;margin-bottom:1.4rem;padding:.65rem 1.2rem;border-radius:999px;font-size:.85rem;font-weight:600}
 
@@ -350,6 +352,11 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   .zone-list li{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1rem 1.1rem;text-align:center}
   .zone-list li strong{display:block;color:var(--cream);font-size:1.08rem}
   .zone-list li span{display:block;color:var(--muted);font-size:.84rem;margin-top:.3rem}
+  .zone-list{grid-template-columns:repeat(2,1fr)}
+  @media(min-width:760px){.zone-list{grid-template-columns:repeat(3,1fr)}}
+  .zone-list li{padding:0}
+  .zone-list li a{display:block;padding:1rem 1.1rem;border-radius:14px;transition:border-color .15s ease}
+  .zone-list li:hover{border-color:var(--red)}
   .zone-note{text-align:center;color:var(--muted);max-width:640px;margin:0 auto 1.5rem;font-size:.95rem}
   .zones .btn{display:inline-flex;margin:0 auto}
   .zones .wrap{text-align:center}
@@ -851,7 +858,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   .hero{padding:clamp(5rem,12vw,9rem) 0 clamp(4.5rem,10vw,7.5rem);
     background:
       linear-gradient(rgba(28,18,14,.30),rgba(28,18,14,.40) 55%,rgba(28,18,14,.55)),
-      url("images/hero.jpg") center 42%/cover no-repeat,
+      url("images/hero.webp") center 42%/cover no-repeat,
       #1c120e;}
   .hero h1{color:#fff;text-shadow:0 3px 26px rgba(0,0,0,.55)}
   .hero .tagline,.hero p.lead{color:#f7ece2;text-shadow:0 1px 10px rgba(0,0,0,.65),0 0 24px rgba(0,0,0,.4)}
@@ -990,7 +997,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
 <header>
   <div class="wrap nav">
     <a href="#top" class="logo">
-      <img src="images/logo.png" alt="La Mia Pizzeria" class="logo-img" width="559" height="447">
+      <img src="images/logo.webp" alt="La Mia Pizzeria" class="logo-img" width="559" height="447">
       
     </a>
     <nav class="nav-links" id="navLinks">
@@ -1016,18 +1023,17 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
 
 <!-- HERO -->
 <section class="hero" id="top">
-  <video class="hero-video" id="heroVideo" autoplay muted loop playsinline preload="metadata"
-         poster="images/hero-poster.jpg" aria-hidden="true" tabindex="-1">
-    <source src="images/hero.webm" type="video/webm">
-    <source src="images/hero.mp4" type="video/mp4">
+  <video class="hero-video" id="heroVideo" autoplay muted loop playsinline preload="none"
+         poster="images/hero-poster.webp" aria-hidden="true" tabindex="-1">
+    <source data-src="images/hero.webm" type="video/webm">
+    <source data-src="images/hero.mp4" type="video/mp4">
   </video>
   <span class="stamp stamp-1" style="transform:rotate(-9deg)">Fresh dough daily</span>
   <span class="stamp stamp-2" style="transform:rotate(7deg)">100% Halal</span>
   <span class="stamp round stamp-3" style="transform:rotate(-6deg)">NY<br>Style</span>
   <div class="wrap">
     <div class="hero-badge"><picture><source srcset="images/logo-badge-660.webp" type="image/webp"><img src="images/logo-badge-660.png" width="660" height="660" fetchpriority="high" decoding="async" alt="La Mia Pizzeria — Pizza, Pasta &amp; More"></picture></div>
-    <span class="eyebrow">New York style · Antwerpen</span>
-    <h1>La Mia Pizzeria</h1>
+    <h1><span class="eyebrow">New York pizza · Antwerpen</span>La Mia Pizzeria</h1>
     <p class="tagline">Pizza, Pasta &amp; More</p>
     <p class="lead">Echte New Yorkse pizza's met huisgemaakt deeg en dagverse toppings, midden in Antwerpen. Afhalen of laten bezorgen, elke dag van de week.</p>
     <div class="hero-cta">
@@ -1053,7 +1059,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
       <div class="deal-track" id="dealTrack">
 
         <article class="deal-card">
-          <div class="dc-img" style="background-image:url('images/promo-card.jpg')" role="img" aria-label="Familiedeal met drie large pizza's, lookbrood en frisdrank">
+          <div class="dc-img" style="background-image:url('images/promo-card.webp')" role="img" aria-label="Familiedeal met drie large pizza's, lookbrood en frisdrank">
             <span class="dc-badge">Populairste</span>
           </div>
           <div class="dc-body">
@@ -1064,7 +1070,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
         </article>
 
         <article class="deal-card">
-          <div class="dc-img" style="background-image:url('images/snacks.jpg')" role="img" aria-label="Kippenwings en snacks">
+          <div class="dc-img" style="background-image:url('images/snacks.webp')" role="img" aria-label="Kippenwings en snacks">
             <span class="dc-badge">Met wings</span>
           </div>
           <div class="dc-body">
@@ -1075,7 +1081,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
         </article>
 
         <article class="deal-card">
-          <div class="dc-img" style="background-image:url('images/pizza-card.jpg')" role="img" aria-label="New York style pizza">
+          <div class="dc-img" style="background-image:url('images/pizza-card.webp')" role="img" aria-label="New York style pizza">
             <span class="dc-badge">Voordeel</span>
           </div>
           <div class="dc-body">
@@ -1086,7 +1092,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
         </article>
 
         <article class="deal-card">
-          <div class="dc-img" style="background-image:url('images/pizza-whole.jpg')" role="img" aria-label="Hele pizza van bovenaf">
+          <div class="dc-img" style="background-image:url('images/pizza-whole.webp')" role="img" aria-label="Hele pizza van bovenaf">
             <span class="dc-badge">Voordeel</span>
           </div>
           <div class="dc-body">
@@ -1097,7 +1103,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
         </article>
 
         <article class="deal-card">
-          <div class="dc-img" style="background-image:url('images/drinks.jpg')" role="img" aria-label="Frisdrank bij je pizza">
+          <div class="dc-img" style="background-image:url('images/drinks.webp')" role="img" aria-label="Frisdrank bij je pizza">
             <span class="dc-badge">Met drank</span>
           </div>
           <div class="dc-body">
@@ -1108,7 +1114,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
         </article>
 
         <article class="deal-card">
-          <div class="dc-img" style="background-image:url('images/slice-card.jpg')" role="img" aria-label="New York pizza met kaassliert">
+          <div class="dc-img" style="background-image:url('images/slice-card.webp')" role="img" aria-label="New York pizza met kaassliert">
             <span class="dc-badge">Voor één</span>
           </div>
           <div class="dc-body">
@@ -1119,7 +1125,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
         </article>
 
         <article class="deal-card">
-          <div class="dc-img" style="background-image:url('images/flatlay.jpg')" role="img" aria-label="Groot pizzafeest van bovenaf">
+          <div class="dc-img" style="background-image:url('images/flatlay.webp')" role="img" aria-label="Groot pizzafeest van bovenaf">
             <span class="dc-badge">Voor 4</span>
           </div>
           <div class="dc-body">
@@ -1130,7 +1136,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
         </article>
 
         <article class="deal-card">
-          <div class="dc-img" style="background-image:url('images/pasta.jpg')" role="img" aria-label="Romige pasta met kip of scampi">
+          <div class="dc-img" style="background-image:url('images/pasta.webp')" role="img" aria-label="Romige pasta met kip of scampi">
             <span class="dc-badge">Pasta</span>
           </div>
           <div class="dc-body">
@@ -1349,7 +1355,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
       <div class="m-row"><div><div class="m-name">Grote fles 1,5L</div><div class="m-desc">Cola, Fanta …</div></div><div class="m-price">€ 4</div></div>
     </div>
         </details>
-    <p class="halal-note">🥩 <b>Al ons vlees is 100% halal.</b> Onze pepperoni, salami, ham en spek zijn halal varianten.</p>
+    <p class="halal-note">🥩 <b>Al ons vlees is 100% halal.</b> Onze pepperoni, salami, ham en spek zijn halal varianten. <a href="halal-pizza-antwerpen" style="text-decoration:underline">Meer over halal pizza</a></p>
     <p class="menu-note">Pizza's ook glutenvrij of veganistisch op aanvraag. Voedselallergie? Meld het ons even. Alle prijzen in euro; het menu kan wijzigen.</p>
   </div>
 </section>
@@ -1368,7 +1374,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
         <div class="stat"><b>€ 8+</b><span>vanaf, per pizza</span></div>
       </div>
     </div>
-    <div class="story-img" style="background-image:url('images/interior.jpg')" role="img" aria-label="Het interieur van La Mia Pizzeria">
+    <div class="story-img" style="background-image:url('images/interior.webp')" role="img" aria-label="Het interieur van La Mia Pizzeria">
       <span class="si-tag">📍 Abdijstraat 226a, Antwerpen</span>
     </div>
   </div>
@@ -1383,7 +1389,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
       <p>Onze toppings snijden we dagelijks vers. Van klassieke Margherita tot Pollo met basilicumpesto: alles wordt pas belegd als je bestelt.</p>
       <a href="#menu" class="btn btn-primary">Bekijk de hele kaart →</a>
     </div>
-    <div class="story-img" style="background-image:url('images/oven.jpg')" role="img" aria-label="Pizza in de houtoven">
+    <div class="story-img" style="background-image:url('images/oven.webp')" role="img" aria-label="Pizza in de houtoven">
       <span class="si-tag">🔥 Vers gebakken, elke dag</span>
     </div>
   </div>
@@ -1397,13 +1403,13 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
       <h2>Vers &amp; ambachtelijk</h2>
     </div>
     <div class="shots-track" id="shotsTrack">
-      <div class="shot" style="background-image:url('images/pizza-whole.jpg')" role="img" aria-label="Hele New York style pizza van bovenaf"></div>
-      <div class="shot" style="background-image:url('images/slice-card.jpg')" role="img" aria-label="New York pizza met kaassliert"></div>
-      <div class="shot" style="background-image:url('images/flatlay.jpg')" role="img" aria-label="Pizzafeest van bovenaf"></div>
-      <div class="shot" style="background-image:url('images/pasta.jpg')" role="img" aria-label="Romige pasta met scampi en champignons"></div>
-      <div class="shot" style="background-image:url('images/snacks.jpg')" role="img" aria-label="Krokante snacks met dip"></div>
-      <div class="shot" style="background-image:url('images/oven.jpg')" role="img" aria-label="Pizza in de houtoven"></div>
-      <div class="shot" style="background-image:url('images/dessert.jpg')" role="img" aria-label="Huisgemaakte tiramisù"></div>
+      <div class="shot" style="background-image:url('images/pizza-whole.webp')" role="img" aria-label="Hele New York style pizza van bovenaf"></div>
+      <div class="shot" style="background-image:url('images/slice-card.webp')" role="img" aria-label="New York pizza met kaassliert"></div>
+      <div class="shot" style="background-image:url('images/flatlay.webp')" role="img" aria-label="Pizzafeest van bovenaf"></div>
+      <div class="shot" style="background-image:url('images/pasta.webp')" role="img" aria-label="Romige pasta met scampi en champignons"></div>
+      <div class="shot" style="background-image:url('images/snacks.webp')" role="img" aria-label="Krokante snacks met dip"></div>
+      <div class="shot" style="background-image:url('images/oven.webp')" role="img" aria-label="Pizza in de houtoven"></div>
+      <div class="shot" style="background-image:url('images/dessert.webp')" role="img" aria-label="Huisgemaakte tiramisù"></div>
     </div>
     <div class="slider-nav">
       <button type="button" id="shotsPrev" aria-label="Vorige foto's">‹</button>
@@ -1443,11 +1449,12 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
       <p>Vanuit de Abdijstraat in Antwerpen-Zuid bezorgen we warm aan huis in de buurten rondom. Bestel online voor levering en krijg 30% korting op je hele bestelling.</p>
     </div>
     <ul class="zone-list">
-      <li><strong>Kiel</strong><span>Onze eigen buurt, rond de Abdijstraat</span></li>
-      <li><strong>Hoboken</strong><span>Pizza bezorgen in Hoboken</span></li>
-      <li><strong>Wilrijk</strong><span>Pizza bezorgen in Wilrijk</span></li>
-      <li><strong>Antwerpen-Zuid</strong><span>Het Zuid en omgeving</span></li>
-      <li><strong>Berchem</strong><span>Pizza bezorgen in Berchem</span></li>
+      <li><a href="pizza-kiel"><strong>Kiel</strong><span>Onze eigen buurt, rond de Abdijstraat</span></a></li>
+      <li><a href="pizza-hoboken"><strong>Hoboken</strong><span>Pizza bezorgen in Hoboken</span></a></li>
+      <li><a href="pizza-wilrijk"><strong>Wilrijk</strong><span>Pizza bezorgen in Wilrijk</span></a></li>
+      <li><a href="pizza-edegem"><strong>Edegem</strong><span>Pizza bezorgen in Edegem</span></a></li>
+      <li><a href="pizza-antwerpen-zuid"><strong>Antwerpen-Zuid</strong><span>Het Zuid en omgeving</span></a></li>
+      <li><a href="pizza-berchem"><strong>Berchem</strong><span>Pizza bezorgen in Berchem</span></a></li>
     </ul>
     <p class="zone-note">We leveren tot 8 km rond de zaak, minimum € 20 na korting. Liever afhalen? Je bestelling staat klaar aan de Abdijstraat 226a, elke dag tot 02:00.</p>
     <a href="order.html" class="btn btn-yellow">🛵 Bestel voor levering →</a>
@@ -1501,7 +1508,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
 <footer class="tex-brick">
   <div class="wrap">
     <a href="#top" class="logo">
-      <img src="images/logo.png" alt="La Mia Pizzeria" class="logo-img" width="559" height="447" loading="lazy">
+      <img src="images/logo.webp" alt="La Mia Pizzeria" class="logo-img" width="559" height="447" loading="lazy">
       
     </a>
     <nav class="fnav">
@@ -1623,14 +1630,22 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   (function(){
     var v=document.getElementById('heroVideo');
     if(!v) return;
-    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-      v.removeAttribute('autoplay'); v.pause(); return;
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // Spaarstand of trage verbinding: geen video van 1,3 MB, de foto blijft staan.
+    var c=navigator.connection;
+    if(c && (c.saveData || /(^|-)2g$/.test(c.effectiveType||''))) return;
+    function start(){
+      var ss=v.querySelectorAll('source[data-src]');
+      for(var i=0;i<ss.length;i++) ss[i].src=ss[i].getAttribute('data-src');
+      v.addEventListener('canplay',function(){ v.classList.add('ready'); },{once:true});
+      v.addEventListener('error',function(){ v.style.display='none'; });
+      v.load();
+      var p=v.play&&v.play();
+      if(p&&p.catch) p.catch(function(){ /* autoplay geweigerd: foto blijft staan */ });
     }
-    function show(){ v.classList.add('ready'); }
-    if(v.readyState>=3) show(); else v.addEventListener('canplay',show,{once:true});
-    v.addEventListener('error',function(){ v.style.display='none'; });
-    var p=v.play&&v.play();
-    if(p&&p.catch) p.catch(function(){ /* autoplay geweigerd: foto blijft staan */ });
+    // De video pas ophalen als de rest van de pagina binnen is: zo vertraagt
+    // hij de eerste weergave niet (telt mee in Google's laadtijd-meting).
+    if(document.readyState==='complete') start(); else window.addEventListener('load',start,{once:true});
   })();
 
   /* ---- Horizontale sliders (deals + sfeerfoto's) ---- */
@@ -1672,7 +1687,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   var DICT = {
     "bezorgen":"Delivery","bezorgen & afhalen":"Delivery & pickup","pizza bezorgen in antwerpen":"Pizza delivery in Antwerp",
     "vanuit de abdijstraat in antwerpen-zuid bezorgen we warm aan huis in de buurten rondom. bestel online voor levering en krijg 30% korting op je hele bestelling.":"From Abdijstraat in Antwerp-Zuid we deliver hot to your door in the surrounding neighbourhoods. Order online for delivery and get 30% off your whole order.",
-    "onze eigen buurt, rond de abdijstraat":"Our own neighbourhood, around Abdijstraat","pizza bezorgen in hoboken":"Pizza delivery in Hoboken","pizza bezorgen in wilrijk":"Pizza delivery in Wilrijk","het zuid en omgeving":"Het Zuid and surroundings","pizza bezorgen in berchem":"Pizza delivery in Berchem",
+    "onze eigen buurt, rond de abdijstraat":"Our own neighbourhood, around Abdijstraat","pizza bezorgen in hoboken":"Pizza delivery in Hoboken","pizza bezorgen in wilrijk":"Pizza delivery in Wilrijk","pizza bezorgen in edegem":"Pizza delivery in Edegem","meer over halal pizza":"More about halal pizza","het zuid en omgeving":"Het Zuid and surroundings","pizza bezorgen in berchem":"Pizza delivery in Berchem",
     "we leveren tot 8 km rond de zaak, minimum € 20 na korting. liever afhalen? je bestelling staat klaar aan de abdijstraat 226a, elke dag tot 02:00.":"We deliver up to 8 km from the shop, minimum € 20 after discount. Prefer pickup? Your order is ready at Abdijstraat 226a, every day until 2:00.",
     "🛵 bestel voor levering →":"🛵 Order for delivery →",
     // nav / footer
@@ -1682,6 +1697,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
     "🛵 bezorgen":"🛵 Delivery","🥡 afhalen":"🥡 Pickup",
     // hero
     "new york style · antwerpen":"New York style · Antwerp",
+    "new york pizza · antwerpen":"New York pizza · Antwerp",
     "echte new yorkse pizza's met huisgemaakt deeg en dagverse toppings, midden in antwerpen. afhalen of laten bezorgen, elke dag van de week.":"Real New York pizzas with homemade dough and fresh daily toppings, in the heart of Antwerp. Pickup or delivery, every day of the week.",
     "🛵 bestel online":"🛵 Order online","🍕 bekijk het menu":"🍕 View the menu",
     "op basis van 260 google-reviews":"based on 260 Google reviews",

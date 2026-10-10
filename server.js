@@ -69,6 +69,13 @@ if (GOOGLE_SITE_VERIFICATION && !/^[A-Za-z0-9_-]+$/.test(GOOGLE_SITE_VERIFICATIO
 }
 // Enkel deze pagina's zijn publiek en krijgen de Google-tags; beheer/kassa/keuken nooit.
 var PUBLIC_PAGES = { 'index.html': 1, 'order.html': 1 };
+// Buurtpagina's (pizza-hoboken.html, …, halal-pizza-antwerpen.html), gemaakt door
+// tools/buurtpaginas.js. Ze worden hier opgezocht, zodat een nieuwe buurt
+// vanzelf publiek is en in de sitemap komt.
+var AREA_PAGES = fs.readdirSync(__dirname).filter(function (f) {
+  return /^(halal-)?pizza-[a-z0-9-]+\.html$/.test(f);
+}).sort();
+AREA_PAGES.forEach(function (f) { PUBLIC_PAGES[f] = 1; });
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -472,7 +479,7 @@ var MIME = {
 // Enkel deze extensies zijn publiek serveerbaar (blokkeert .db, .key, .json, .md, Dockerfile, …)
 var SERVE_EXT = { '.html': 1, '.js': 1, '.css': 1, '.png': 1, '.jpg': 1, '.jpeg': 1, '.svg': 1, '.ico': 1, '.webp': 1, '.woff': 1, '.woff2': 1, '.mp4': 1, '.webm': 1 };
 // Deze mappen bevatten interne bestanden en worden nooit geserveerd
-var BLOCK_DIR = { data: 1, lib: 1, node_modules: 1, '.git': 1 };
+var BLOCK_DIR = { data: 1, lib: 1, node_modules: 1, '.git': 1, tools: 1 };
 function serveStatic(req, res, urlPath) {
   var rel;
   try { rel = decodeURIComponent(urlPath.split('?')[0]); }
@@ -501,7 +508,9 @@ function serveStatic(req, res, urlPath) {
     // afbeeldingen/fonts mogen kort gecachet worden (schelen bandbreedte, veranderen zelden).
     var noCache = (ext === '.html' || ext === '.js' || ext === '.css');
     var type = MIME[ext] || 'application/octet-stream';
-    var cache = noCache ? 'no-cache, no-store, must-revalidate' : 'public, max-age=604800'; // 7 dagen
+    // no-cache (niet no-store): de browser vraagt elke keer de nieuwste versie,
+    // maar mag de pagina wel bewaren voor de terugknop (back/forward cache).
+    var cache = noCache ? 'no-cache, must-revalidate' : 'public, max-age=604800'; // 7 dagen
 
     // Video's worden met byte-ranges opgehaald. Safari en iOS weigeren een
     // video af te spelen als de server daar niet met 206 op antwoordt.
@@ -532,7 +541,10 @@ function serveStatic(req, res, urlPath) {
       return fs.readFile(file, function (err2, buf) {
         if (err2) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Niet gevonden'); }
         if (ext === '.html' && PUBLIC_PAGES[base]) buf = Buffer.from(injectHead(buf.toString('utf8')), 'utf8');
-        sendCompressed(req, res, 200, buf, { 'Content-Type': type, 'Cache-Control': cache });
+        var hdr = { 'Content-Type': type, 'Cache-Control': cache };
+        // kassa, keuken, beheer, rapporten …: nooit in Google, ook niet als iemand ernaar linkt
+        if (ext === '.html' && !PUBLIC_PAGES[base] && !/^google[0-9a-f]+\.html$/.test(base)) hdr['X-Robots-Tag'] = 'noindex, nofollow';
+        sendCompressed(req, res, 200, buf, hdr);
       });
     }
 
@@ -614,6 +626,9 @@ function sitemapXml() {
     img('interior.jpg', 'Interieur La Mia Pizzeria, Abdijstraat Antwerpen') + '\n' +
     '  </url>\n' +
     '  <url>\n    <loc>' + xmlEsc(SITE_URL + '/order.html') + '</loc>\n    <lastmod>' + lastmod('order.html') + '</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n' +
+    AREA_PAGES.map(function (f) {
+      return '  <url>\n    <loc>' + xmlEsc(SITE_URL + '/' + f.replace(/\.html$/, '')) + '</loc>\n    <lastmod>' + lastmod(f) + '</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>\n';
+    }).join('') +
     '</urlset>\n';
 }
 
