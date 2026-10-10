@@ -204,7 +204,10 @@
   .tender{display:flex;justify-content:space-between;align-items:center;background:var(--ink);border:1px solid var(--line-2);border-radius:11px;padding:.7rem .9rem;margin-bottom:.6rem}
   .tender .l{color:var(--muted);font-weight:700;font-size:.85rem}
   .tender .v{font-family:'Anton',sans-serif;font-size:1.5rem;font-variant-numeric:tabular-nums}
-  .change{background:var(--green);color:#08210e}
+  /* wit op groen: contrast ±5:1 (donkergroen haalde maar ±3:1) */
+  .change{background:var(--green);color:#fff}
+  .change .l{color:#fff;opacity:.92}
+  .change.neg .l{color:#fff;opacity:.92}
   .change.neg{background:var(--red);color:#fff}
   .split-row{display:flex;gap:.6rem;margin-bottom:.6rem}
   .split-row .fld{flex:1}
@@ -324,7 +327,7 @@
     <aside class="ticket">
       <div class="tk-head">
         <h2>Bestelling</h2>
-        <span class="ordno" id="ordNo">Bon #—</span>
+        <span class="ordno" id="ordNo">Bon —</span>
       </div>
       <div class="tk-meta" id="tkMeta"></div>
       <div class="lines" id="lines"></div>
@@ -675,6 +678,13 @@
       tabsEl.appendChild(b);
     });
   }
+  // Past de zoekterm op het begin van een woord in naam of omschrijving?
+  // Zo vindt "cola" de Cola, maar niet Chocolate Cake of Rucola.
+  function woordMatch(p,term){
+    var woorden=(p.name+' '+p.desc).toLowerCase().split(/[\s'’\-(),.\/&+]+/);
+    for(var i=0;i<woorden.length;i++) if(woorden[i].indexOf(term)===0) return true;
+    return (p.name||'').toLowerCase().indexOf(term)===0;   // ook meerdere woorden ("hot ki")
+  }
   // hoe goed past dit product bij wat er getypt is? lager = beter
   function zoekRang(p,term){
     var naam=String(p.name||'').toLowerCase();
@@ -692,8 +702,14 @@
     var list=PRODUCTS.filter(function(p){
       if(state.type==='leveren'&&p.c==='promo') return false; // promo's gelden enkel bij afhalen
       if(activeCat!=='all'&&p.c!==activeCat) return false;
-      if(term&&(p.name+' '+p.desc).toLowerCase().indexOf(term)<0) return false;
+      if(term&&!woordMatch(p,term)) return false;
       return true;
+    });
+    // Niets gevonden op woordbegin? Dan toch op letterdelen zoeken ("peroni" → Pepperoni).
+    if(term&&!list.length) list=PRODUCTS.filter(function(p){
+      if(state.type==='leveren'&&p.c==='promo') return false;
+      if(activeCat!=='all'&&p.c!==activeCat) return false;
+      return (p.name+' '+p.desc).toLowerCase().indexOf(term)>-1;
     });
     /* Zoekresultaten op volgorde van bruikbaarheid. Zoeken op "cola" gaf eerst
        Rucola, Brownie en Chocolate Cake, omdat er enkel gekeken werd of de
@@ -913,7 +929,7 @@
   }
   function renderTicket(){
     renderMeta();
-    $('#ordNo').textContent='Bon #'+currentOrderNo();
+    $('#ordNo').textContent='Bon '+bonLabel(currentOrderNo());
     if(!state.lines.length){
       linesEl.innerHTML='<div class="empty">Nog geen artikels.<br>Tik links op een product om te starten.</div>';
     } else {
@@ -991,9 +1007,20 @@
   $('#discApply').onclick=function(){
     var pct=parseFloat($('#discPct').value)||0, eur=parseFloat($('#discEur').value)||0;
     pct=Math.max(0,Math.min(100,pct)); eur=Math.max(0,eur);
-    state.discount=(eur>0)?{pct:0,eur:eur}:{pct:pct,eur:0};
-    renderTicket(); saveCart(); closeOv('#ovDisc');
-    toast(state.discount.pct||state.discount.eur?'Korting toegepast':'Korting verwijderd');
+    var nieuw=(eur>0)?{pct:0,eur:eur}:{pct:pct,eur:0};
+    function toepassen(){
+      state.discount=nieuw;
+      renderTicket(); saveCart(); closeOv('#ovDisc');
+      toast(state.discount.pct||state.discount.eur?'Korting toegepast':'Korting verwijderd');
+    }
+    // Een korting die de hele bon wegveegt, eerst laten bevestigen.
+    var vorig=state.discount; state.discount=nieuw; var t=totals(); state.discount=vorig;
+    if(t.total<=0.005 && state.lines.length){
+      askConfirm({title:'Bon volledig gratis maken?',msg:'Met deze korting wordt het totaal € 0,00.',ok:'Ja, gratis',danger:true,cancel:'Terug'})
+        .then(function(ja){ if(ja) toepassen(); });
+      return;
+    }
+    toepassen();
   };
 
   /* =============================================================
@@ -1004,7 +1031,7 @@
   }
   $('#btnPark').onclick=function(){
     if(!state.lines.length) return;
-    var def=state.type==='terplaatse'&&state.table?('Tafel '+state.table):('Bon '+currentOrderNo());
+    var def=state.type==='terplaatse'&&state.table?('Tafel '+state.table):('Bon '+bonLabel(currentOrderNo()));
     ask({title:'Bon parkeren',label:'Parkeren als',input:true,value:def,placeholder:def,ok:'Parkeren'}).then(function(label){
       if(label===null) return;
       parked.push({id:Date.now(),label:label||def,ts:new Date().toISOString(),state:JSON.parse(JSON.stringify(state))});
@@ -1020,7 +1047,7 @@
       l.innerHTML=parked.map(function(pk){
         var n=pk.state.lines.reduce(function(a,x){return a+x.qty;},0);
         var t=new Date(pk.ts), tm=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
-        return '<div class="pitem"><div class="meta"><b>'+esc(pk.label)+'</b><div>'+n+' artikels · '+tm+'</div></div>'+
+        return '<div class="pitem"><div class="meta"><b>'+esc(pk.label)+'</b><div>'+n+(n===1?' artikel':' artikels')+' · '+tm+'</div></div>'+
           '<div class="acts"><button class="load" data-load="'+pk.id+'">Openen</button><button class="del" data-del="'+pk.id+'">✕</button></div></div>';
       }).join('');
     }
@@ -1173,7 +1200,7 @@
     // Ook het zoekveld leegmaken: bleef de vorige zoekterm staan, dan begon de
     // volgende klant op een gefilterde kaart met maar een handvol producten.
     if(searchTerm){ searchTerm=''; $('#search').value=''; renderGrid(); }
-    toast('Bon #'+no+' afgerekend');
+    toast('Bon '+bonLabel(no)+' afgerekend');
     setTimeout(function(){ window.print(); }, 120);
   }
 
@@ -1309,7 +1336,7 @@
     h+='<div class="r-c r-b"><img class="r-logo" src="images/logo.png" alt="La Mia Pizzeria"><h3>LA MIA PIZZERIA</h3>'+
        '<div class="r-sub">Abdijstraat 226a, 2020 Antwerpen<br>Tel. 03 644 23 31<br>BTW BE 1013.153.914</div></div>';
     h+='<hr>';
-    h+='<div class="r-b">Bon #'+sale.no+'  ·  '+typeLbl+(sale.table?(' T'+sale.table):'')+'</div>'+dt;
+    h+='<div class="r-b">Bon '+bonLabel(sale.no)+'  ·  '+typeLbl+(sale.table?(' T'+sale.table):'')+'</div>'+dt;
     var c=sale.cust||{};
     if(sale.type==='leveren' && (c.name||c.address||c.phone)){
       h+='<div class="r-deliv"><b>🛵 LEVERADRES</b><br>'+
@@ -1446,6 +1473,9 @@
      de omzet. De bon verdwijnt niet, ze wordt gemarkeerd en telt niet meer mee.
      ------------------------------------------------------------- */
   var LAATSTE_BONNEN=10;
+  // Zelfde notatie als op het keukenscherm (K-0003), zodat kassa en keuken
+  // over hetzelfde nummer praten.
+  function bonLabel(no){ return /^\d+$/.test(String(no))?'K-'+String(no).padStart(4,'0'):String(no); }
 
   function openBonnen(){
     var l=$('#bonnenLijst');
@@ -1462,8 +1492,8 @@
         var wie=(s.cust&&s.cust.name)?(' · '+esc(s.cust.name)):(s.table?(' · T'+esc(s.table)):'');
         var aantal=(s.lines||[]).reduce(function(a,x){return a+x.qty;},0);
         return '<div class="pitem"'+(s.geannuleerd?' style="opacity:.55"':'')+'>'+
-          '<div class="meta"><b>Bon #'+s.no+'</b> '+(s.geannuleerd?'<span style="color:var(--red);font-weight:800">· GEANNULEERD</span>':'')+
-            '<div>'+tm+' · '+(TYPEIC[s.type]||'')+' '+pm+wie+' · '+aantal+' artikel(en)</div>'+
+          '<div class="meta"><b>Bon '+bonLabel(s.no)+'</b> '+(s.geannuleerd?'<span style="color:var(--red);font-weight:800">· GEANNULEERD</span>':'')+
+            '<div>'+tm+' · '+(TYPEIC[s.type]||'')+' '+pm+wie+' · '+aantal+(aantal===1?' artikel':' artikels')+'</div>'+
             '<div style="color:var(--gold);font-weight:800;font-size:.95rem">'+euro(s.total)+'</div></div>'+
           '<div class="acts">'+
             '<button class="load" data-bonprint="'+i+'">🖨 Afdrukken</button>'+
@@ -1480,7 +1510,7 @@
     if(pr){
       var s=sales[+pr.getAttribute('data-bonprint')]; if(!s) return;
       buildReceipt(s); setTimeout(function(){ window.print(); }, 100);
-      toast('Bon #'+s.no+' opnieuw afgedrukt');
+      toast('Bon '+bonLabel(s.no)+' opnieuw afgedrukt');
       return;
     }
     if(an){
@@ -1491,19 +1521,16 @@
 
   function annuleerBon(idx,sa){
     askConfirm({
-      title:'Bon #'+sa.no+' annuleren?',
+      title:'Bon '+bonLabel(sa.no)+' annuleren?',
       msg:'Bedrag: '+euro(sa.total)+'\n\nDe bon blijft bewaard, maar telt niet meer mee in de omzet en de BTW. Dit kan niet ongedaan gemaakt worden.',
-      ok:'Bon annuleren', danger:true
+      ok:'Bon annuleren', danger:true, cancel:'Terug'
     }).then(function(ja){
       if(!ja) return;
-      return ask({title:'Manager-PIN',msg:'Een bon annuleren haalt geld uit de omzet en kan enkel met de manager-PIN.',label:'Manager-PIN',input:true,password:true,numeric:true,ok:'Bevestigen'})
+      return vraagPin({title:'Manager-PIN',msg:'Een bon annuleren haalt geld uit de omzet en kan enkel met de manager-PIN.',label:'Manager-PIN',ok:'Bevestigen'},controleerManagerPin)
         .then(function(pin){
           if(pin===null) return;
-          if(!window.fetch){ toast('Geen verbinding'); return; }
-          return fetch('api/report-login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:pin})})
-            .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
-            .then(function(res){
-              if(!res.ok){ toast(res.j&&res.j.error?res.j.error:'Verkeerde PIN'); return; }
+          return Promise.resolve()
+            .then(function(){
               return fetch('api/admin/orders/annuleer',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({no:'K-'+String(sa.no).padStart(4,'0'),reason:'Geannuleerd via de kassa'})})
                 .then(function(r2){ return r2.json().then(function(j2){ return {ok:r2.ok,j:j2}; }); })
                 .then(function(res2){
@@ -1521,7 +1548,7 @@
                   }
                   sales[idx].geannuleerd=true; save(LS.sales,sales);
                   openBonnen();                    // lijst opnieuw tekenen
-                  toast('Bon #'+sa.no+' geannuleerd');
+                  toast('Bon '+bonLabel(sa.no)+' geannuleerd');
                 });
             })
             .catch(function(){ toast('Geen verbinding — bon niet geannuleerd'); });
@@ -1530,14 +1557,8 @@
   }
   // de dagomzet zit achter de manager-PIN (zelfde als de rapportenpagina)
   $('#btnReport').onclick=function(){
-    ask({title:'Dagrapport',msg:'De dagomzet is enkel zichtbaar met de manager-PIN.',label:'Manager-PIN',input:true,password:true,numeric:true,ok:'Bekijken'}).then(function(pin){
-      if(pin===null) return;
-      if(!window.fetch){ toast('Geen verbinding'); return; }
-      fetch('api/report-login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:pin})})
-        .then(function(r){ return r.ok; })
-        .then(function(ok){ if(ok) openReport(); else toast('Verkeerde PIN'); })
-        .catch(function(){ toast('Geen verbinding — PIN kan niet gecontroleerd worden'); });
-    });
+    vraagPin({title:'Dagrapport',msg:'De dagomzet is enkel zichtbaar met de manager-PIN.',label:'Manager-PIN',ok:'Bekijken'},controleerManagerPin)
+      .then(function(pin){ if(pin!==null) openReport(); });
   };
 
   function buildReportReceipt(r,isZ){
@@ -1585,14 +1606,8 @@
   // dag afsluiten toont de omzet → ook achter de manager-PIN
   $('#btnCloseDay').onclick=function(){
     if(!sales.length){ toast('Nog geen verkoop vandaag'); return; }
-    ask({title:'Dag afsluiten',msg:'De dag afsluiten kan enkel met de manager-PIN.',label:'Manager-PIN',input:true,password:true,numeric:true,ok:'Doorgaan'}).then(function(pin){
-      if(pin===null) return;
-      if(!window.fetch){ toast('Geen verbinding'); return; }
-      fetch('api/report-login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:pin})})
-        .then(function(r){ return r.ok; })
-        .then(function(ok){ if(ok) doCloseDay(); else toast('Verkeerde PIN'); })
-        .catch(function(){ toast('Geen verbinding — PIN kan niet gecontroleerd worden'); });
-    });
+    vraagPin({title:'Dag afsluiten',msg:'De dag afsluiten kan enkel met de manager-PIN.',label:'Manager-PIN',ok:'Doorgaan'},controleerManagerPin)
+      .then(function(pin){ if(pin!==null) doCloseDay(); });
   };
 
   /* =============================================================
@@ -1623,6 +1638,7 @@
     $('#askMsg').textContent=o.msg||'';
     $('#askMsg').style.display=o.msg?'':'none';
     $('#askOk').textContent=o.ok||'Bevestigen';
+    $('#askCancel').textContent=o.cancel||'Annuleren';
     $('#askOk').classList.toggle('danger',!!o.danger);
     var fld=$('#askField'), inp=$('#askInput');
     if(o.input){
@@ -1638,11 +1654,43 @@
       inp.value='';
     }
     openOv('#ovAsk');
+    if(o.input) inp.focus();                 // meteen, zodat niets van wat er getypt wordt verloren gaat
     // even wachten tot het venster zichtbaar is, anders pakt het toetsenbord niet
     setTimeout(function(){ if(o.input){ inp.focus(); inp.select(); } else $('#askOk').focus(); },50);
     return new Promise(function(res){ askResolve=res; });
   }
   function askConfirm(o){ return ask(o).then(function(v){ return v!==null; }); }
+
+  /* PIN vragen. Is de PIN fout, dan blijft het venster open met de foutmelding
+     erboven, in plaats van dicht te gaan zodat het personeel opnieuw moet
+     beginnen. controleer(pin) geeft true (goed), {opnieuw:true,fout:'…'}
+     (opnieuw vragen) of null (stoppen, bv. geen verbinding) terug. */
+  function vraagPin(o, controleer){
+    function poging(fout){
+      var opt={}; for(var k in o) opt[k]=o[k];
+      opt.input=true; opt.password=true; opt.numeric=true;
+      opt.msg=(fout?'❌ '+fout+'\n\n':'')+(o.msg||'');
+      return ask(opt).then(function(pin){
+        if(pin===null) return null;
+        return Promise.resolve(controleer(pin)).then(function(res){
+          if(res===true) return pin;
+          if(res&&res.opnieuw) return poging(res.fout||'Verkeerde PIN. Probeer opnieuw.');
+          return null;
+        });
+      });
+    }
+    return poging(null);
+  }
+  // manager-PIN controleren (dagrapport, annuleren, dag afsluiten)
+  function controleerManagerPin(pin){
+    if(!window.fetch){ toast('Geen verbinding'); return null; }
+    return fetch('api/report-login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:pin})})
+      .then(function(r){
+        if(r.ok) return true;
+        return r.json().catch(function(){ return {}; }).then(function(j){ return {opnieuw:true,fout:(j&&j.error)||'Verkeerde PIN. Probeer opnieuw.'}; });
+      })
+      .catch(function(){ toast('Geen verbinding — PIN kan niet gecontroleerd worden'); return null; });
+  }
 
   (function bindAsk(){
     var ov=$('#ovAsk'), inp=$('#askInput');
@@ -1900,16 +1948,15 @@
     }
     // met PIN: alleen wanneer het personeel er zelf om vraagt
     function koppelMetPin(){
-      return ask({title:'Kassa koppelen',msg:'Dit toestel is nog niet aan de server gekoppeld. Geef de beheer-PIN; dat hoeft maar één keer.',label:'Beheer-PIN',input:true,password:true,numeric:true,ok:'Koppelen'})
+      return vraagPin({title:'Kassa koppelen',msg:'Dit toestel is nog niet aan de server gekoppeld. Geef de beheer-PIN; dat hoeft maar één keer.',label:'Beheer-PIN',ok:'Koppelen'},function(pin){
+          return fetch('api/pos/hello',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:pin})})
+            .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return {ok:r.ok,j:j}; }); })
+            .then(function(res){ return res.ok ? true : {opnieuw:true,fout:(res.j&&res.j.error)||'Verkeerde PIN. Probeer opnieuw.'}; })
+            .catch(function(){ toast('Geen verbinding'); return null; });
+        })
         .then(function(pin){
           if(pin===null) return false;
-          return fetch('api/pos/hello',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({pin:pin})})
-            .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
-            .then(function(res){
-              if(!res.ok){ toast(res.j&&res.j.error?res.j.error:'Koppelen mislukt'); return false; }
-              return loadInitial().then(function(ok){ if(ok){ verbind(); toast('Kassa gekoppeld'); } return ok; });
-            })
-            .catch(function(){ toast('Geen verbinding'); return false; });
+          return loadInitial().then(function(ok){ if(ok){ verbind(); toast('Kassa gekoppeld'); } return ok; });
         });
     }
     posActivate=activate;   // de verkoop-wachtrij probeert het stil opnieuw
