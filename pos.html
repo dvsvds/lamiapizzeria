@@ -470,7 +470,7 @@
   var DRINK_SIZES=[{k:'Blik 33cl',d:0},{k:'Fles 50cl',d:0.5},{k:'Fles 1,5L',d:1.5}];
   var DELIVERY_FEE=3.00;
   var PIZZA_SURCHARGE=6;        // extra per pizza bij levering (zelfde als de website)
-  var DELIVERY_DISCOUNT=0.30;   // 30% korting op de hele levering (zelfde als de website)
+  var DELIVERY_DISCOUNT=0.10;   // 10% korting op de hele levering (zelfde als de website)
 
   var PRODUCTS=[
     {id:'pz01',c:'pizza',t:'pizza',name:'Margherita',desc:'Tomaat, mozzarella, basilicum',sz:[8,9,10],price:9},
@@ -893,7 +893,7 @@
   function totals(){
     var sub=0, vat={};
     state.lines.forEach(function(l){ sub+=effUnit(l)*l.qty; });
-    // 30% leveringskorting (zoals de website) + eventuele handmatige korting
+    // 10% leveringskorting (zoals de website) + eventuele handmatige korting
     var delivDisc=(state.type==='leveren'&&state.lines.length)?r2(sub*DELIVERY_DISCOUNT):0;
     var manualDisc=0;
     if(state.discount.pct>0) manualDisc=sub*state.discount.pct/100;
@@ -954,7 +954,7 @@
       if(t.vat[r]>0.0001) vh+='<div class="trow"><span>waarvan BTW '+(r*100)+'%</span><span>'+euro(t.vat[r])+'</span></div>';
     });
     var html='<div class="trow"><span>Subtotaal</span><span>'+euro(t.sub)+'</span></div>';
-    if(t.delivDisc>0) html+='<div class="trow disc"><span>Korting levering (30%)</span><span>– '+euro(t.delivDisc)+'</span></div>';
+    if(t.delivDisc>0) html+='<div class="trow disc"><span>Korting levering (10%)</span><span>– '+euro(t.delivDisc)+'</span></div>';
     if(t.manualDisc>0) html+='<div class="trow disc"><span>Korting'+(state.discount.pct>0?' ('+state.discount.pct+'%)':'')+'</span><span>– '+euro(t.manualDisc)+'</span></div>';
     html+=vh;
     html+='<div class="trow big"><span>Totaal</span><span>'+euro(t.total)+'</span></div>';
@@ -1195,7 +1195,7 @@
     // reset bon
     state.lines=[]; state.discount={pct:0,eur:0}; state.table=''; state.cust={name:'',phone:'',address:''}; state.prepriced=false; state.onlinePaid=false;
     // Na een levering terug naar afhalen: anders kreeg de volgende klant aan de
-    // toog ongemerkt de leverprijzen (+€ 6 per pizza, −30%).
+    // toog ongemerkt de leverprijzen (+€ 6 per pizza, −10%).
     if(state.type==='leveren') zetType('afhalen');
     renderTicket(); saveCart();
     // Ook het zoekveld leegmaken: bleef de vorige zoekterm staan, dan begon de
@@ -1357,7 +1357,7 @@
     });
     h+='</table><hr><table>';
     h+='<tr><td>Subtotaal</td><td class="rt">'+euro(sale.sub)+'</td></tr>';
-    if(sale.delivDisc>0) h+='<tr><td>Korting levering (30%)</td><td class="rt">-'+euro(sale.delivDisc)+'</td></tr>';
+    if(sale.delivDisc>0) h+='<tr><td>Korting levering (10%)</td><td class="rt">-'+euro(sale.delivDisc)+'</td></tr>';
     if(sale.manualDisc>0) h+='<tr><td>Korting</td><td class="rt">-'+euro(sale.manualDisc)+'</td></tr>';
     else if(!sale.delivDisc && sale.disc>0) h+='<tr><td>Korting</td><td class="rt">-'+euro(sale.disc)+'</td></tr>';
     if(sale.delivery>0) h+='<tr><td>Levering</td><td class="rt">'+euro(sale.delivery)+'</td></tr>';

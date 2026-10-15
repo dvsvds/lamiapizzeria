@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pizza online bestellen in Antwerpen — La Mia Pizzeria</title>
-<meta name="description" content="Pizza online bestellen bij La Mia Pizzeria: New York style, 100% halal. Afhalen in Antwerpen of bezorgen met 30% korting in Kiel, Hoboken, Wilrijk en omstreken.">
+<meta name="description" content="Pizza online bestellen bij La Mia Pizzeria: New York style, 100% halal. Afhalen in Antwerpen of bezorgen met 10% korting in Kiel, Hoboken, Wilrijk en omstreken.">
 <meta name="theme-color" content="#141110">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="96x96" href="images/favicon-96.png">
@@ -18,7 +18,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
 <meta property="og:locale" content="nl_BE">
 <meta property="og:site_name" content="La Mia Pizzeria">
 <meta property="og:title" content="Pizza online bestellen in Antwerpen — La Mia Pizzeria">
-<meta property="og:description" content="New York style pizza, 100% halal. Stel je bestelling samen en betaal online. Afhalen of bezorgen met 30% korting.">
+<meta property="og:description" content="New York style pizza, 100% halal. Stel je bestelling samen en betaal online. Afhalen of bezorgen met 10% korting.">
 <meta property="og:url" content="https://www.lamiapizzeria.be/order.html">
 <meta property="og:image" content="https://www.lamiapizzeria.be/images/hero.jpg">
 <meta property="og:image:width" content="1344">
@@ -26,7 +26,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
 <meta property="og:image:alt" content="New York style pizza van La Mia Pizzeria in Antwerpen">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Pizza online bestellen in Antwerpen — La Mia Pizzeria">
-<meta name="twitter:description" content="New York style pizza, 100% halal. Stel je bestelling samen en betaal online. Afhalen of bezorgen met 30% korting.">
+<meta name="twitter:description" content="New York style pizza, 100% halal. Stel je bestelling samen en betaal online. Afhalen of bezorgen met 10% korting.">
 <!-- Structured data: helpt Google je zaak, uren, rating en 'bestellen' tonen -->
 <script type="application/ld+json">
 {
@@ -1021,7 +1021,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   <div class="wrap">
     <div class="hero-badge"><picture><source srcset="images/logo-badge-660.webp" type="image/webp"><img src="images/logo-badge-660.png" width="660" height="660" fetchpriority="high" decoding="async" alt="La Mia Pizzeria — Pizza, Pasta &amp; More"></picture></div>
     <h1><span class="eyebrow">New York pizza · Antwerpen</span>Pizza bestellen in Antwerpen</h1>
-    <p>New York style pizza's, pasta, snacks en desserts, 100% halal. Afhalen aan de Abdijstraat 226a, of laten bezorgen met 30% korting in <a href="pizza-kiel">Kiel</a>, <a href="pizza-hoboken">Hoboken</a>, <a href="pizza-wilrijk">Wilrijk</a>, <a href="pizza-edegem">Edegem</a>, <a href="pizza-berchem">Berchem</a> en op <a href="pizza-antwerpen-zuid">het Zuid</a>.</p>
+    <p>New York style pizza's, pasta, snacks en desserts, 100% halal. Afhalen aan de Abdijstraat 226a, of laten bezorgen met 10% korting in <a href="pizza-kiel">Kiel</a>, <a href="pizza-hoboken">Hoboken</a>, <a href="pizza-wilrijk">Wilrijk</a>, <a href="pizza-edegem">Edegem</a>, <a href="pizza-berchem">Berchem</a> en op <a href="pizza-antwerpen-zuid">het Zuid</a>.</p>
   </div>
 </section>
 
@@ -1092,7 +1092,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
         </div>
         <div class="cart-tot">
           <div class="ct-row"><span>Subtotaal</span><span id="ctSub">€ 0,00</span></div>
-          <div class="ct-row" id="ctDelRow" style="display:none"><span>Korting levering (30%)</span><span id="ctDel">€ 0,00</span></div>
+          <div class="ct-row" id="ctDelRow" style="display:none"><span>Korting levering (10%)</span><span id="ctDel">€ 0,00</span></div>
           <div class="ct-row ct-total"><span>Totaal</span><span id="ctTotal">€ 0,00</span></div>
         </div>
         <p class="min-note" id="cartMin"></p>
@@ -1265,8 +1265,8 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
     var ic=document.getElementById('ppIc'),ti=document.getElementById('ppTitle'),tx=document.getElementById('ppText'),ls=document.getElementById('ppList'),bt=document.getElementById('ppBtn');
     if(i===0){
       ic.textContent='🛵';
-      ti.textContent=e?'Delivery with 30% off':'Levering met 30% korting';
-      tx.textContent=e?'Order online for delivery and get 30% off your whole order.':'Bestel online voor levering en krijg 30% korting op je hele bestelling.';
+      ti.textContent=e?'Delivery with 10% off':'Levering met 10% korting';
+      tx.textContent=e?'Order online for delivery and get 10% off your whole order.':'Bestel online voor levering en krijg 10% korting op je hele bestelling.';
       ls.style.display='none'; ls.innerHTML='';
       bt.textContent=e?'View the deals →':'Bekijk de promo\'s →';
     } else {
@@ -1311,11 +1311,11 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
      =================================================================== */
   (function(){
     var IMG='images/';
-    var DELIVERY_FEE = 0;      // leveringskosten (0 = gratis, vervangen door 30% korting)
+    var DELIVERY_FEE = 0;      // leveringskosten (0 = gratis, vervangen door 10% korting)
     var MIN_ORDER    = 20.00;  // minimum bestelbedrag (subtotaal)
     var BASE_PRICE   = 8.00;   // basisprijs 'stel je eigen pizza samen'
     var PIZZA_SURCHARGE  = 6;     // extra prijs per pizza bij levering
-    var DELIVERY_DISCOUNT = 0.30; // korting op de hele bestelling bij levering
+    var DELIVERY_DISCOUNT = 0.10; // korting op de hele bestelling bij levering
 
     /* openingsuren (Europe/Brussels), sluit om 02:00 — bestellen kan enkel tijdens de uren */
     var OPEN_MIN={0:14*60,1:11*60+30,2:11*60+30,3:11*60+30,4:11*60+30,5:11*60+30,6:14*60}, CLOSE_MIN=2*60;
@@ -1865,7 +1865,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
       var sub=subtotal();
       $('#coReview').innerHTML=cart.map(function(l){return '<div class="cr"><span>'+l.qty+'× '+esc(l.name)+(l.opts.length?' <small>('+esc(l.opts.join(', '))+')</small>':'')+'</span><span>'+fmt(effUnit(l)*l.qty)+'</span></div>';}).join('')+
         '<div class="cr cr-sub"><span>Subtotaal</span><span>'+fmt(sub)+'</span></div>'+
-        (mode==='leveren'?'<div class="cr"><span>Korting levering (30%)</span><span>− '+fmt(discountAmt())+'</span></div>':'')+
+        (mode==='leveren'?'<div class="cr"><span>Korting levering (10%)</span><span>− '+fmt(discountAmt())+'</span></div>':'')+
         '<div class="cr cr-tot"><span>Totaal</span><span>'+fmt(orderTotal())+'</span></div>';
       re();
     }
@@ -1898,7 +1898,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
       });
       L.push('');
       L.push('Subtotaal: '+fmt(sub));
-      if(mode==='leveren') L.push('Korting levering (30%): − '+fmt(discountAmt()));
+      if(mode==='leveren') L.push('Korting levering (10%): − '+fmt(discountAmt()));
       L.push('*Totaal: '+fmt(orderTotal())+'*');
       L.push('');
       L.push('*Klant:* '+((f.naam&&f.naam.value.trim())||'—'));
@@ -1932,7 +1932,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
       }
       if(mode==='leveren' && cart.some(function(l){return l.cat==='promo';})){ orderError('Promo’s kunnen enkel afgehaald worden. Verwijder de promo of kies afhalen.'); return; }
       var sub=subtotal();
-      // minimum bij levering geldt op het te betalen bedrag (na 30% korting)
+      // minimum bij levering geldt op het te betalen bedrag (na 10% korting)
       if(mode==='leveren' && orderTotal()<MIN_ORDER){ orderError('Minimum voor levering is '+fmt(MIN_ORDER)+' na korting — voeg nog '+fmt(MIN_ORDER-orderTotal())+' toe of kies afhalen.'); return; }
       var addr=[ f.adres?f.adres.value.trim():'', f.postcode?f.postcode.value.trim():'', f.gemeente?f.gemeente.value.trim():'' ]
                  .filter(Boolean).join(', ');
@@ -2244,7 +2244,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
     "🛵 bezorgen":"🛵 Delivery","🥡 afhalen":"🥡 Pickup",
     // hero
     "new york style · antwerpen":"New York style · Antwerp",
-    "new york pizza · antwerpen":"New York pizza · Antwerp","pizza bestellen in antwerpen":"Order pizza in Antwerp","new york style pizza's, pasta, snacks en desserts, 100% halal. afhalen aan de abdijstraat 226a, of laten bezorgen met 30% korting in":"New York style pizzas, pasta, snacks and desserts, 100% halal. Pick up at Abdijstraat 226a, or get it delivered with 30% off in","en op":"and","het zuid":"the Zuid",
+    "new york pizza · antwerpen":"New York pizza · Antwerp","pizza bestellen in antwerpen":"Order pizza in Antwerp","new york style pizza's, pasta, snacks en desserts, 100% halal. afhalen aan de abdijstraat 226a, of laten bezorgen met 10% korting in":"New York style pizzas, pasta, snacks and desserts, 100% halal. Pick up at Abdijstraat 226a, or get it delivered with 10% off in","en op":"and","het zuid":"the Zuid",
     "echte new yorkse pizza's met huisgemaakt deeg en dagverse toppings, midden in antwerpen. afhalen of laten bezorgen, elke dag van de week.":"Real New York pizzas with homemade dough and fresh daily toppings, in the heart of Antwerp. Pickup or delivery, every day of the week.",
     "🛵 bestel online":"🛵 Order online","🍕 bekijk het menu":"🍕 View the menu",
     "op basis van 260 google-reviews":"based on 260 Google reviews",
@@ -2392,7 +2392,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
     "1 large pizza + 2 looksaus + 2 frisdrank + mozzarellastokjes":"1 large pizza + 2 garlic sauces + 2 sodas + mozzarella sticks",
     "4 small pizza's + 4 looksaus + 4 frisdrank":"4 small pizzas + 4 garlic sauces + 4 sodas",
     "2 pasta's (kip of scampi) + 1 looksaus":"2 pastas (chicken or scampi) + 1 garlic sauce",
-    "korting levering (30%)":"Delivery discount (30%)",
+    "korting levering (10%)":"Delivery discount (10%)",
     "je bestelling staat klaar in whatsapp — verstuur het bericht om te bevestigen. 🍕":"Your order is ready in WhatsApp — send the message to confirm it. 🍕","📲 verstuur via whatsapp":"📲 Send via WhatsApp"
   };
   var PLACE = {

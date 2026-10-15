@@ -35,7 +35,7 @@ var DB_PATH = path.join(DATA_DIR, 'lamia.db');
 var PORT = parseInt(process.env.PORT || '3000', 10);
 var ADMIN_PIN = String(process.env.ADMIN_PIN || '1234');
 var SESSION_HOURS = 12;
-var DELIVERY_FEE = parseFloat(process.env.DELIVERY_FEE || '0.00'); // leveringskosten (vervangen door 30% korting bij levering)
+var DELIVERY_FEE = parseFloat(process.env.DELIVERY_FEE || '0.00'); // leveringskosten (vervangen door 10% korting bij levering)
 var MIN_ORDER = parseFloat(process.env.MIN_ORDER || '20.00');      // minimum bestelbedrag (levering)
 var MOLLIE_API_KEY = String(process.env.MOLLIE_API_KEY || '');    // online betalen (Mollie); leeg = uit
 // Leveringszone: enkel leveren binnen deze straal (km) rond de zaak (Abdijstraat 226a, 2020 Antwerpen).
@@ -721,7 +721,7 @@ function llmsTxt() {
     '- Keuken: New York style pizza (small, medium, large), pasta, burgers, broodjes, kapsalon, snacks, desserts, ijs',
     '- Vegetarisch: o.a. Margherita, Veggie, Funghi, Italiano, Quattro Formaggi. Veganistisch en glutenvrij op aanvraag.',
     '- Bezorggebied: tot ' + DELIVERY_RADIUS_KM + ' km rond de zaak, o.a. Kiel, Hoboken, Wilrijk, Edegem, Berchem en Antwerpen-Zuid',
-    '- Levering: geen aparte bezorgkosten; pizza en pasta kosten bij levering € 6 meer dan bij afhalen, daarna 30% korting op de hele online bestelling. Minimum ' + euro(MIN_ORDER) + ' na korting.',
+    '- Levering: geen aparte bezorgkosten; pizza en pasta kosten bij levering € 6 meer dan bij afhalen, daarna 10% korting op de hele online bestelling. Minimum ' + euro(MIN_ORDER) + ' na korting.',
     '- Betalen: online met Bancontact of kaart; in de zaak cash of kaart',
     '- Afhaaldeals (promo\'s) gelden enkel voor afhalen',
     '',
@@ -947,7 +947,7 @@ async function handleApi(req, res, urlPath) {
     }
     subtotal = Math.round(subtotal * 100) / 100;
     // korting en betaalinfo enkel voor de (ingelogde) kassa
-    var discount = (source === 'pos') ? Math.round(Math.max(0, Math.min(parseFloat(ob.discount) || 0, subtotal)) * 100) / 100 : (type === 'leveren' ? Math.round(subtotal * 0.30 * 100) / 100 : 0);
+    var discount = (source === 'pos') ? Math.round(Math.max(0, Math.min(parseFloat(ob.discount) || 0, subtotal)) * 100) / 100 : (type === 'leveren' ? Math.round(subtotal * 0.10 * 100) / 100 : 0);
     var delivery = type === 'leveren' ? DELIVERY_FEE : 0;
     var total = Math.round((subtotal - discount + delivery) * 100) / 100;
     // minimum bij levering geldt op het te betalen bedrag (na korting); enkel de webshop afdwingen
