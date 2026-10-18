@@ -69,8 +69,10 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
     { "@type": "Place", "name": "Berchem" }
   ],
   "openingHoursSpecification": [
-    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "11:30", "closes": "02:00" },
-    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Saturday","Sunday"], "opens": "14:00", "closes": "02:00" }
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday"], "opens": "15:00", "closes": "02:00" },
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Friday"], "opens": "14:30", "closes": "02:00" },
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Saturday"], "opens": "14:00", "closes": "02:00" },
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Sunday"], "opens": "14:00", "closes": "01:30" }
   ],
   "hasMenu": { "@id": "https://www.lamiapizzeria.be/#menu" },
   "acceptsReservations": false,
@@ -1317,15 +1319,15 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
     var PIZZA_SURCHARGE  = 6;     // extra prijs per pizza bij levering
     var DELIVERY_DISCOUNT = 0.10; // korting op de hele bestelling bij levering
 
-    /* openingsuren (Europe/Brussels), sluit om 02:00 — bestellen kan enkel tijdens de uren */
-    var OPEN_MIN={0:14*60,1:11*60+30,2:11*60+30,3:11*60+30,4:11*60+30,5:11*60+30,6:14*60}, CLOSE_MIN=2*60;
+    /* openingsuren (Europe/Brussels), sluit om 02:00 (zondagnacht 01:30) — bestellen kan enkel tijdens de uren */
+    var OPEN_MIN={0:14*60,1:15*60,2:15*60,3:15*60,4:15*60,5:14*60+30,6:14*60}, CLOSE_MIN={0:1*60+30,1:2*60,2:2*60,3:2*60,4:2*60,5:2*60,6:2*60}; // zelfde uren als het Bedrijfsprofiel; CLOSE hoort bij de openingsdag
     function shopOpen(){
       try{
         var f=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Brussels',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
         var p={}; f.formatToParts(new Date()).forEach(function(x){p[x.type]=x.value;});
         var wd={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6}[p.weekday];
         var min=parseInt(p.hour,10)*60+parseInt(p.minute,10);
-        return (min<CLOSE_MIN) || (min>=OPEN_MIN[wd]);
+        return (min<CLOSE_MIN[(wd+6)%7]) || (min>=OPEN_MIN[wd]);
       }catch(e){ return true; } // bij twijfel niet blokkeren; de server bewaakt het sowieso
     }
 
@@ -1756,7 +1758,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
       var min=$('#cartMin');
       if(!shopOpen()){
         min.style.display='block';
-        min.textContent='We zijn momenteel gesloten. Bestellen kan tijdens de openingsuren (ma–vr vanaf 11:30, za–zo vanaf 14:00, tot 02:00).';
+        min.textContent='We zijn momenteel gesloten. Bestellen kan tijdens de openingsuren (ma–do vanaf 15:00, vr vanaf 14:30, za–zo vanaf 14:00, tot 02:00, zondag tot 01:30).';
         toCk.disabled=true; toCk.textContent='Gesloten — bestellen kan straks';
       } else if(mode==='leveren' && sub>0 && orderTotal()<MIN_ORDER){
         min.style.display='block';
@@ -1918,7 +1920,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
         el.textContent=msg; el.style.display='block';
       }
       var ce=$('#coErr'); if(ce) ce.style.display='none';
-      if(!shopOpen()){ orderError('We zijn momenteel gesloten. Online bestellen kan tijdens de openingsuren: ma–vr vanaf 11:30, za–zo vanaf 14:00, elke dag tot 02:00.'); return; }
+      if(!shopOpen()){ orderError('We zijn momenteel gesloten. Online bestellen kan tijdens de openingsuren: ma–do vanaf 15:00, vr vanaf 14:30, za–zo vanaf 14:00, tot 02:00 (zondag 01:30).'); return; }
       if(mode==='leveren'){
         var miss=[];
         if(!f.adres || !f.adres.value.trim()) miss.push({el:f.adres,lbl:'adres'});
