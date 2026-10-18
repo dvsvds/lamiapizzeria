@@ -164,11 +164,15 @@ zien wat uit Google Maps komt: `https://www.lamiapizzeria.be/?utm_source=google&
 
 ## Buurtpagina's (okt 2026)
 
-Eén pagina per buurt plus één over halal, zodat Google de zaak toont bij
-"pizza + buurt"-zoekopdrachten en niet enkel op de eigen naam:
+Eén pagina per buurt, één over halal en één over take away, zodat Google de
+zaak toont bij "pizza + buurt"- en "take away antwerpen"-zoekopdrachten en
+niet enkel op de eigen naam:
 
 `/pizza-kiel` · `/pizza-hoboken` · `/pizza-wilrijk` · `/pizza-edegem` ·
-`/pizza-berchem` · `/pizza-antwerpen-zuid` · `/halal-pizza-antwerpen`
+`/pizza-berchem` · `/pizza-antwerpen-zuid` · `/halal-pizza-antwerpen` ·
+`/take-away-antwerpen` (18/10/2026: 1.300 zoekopdrachten/maand, stond al op
+pos. 4 met 143 vertoningen en 0 klikken; de afhaaldeals staan in `AFHAALDEALS`,
+prijzen gelijk houden met order.html)
 
 - Ze worden gemaakt door `tools/buurtpaginas.js`. **Pas de tekst of de feiten
   (korting, minimum, uren) daar aan** en draai `node tools/buurtpaginas.js`;
@@ -181,7 +185,7 @@ Eén pagina per buurt plus één over halal, zodat Google de zaak toont bij
   halal-pagina (onder het menu).
 - **Na de livegang:** in Search Console bij elke nieuwe URL *Indexering
   aanvragen*, en de sitemap opnieuw indienen.
-- Wordt de korting van 30% ooit stopgezet, pas `FEIT.korting` aan én de
+- Wordt de korting van 10% ooit gewijzigd, pas `FEIT.korting` aan én de
   zinnen in `BUURTEN` die ze noemen.
 
 ## Lokale SEO (okt 2026)

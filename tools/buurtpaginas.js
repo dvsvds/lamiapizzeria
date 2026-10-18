@@ -2,8 +2,8 @@
 /* ============================================================================
    Buurtpagina's — La Mia Pizzeria
    ----------------------------------------------------------------------------
-   Maakt de landingspagina's per buurt (pizza-hoboken.html, …) en de pagina
-   over halal pizza. Eén bron voor alles, zodat de pagina's onderling kloppen.
+   Maakt de landingspagina's per buurt (pizza-hoboken.html, …), de pagina
+   over halal pizza en de take-away-pagina. Eén bron voor alles, zodat de pagina's onderling kloppen.
 
    Iets aanpassen (korting, minimum, uren, tekst van een buurt)?
      1. Pas het hieronder aan.
@@ -192,6 +192,29 @@ var HALAL = {
   lead: 'Bij La Mia Pizzeria hoef je niet te twijfelen: al ons vlees is 100% halal. Ook de pepperoni, salami, ham en spek.'
 };
 
+/* De take-away-pagina: "take away antwerpen" is de grootste zoekterm zonder
+   eigen pagina (±1.300 zoekopdrachten per maand, okt 2026). */
+var TAKEAWAY = {
+  slug: 'take-away-antwerpen',
+  titel: 'Take away pizza in Antwerpen (Kiel) | La Mia Pizzeria',
+  omschrijving: 'Take away in Antwerpen: bestel online, kies afhalen en haal je New York style pizza op aan de Abdijstraat 226a. Afhaaldeals vanaf € 21, 100% halal, open tot 02:00.',
+  h1: 'Take away pizza in Antwerpen',
+  lead: 'Online bestellen, afhalen aan de Abdijstraat 226a op het Kiel en thuis warm opeten. Afhalen is bij ons de goedkoopste manier om pizza te eten: lagere prijzen dan bij levering en deals die je enkel bij afhaal krijgt.'
+};
+
+/* Afhaaldeals zoals ze in de webshop staan (order.html, categorie promo).
+   Prijzen wijzigen? Pas ze daar én hier aan. */
+var AFHAALDEALS = [
+  ['Duo Large', '2 large pizza\'s', '€ 21'],
+  ['Duo Medium', '2 medium pizza\'s + 2 looksaus', '€ 21'],
+  ['Solo Large', '1 large pizza + 2 looksaus + 2 frisdrank + mozzarellastokjes', '€ 21'],
+  ['Duo Deluxe', '2 medium pizza\'s + 2 looksaus + 1,5 l frisdrank', '€ 26'],
+  ['Pasta Deal', '2 pasta\'s (kip of scampi) + 1 looksaus', '€ 26'],
+  ['Familiedeal', '3 large pizza\'s + 3 looksaus + 1,5 l frisdrank', '€ 40'],
+  ['Trio + Wings', '3 medium pizza\'s + 3 looksaus + 12 wings', '€ 45'],
+  ['Small Party', '4 small pizza\'s + 4 looksaus + 4 frisdrank', '€ 50']
+];
+
 /* ============================================================================
    Hulpfuncties
    ========================================================================== */
@@ -377,7 +400,7 @@ function urenKaart() {
 }
 
 function andereLinks(huidig) {
-  var alle = BUURTEN.map(function (b) { return [b.slug, 'Pizza in ' + b.naam]; }).concat([[HALAL.slug, 'Halal pizza']]);
+  var alle = BUURTEN.map(function (b) { return [b.slug, 'Pizza in ' + b.naam]; }).concat([[HALAL.slug, 'Halal pizza'], [TAKEAWAY.slug, 'Take away']]);
   return '<ul class="andere">\n' + alle.filter(function (x) { return x[0] !== huidig; }).map(function (x) {
     return '  <li><a href="' + x[0] + '">' + esc(x[1]) + '</a></li>';
   }).join('\n') + '\n</ul>\n';
@@ -506,9 +529,67 @@ function halalPagina() {
     '  </div>\n</section>\n</main>\n' + staart();
 }
 
+function takeawayPagina() {
+  var p = TAKEAWAY;
+  var crumb = 'Take away in Antwerpen';
+  var vragen = [
+    ['Hoe bestel ik voor afhalen?', 'Online via de webshop: kies "afhalen", stel je bestelling samen en betaal met Bancontact of kaart. Je kan ook bellen naar ' + FEIT.telTekst + ' of gewoon aan de toog bestellen.'],
+    ['Waarom is afhalen goedkoper dan laten bezorgen?', 'Bij levering hebben pizza\'s en pasta\'s een leverprijs van ' + FEIT.leverprijs + ' extra. Wie afhaalt, betaalt de gewone kaartprijs en kan bovendien kiezen uit de afhaaldeals, die niet gelden voor levering.'],
+    ['Gelden de afhaaldeals ook bij levering?', 'Nee. De Duo\'s, de Familiedeal en de andere deals zijn er enkel als je zelf komt afhalen. Voor levering krijg je online wel ' + FEIT.korting + ' korting op je hele bestelling.'],
+    ['Kan ik ter plaatse eten?', 'Ja. Je kan binnen of op het terras eten; reserveren is niet nodig.'],
+    ['Hoe betaal ik bij afhalen?', 'Online met Bancontact of kaart, of in de zaak met cash of kaart.'],
+    ['Waar staat de zaak precies?', 'Abdijstraat 226a, 2020 Antwerpen, op het Kiel, vlak bij het Olympisch Stadion en het Kielpark. Hoboken, Wilrijk en het Zuid liggen op een paar minuten rijden.']
+  ].concat(gedeeldeVragen().filter(function (v) { return v[0] !== 'Wat kost bezorgen?'; }));
+  p.ld = ldVoor(p, crumb, vragen);
+  var rij = function (ic, html) { return '      <li><span>' + ic + '</span><span>' + html + '</span></li>\n'; };
+  var kaart = '<div class="card">\n    <h3>Afhalen bij La Mia</h3>\n    <ul class="facts">\n' +
+    rij('📍', '<b>Abdijstraat 226a</b>, 2020 Antwerpen (Kiel)') +
+    rij('🥡', 'Pizza en pasta <b>' + FEIT.leverprijs + ' goedkoper</b> dan bij levering') +
+    rij('🎁', '<b>Afhaaldeals vanaf € 21</b>, enkel voor afhaal') +
+    rij('🕑', 'Open <b>tot 02:00</b> (zondag 01:30)') +
+    rij('💳', 'Online betalen, of cash of kaart in de zaak') +
+    rij('🪑', 'Ter plaatse eten kan, binnen of op het terras') +
+    '    </ul>\n  </div>';
+  return kop(p) + header() + hero(p, 'New York pizza · take away', crumb) +
+    '<main>\n' +
+    '<section class="blok">\n  <div class="wrap cols">\n  <div class="prose">\n' +
+    '    <span class="kicker">Take away</span>\n' +
+    '    <h2>Pizza afhalen in Antwerpen</h2>\n' +
+    '    <p>Take away is hoe de meeste klanten van La Mia Pizzeria hun pizza eten: even langskomen aan de Abdijstraat, de doos meenemen en thuis of in het park opeten. Je krijgt dezelfde New York style pizza met huisgemaakt deeg als in de zaak, in small, medium of large, en daarnaast pasta, burgers, kapsalon, wings en desserts.</p>\n' +
+    '    <p>Afhalen is ook de voordeligste keuze. Pizza\'s en pasta\'s kosten bij afhaal ' + FEIT.leverprijs + ' minder dan bij levering, en de afhaaldeals (twee large pizza\'s voor € 21, een familiedeal met drie large pizza\'s, looksaus en frisdrank voor € 40) bestaan enkel voor wie zelf komt.</p>\n' +
+    '    <p>Al ons vlees is 100% halal, ook de pepperoni, salami, ham en spek. En we zijn laat open: tot 02:00, op zondag tot 01:30, dus ook na een late shift of een avond in de stad kan je nog iets komen halen.</p>\n' +
+    '  </div>\n  ' + kaart + '\n  </div>\n</section>\n' +
+    '<section class="blok alt">\n  <div class="wrap prose">\n' +
+    '    <span class="kicker">Zo werkt het</span>\n' +
+    '    <h2>Online bestellen, afhalen aan de toog</h2>\n' +
+    '    <p><b>1. Bestel online.</b> Open de <a href="order.html">webshop</a>, kies "afhalen" en stel je bestelling samen. Je ziet meteen de afhaalprijzen en alle deals.</p>\n' +
+    '    <p><b>2. Betaal meteen.</b> Reken af met Bancontact of kaart. Zodra de betaling binnen is, gaat je bestelling naar de keuken en beginnen we met bakken.</p>\n' +
+    '    <p><b>3. Haal af.</b> Kom naar de Abdijstraat 226a en noem je naam of bestelnummer aan de toog. Liever telefonisch? Bel ' + FEIT.telTekst + '. Of kom gewoon binnen en bestel ter plaatse, dan wacht je even terwijl we bakken.</p>\n' +
+    '    <p>Grote bestelling voor een feestje, een werkploeg of een verjaardag? Bestel ze online op voorhand, dan staat alles tegelijk klaar wanneer je toekomt.</p>\n' +
+    '  </div>\n</section>\n' +
+    '<section class="blok">\n  <div class="wrap">\n' +
+    '    <span class="kicker">Enkel bij afhaal</span>\n' +
+    '    <h2>Afhaaldeals</h2>\n' +
+    '    <p class="muted" style="max-width:62ch">Deze deals krijg je alleen als je zelf komt afhalen. Je kiest zelf welke pizza\'s erin gaan.</p>\n' +
+    '<ul class="pizzas">\n' + AFHAALDEALS.map(function (d) {
+      return '  <li><b>' + esc(d[0]) + ' · ' + esc(d[2]) + '</b><span>' + esc(d[1]) + '</span></li>';
+    }).join('\n') + '\n</ul>\n' +
+    '    <p class="muted" style="font-size:.85rem;margin-bottom:1.2rem">De webshop toont altijd de actuele prijzen.</p>\n' +
+    '    <a href="order.html" class="btn btn-red">Bestel voor afhalen</a>\n' +
+    '  </div>\n</section>\n' +
+    '<section class="blok alt">\n  <div class="wrap cols">\n  <div>\n' +
+    '    <span class="kicker">Veelgestelde vragen</span>\n' +
+    '    <h2>Over afhalen bij La Mia</h2>\n' + faqHtml(vragen) +
+    '  </div>\n  <div>\n  ' + urenKaart() + '\n  </div>\n  </div>\n</section>\n' +
+    '<section class="blok">\n  <div class="wrap">\n' +
+    '    <span class="kicker">Liever laten bezorgen?</span>\n    <h2>We bezorgen ook in</h2>\n' + andereLinks(p.slug) +
+    '  </div>\n</section>\n</main>\n' + staart();
+}
+
 /* ---- Wegschrijven ---- */
 var pages = BUURTEN.map(function (b) { return [b.slug, buurtPagina(b), km(ZAAK, b.punt)]; });
 pages.push([HALAL.slug, halalPagina(), null]);
+pages.push([TAKEAWAY.slug, takeawayPagina(), null]);
 pages.forEach(function (x) {
   fs.writeFileSync(path.join(ROOT, x[0] + '.html'), x[1]);
   console.log(x[0] + '.html' + (x[2] != null ? '  (' + x[2].toFixed(1) + ' km)' : ''));
