@@ -264,3 +264,31 @@ manager; vergelijk telkens met de vorige rij.
 |---|---|---|---|---|---|---|
 | 01/10/2026 | 23–28 sep (7 d) | 10 | 7.350 | 2,4 | 24 | Nulmeting. 6.720 vertoningen op het losse woord "pizza" zonder klik (groot blok, niet bruikbaar). Klikken enkel op de eigen naam. "pizza antwerpen" 30 vertoningen / 0 klikken, "pasta" 102 / 0, "takeaway" 19 / 0, "pizza in hoboken" 1 / 1. Favicon zichtbaar in Google. Bedrijfsprofiel ingevuld. Google Ads nog niet gestart. Actie: bezorggebied-sectie met buurten (PR #79). |
 | 17/10/2026 | 18 sep – 15 okt (28 d), via Windsor.ai | 105 | 15.676 | 2,6 | 86 (28 d: 169 sessies) | Per week: 10 → 41 → 38 → 40 klikken; CTR van 0,14% naar 1,2%. Klikken vooral op de eigen naam (la mia pizzeria 16, la mia 13). Eerste buurtklikken: pizza hoboken 2 (59 vertoningen, pos. 2,5), pizza kiel 2 (pos. 1,4). Zonder klik maar op pagina 1: pizza antwerpen 191 (pos. 5,5), pizzeria antwerpen 76, take away/takeaway 143 (pos. 4), pizza near me 54, pizza abdijstraat 53. Buurtpagina's (live sinds ~10 okt) al geïndexeerd: 10–21 vertoningen elk, pos. 6,5 (Berchem) tot 23. order.html geïndexeerd: 5 klikken / 366 vertoningen. Analytics: 77 sessies Google organisch, 74 direct, 7 via ChatGPT; 116× bestel_klik, 11× bestelling_betaald, 9× bellen. Google Ads niet gestart. Actie: titel en meta-omschrijving homepage gericht op de niet-merk zoektermen (PR). |
+
+### Maps-bereik en reviews (18/10/2026, via OpenSEO)
+
+**Rank grid** voor "pizza antwerpen" in Google Maps, 3×3 punten met 3 km
+tussenruimte rond de zaak (positie van La Mia per zoekpunt; "–" = niet in de
+top 20):
+
+| | west | midden | oost |
+|---|---|---|---|
+| noord (centrum / Linkeroever / Borgerhout) | 7 | – | – |
+| midden (Hoboken / **zaak** / Berchem-Mortsel) | 3 | **1** | 20 |
+| zuid (Hemiksem / Wilrijk / Edegem) | 10 | 5 | 2 |
+
+Gevonden op 7 van 9 punten, gemiddeld 6,9, 3× top 3. Sterk naar het zuiden
+(Wilrijk, Edegem, Hoboken); zwak naar het oosten (Berchem) en onzichtbaar in
+het stadscentrum. Berchem heeft 480 zoekopdrachten/maand: daar reviews en de
+buurtpagina op inzetten. Herhalen bij de check van 1 december (zelfde
+instellingen, ±10 credits).
+
+**Reviews** (50 nieuwste, apr–okt 2026, totaal 271, score 4,7): 37× 5 sterren,
+13× 1–2 sterren. Maar 2 van de 50 beantwoord (beide op 15/10). Negatief gaat
+over: verbrande pizza's en terugbetaling (cluster 11/04), te weinig beleg
+t.o.v. de foto's (14/08, uitgebreid), lange wachttijd bij levering, vroeger
+dicht dan aangegeven (09/06, uren klopten toen niet; sinds 18/10 wel). Positief:
+vriendelijk personeel, deeg, Godfather en penne-pizza, decor, halal. Veel
+reviews bevatten enkel "Top" zonder tekst, en één reviewer noemt ze nep: vraag
+klanten om een zin met gerecht en buurt. Actie: elke review beantwoorden
+(ook de oude), eerst de 1-sterren.
