@@ -23,13 +23,13 @@ var ZAAK = { lat: 51.1861375, lon: 4.3874416 }; // Abdijstraat 226a
 
 /* ---- Feiten die op elke pagina staan (houd gelijk met de webshop) ---- */
 var FEIT = {
-  korting: '30%',            // korting op online bestellingen voor levering
+  korting: '10%',            // korting op online bestellingen voor levering
   minimum: '€ 20',           // minimum voor levering, na korting (server: MIN_ORDER)
   leverprijs: '€ 6',         // pizza's en pasta's kosten zoveel meer bij levering (order.html: PIZZA_SURCHARGE)
   straal: 8,                 // km rond de zaak (server: DELIVERY_RADIUS_KM)
   tel: '+3236442331',
   telTekst: '03 644 23 31',
-  uren: [['Maandag – vrijdag', '11:30 – 02:00'], ['Zaterdag – zondag', '14:00 – 02:00']]
+  uren: [['Maandag – donderdag', '15:00 – 02:00'], ['Vrijdag', '14:30 – 02:00'], ['Zaterdag', '14:00 – 02:00'], ['Zondag', '14:00 – 01:30']] // zelfde als het Google Bedrijfsprofiel
 };
 
 var HALAL_PIZZAS = [
@@ -51,35 +51,35 @@ var BUURTEN = [
     slug: 'pizza-kiel', naam: 'Kiel', postcode: '2020', postcodes: ['2020'],
     punt: { lat: 51.1880, lon: 4.3880 },
     titel: 'Pizza bezorgen in Kiel (2020) | La Mia Pizzeria',
-    omschrijving: 'New York style pizza uit de Abdijstraat, midden op het Kiel. Bezorgd of afhalen, 100% halal, elke dag open tot 02:00. Online 30% korting bij levering.',
+    omschrijving: 'New York style pizza uit de Abdijstraat, midden op het Kiel. Bezorgd of afhalen, 100% halal, open tot 02:00 (zondag tot 01:30). Online 10% korting bij levering.',
     h1: 'Pizza bezorgen op het Kiel',
     lead: 'Het Kiel is onze eigen buurt. Dichter bij de oven kan je niet wonen: bestel online voor levering, of loop even binnen in de Abdijstraat 226a en neem je pizza warm mee.',
     tekst: [
       'We zitten zelf in de Abdijstraat, dus voor wie op het Kiel woont is dit de pizzeria om de hoek. Of je nu rond het Kielpark woont, in de buurt van de Sint-Bernardsesteenweg of richting het Olympisch Stadion: je bestelling is meteen bij je.',
-      'Afhalen gaat hier het snelst. Bestel online, kies afhalen en je pizza staat klaar aan de toonbank. Liever thuis blijven? Dan bezorgen we, met 30% korting op je hele online bestelling.'
+      'Afhalen gaat hier het snelst. Bestel online, kies afhalen en je pizza staat klaar aan de toonbank. Liever thuis blijven? Dan bezorgen we, met 10% korting op je hele online bestelling.'
     ],
     extra: ['Afhalen of bezorgen op het Kiel?', [
       'Woon je op wandelafstand, dan is afhalen vaak de beste keuze. Onze afhaaldeals gelden namelijk alleen als je zelf komt: de Familiedeal met drie large pizza\'s, de Duo\'s met twee pizza\'s, de Pasta Deal. Die vind je niet bij levering.',
-      'Bezorgen loont dan weer voor een gewone bestelling van de kaart: online krijg je 30% korting op alles. Na een match in het Olympisch Stadion of een zomeravond in het Kielpark kan het nog laat: we zijn elke dag open tot 02:00.'
+      'Bezorgen loont dan weer voor een gewone bestelling van de kaart: online krijg je 10% korting op alles. Na een match in het Olympisch Stadion of een zomeravond in het Kielpark kan het nog laat: we zijn open tot 02:00 (zondag tot 01:30).'
     ]],
     wijken: ['Abdijstraat en omgeving', 'Kielpark', 'Sint-Bernardsesteenweg', 'Rond het Olympisch Stadion', 'Kielsevest', 'Beerschot'],
     afhalen: 'Je vindt ons in de Abdijstraat 226a. Vanuit het Kiel ben je er te voet of met de fiets in een paar minuten.',
     vragen: [
-      ['Kan ik ook afhalen?', 'Ja. Bestel online en kies "afhalen", of bel ons op 03 644 23 31. Je pizza staat klaar aan de Abdijstraat 226a. Afhalen kan elke dag tot 02:00.'],
+      ['Kan ik ook afhalen?', 'Ja. Bestel online en kies "afhalen", of bel ons op 03 644 23 31. Je pizza staat klaar aan de Abdijstraat 226a. Afhalen kan tot 02:00 (zondag tot 01:30).'],
       ['Kan ik ter plaatse eten?', 'Ja, je kan bij ons binnen of op het terras eten. Kom gewoon langs tijdens de openingsuren.'],
-      ['Gelden de deals ook bij levering?', 'Nee, de afhaaldeals gelden enkel als je zelf komt afhalen. Bij levering krijg je wel 30% korting op je hele online bestelling van de gewone kaart.']
+      ['Gelden de deals ook bij levering?', 'Nee, de afhaaldeals gelden enkel als je zelf komt afhalen. Bij levering krijg je wel 10% korting op je hele online bestelling van de gewone kaart.']
     ]
   },
   {
     slug: 'pizza-hoboken', naam: 'Hoboken', postcode: '2660', postcodes: ['2660'],
     punt: { lat: 51.1730, lon: 4.3470 },
     titel: 'Pizza bezorgen in Hoboken (2660) | La Mia Pizzeria',
-    omschrijving: 'Pizza bestellen in Hoboken: New York style pizza, pasta en snacks, 100% halal. We bezorgen in heel Hoboken, elke dag tot 02:00. Online 30% korting bij levering.',
+    omschrijving: 'Pizza bestellen in Hoboken: New York style pizza, pasta en snacks, 100% halal. We bezorgen in heel Hoboken, tot 02:00 (zondag tot 01:30). Online 10% korting bij levering.',
     h1: 'Pizza bezorgen in Hoboken',
-    lead: 'Vanuit het Kiel rijden we zo Hoboken in. New York style pizza met huisgemaakt deeg, warm aan je deur, elke dag tot 02:00.',
+    lead: 'Vanuit het Kiel rijden we zo Hoboken in. New York style pizza met huisgemaakt deeg, warm aan je deur, tot 02:00 (zondag tot 01:30).',
     tekst: [
       'Hoboken ligt vlak naast ons. Via de Sint-Bernardsesteenweg zijn we snel bij je, of je nu rond de Kioskplaats woont, in Moretusburg of in Polderstad.',
-      'Bestel je online voor levering, dan krijg je 30% korting op je hele bestelling. Het minimum voor levering is € 20 na korting.'
+      'Bestel je online voor levering, dan krijg je 10% korting op je hele bestelling. Het minimum voor levering is € 20 na korting.'
     ],
     extra: ['Van de Kioskplaats tot aan de Schelde', [
       'Hoboken is een eigen district, ten zuidwesten van het Kiel. De Sint-Bernardsesteenweg loopt van onze buurt dwars door Hoboken, en dat is ook de route van onze bezorgers. Het centrum rond de Kioskplaats en de Kapelstraat ligt op zo\'n 3 km in vogelvlucht.',
@@ -96,16 +96,16 @@ var BUURTEN = [
     slug: 'pizza-wilrijk', naam: 'Wilrijk', postcode: '2610', postcodes: ['2610'],
     punt: { lat: 51.1690, lon: 4.3920 },
     titel: 'Pizza bezorgen in Wilrijk (2610) | La Mia Pizzeria',
-    omschrijving: 'Pizza bestellen in Wilrijk: van de Bist tot Valaar en campus Drie Eiken. New York style pizza, 100% halal, bezorgd tot 02:00. Online 30% korting bij levering.',
+    omschrijving: 'Pizza bestellen in Wilrijk: van de Bist tot Valaar en campus Drie Eiken. New York style pizza, 100% halal, bezorgd tot 02:00. Online 10% korting bij levering.',
     h1: 'Pizza bezorgen in Wilrijk',
-    lead: 'Laat studeren, laat thuis of gewoon zin in pizza? We bezorgen in Wilrijk elke dag tot 02:00, vers uit onze oven op het Kiel, een paar minuten verderop.',
+    lead: 'Laat studeren, laat thuis of gewoon zin in pizza? We bezorgen in Wilrijk tot 02:00 (zondag tot 01:30), vers uit onze oven op het Kiel, een paar minuten verderop.',
     tekst: [
       'Wilrijk grenst aan het Kiel, dus we zijn er snel. We bezorgen rond de Bist, in Valaar, Neerland en Oosterveld, en ook op campus Drie Eiken van de Universiteit Antwerpen.',
-      'Op kot of samen met vrienden? Onze deals met twee of drie pizza\'s, lookbrood en drank zijn gemaakt om te delen. Online bestellen voor levering geeft 30% korting op alles.'
+      'Op kot of samen met vrienden? Onze deals met twee of drie pizza\'s, lookbrood en drank zijn gemaakt om te delen. Online bestellen voor levering geeft 10% korting op alles.'
     ],
     extra: ['Van de Bist tot Fort 6', [
       'Wilrijk is het district direct ten zuiden van ons; de Bist, het hart van Wilrijk, ligt op amper 2 km in vogelvlucht. Via de Boomsesteenweg ben je in een handomdraai bij ons.',
-      'We bezorgen in heel Wilrijk: de woonwijken van Valaar en Neerland, Oosterveld, de buurt rond Fort 6 en de studentenkoten rond campus Drie Eiken. Studeer je er en bestel je met vrienden? Online bestellen voor levering geeft 30% korting op de hele bestelling.'
+      'We bezorgen in heel Wilrijk: de woonwijken van Valaar en Neerland, Oosterveld, de buurt rond Fort 6 en de studentenkoten rond campus Drie Eiken. Studeer je er en bestel je met vrienden? Online bestellen voor levering geeft 10% korting op de hele bestelling.'
     ]],
     wijken: ['De Bist', 'Valaar', 'Neerland', 'Oosterveld', 'Campus Drie Eiken', 'Fort 6'],
     afhalen: 'Afhalen kan aan de Abdijstraat 226a op het Kiel, een paar minuten van Wilrijk.',
@@ -118,12 +118,12 @@ var BUURTEN = [
     slug: 'pizza-edegem', naam: 'Edegem', postcode: '2650', postcodes: ['2650'],
     punt: { lat: 51.1560, lon: 4.4430 },
     titel: 'Pizza bezorgen in Edegem (2650) | La Mia Pizzeria',
-    omschrijving: 'Ook in Edegem bezorgen we New York style pizza, pasta en snacks. 100% halal, elke dag tot 02:00. Bestel online voor levering en krijg 30% korting.',
+    omschrijving: 'Ook in Edegem bezorgen we New York style pizza, pasta en snacks. 100% halal, tot 02:00 (zondag tot 01:30). Bestel online voor levering en krijg 10% korting.',
     h1: 'Pizza bezorgen in Edegem',
     lead: 'Edegem ligt net buiten de stad, maar binnen onze bezorgzone. Bestel online en we brengen New York style pizza tot aan je deur.',
     tekst: [
       'Van Elsdonk tot Buizegem en rond het UZA: Edegem valt binnen de 8 km die we rond de zaak bezorgen. Woon je aan de uiterste rand, dan zegt de webshop je meteen of je adres binnen de zone ligt.',
-      'Wie laat thuiskomt, kan bij ons nog terecht: we zijn elke dag open tot 02:00. Online bestellen voor levering geeft 30% korting op je hele bestelling.'
+      'Wie laat thuiskomt, kan bij ons nog terecht: we zijn open tot 02:00 (zondag tot 01:30). Online bestellen voor levering geeft 10% korting op je hele bestelling.'
     ],
     extra: ['Net over de stadsgrens', [
       'Edegem is geen district van Antwerpen maar een eigen gemeente, ten zuidoosten van Wilrijk. Onze bezorgers rijden er via Wilrijk naartoe; het centrum ligt op zo\'n 5 km in vogelvlucht van de zaak. Dat is verder dan Hoboken of Berchem, maar nog ruim binnen onze zone van 8 km.',
@@ -140,12 +140,12 @@ var BUURTEN = [
     slug: 'pizza-berchem', naam: 'Berchem', postcode: '2600', postcodes: ['2600'],
     punt: { lat: 51.1993, lon: 4.4322 },
     titel: 'Pizza bezorgen in Berchem (2600) | La Mia Pizzeria',
-    omschrijving: 'Pizza bestellen in Berchem: rond het station, Zurenborg en de Driekoningenstraat. New York style, 100% halal, tot 02:00. Online 30% korting bij levering.',
+    omschrijving: 'Pizza bestellen in Berchem: rond het station, Zurenborg en de Driekoningenstraat. New York style, 100% halal, tot 02:00. Online 10% korting bij levering.',
     h1: 'Pizza bezorgen in Berchem',
-    lead: 'Van het station van Berchem tot Zurenborg: we bezorgen New York style pizza in heel Berchem, elke dag tot 02:00.',
+    lead: 'Van het station van Berchem tot Zurenborg: we bezorgen New York style pizza in heel Berchem, tot 02:00 (zondag tot 01:30).',
     tekst: [
       'Berchem ligt ten oosten van ons, ruim binnen onze bezorgzone. We leveren rond het station, in de Driekoningenstraat, langs de Grote Steenweg en in het Berchemse deel van Zurenborg.',
-      'Bestel online voor levering en je krijgt 30% korting op je hele bestelling. Het minimum is € 20 na korting.'
+      'Bestel online voor levering en je krijgt 10% korting op je hele bestelling. Het minimum is € 20 na korting.'
     ],
     extra: ['Rond het station en in Zurenborg', [
       'Berchem is een eigen district, op ongeveer 3,5 km in vogelvlucht van onze zaak. Het station van Berchem vormt er het middelpunt, met de Driekoningenstraat en de Grote Steenweg als drukke winkelstraten.',
@@ -156,19 +156,19 @@ var BUURTEN = [
     vragen: [
       ['Leveren jullie ook in Zurenborg?', 'Ja. Zurenborg ligt deels in Berchem en deels in Antwerpen, en beide delen vallen binnen onze zone van 8 km.'],
       ['Leveren jullie op kantoor rond het station?', 'Ja. Geef de bedrijfsnaam, het gebouw of de verdieping mee in de opmerking bij je bestelling.'],
-      ['Loont het om vanuit Berchem zelf af te halen?', 'Dat kan, de zaak ligt op zo\'n 3,5 km in vogelvlucht. Wie afhaalt, kan kiezen uit de afhaaldeals zoals de Duo\'s en de Familiedeal; wie laat bezorgen in Berchem, krijgt online 30% korting op de gewone kaart.']
+      ['Loont het om vanuit Berchem zelf af te halen?', 'Dat kan, de zaak ligt op zo\'n 3,5 km in vogelvlucht. Wie afhaalt, kan kiezen uit de afhaaldeals zoals de Duo\'s en de Familiedeal; wie laat bezorgen in Berchem, krijgt online 10% korting op de gewone kaart.']
     ]
   },
   {
     slug: 'pizza-antwerpen-zuid', naam: 'Antwerpen-Zuid', postcode: '2000', postcodes: ['2000', '2018'],
     punt: { lat: 51.2089, lon: 4.3943 },
     titel: 'Pizza bezorgen op het Zuid (Antwerpen) | La Mia Pizzeria',
-    omschrijving: 'Pizza bestellen op het Zuid: rond het KMSKA, de Waalse en Vlaamse Kaai en Nieuw Zuid. New York style, 100% halal, tot 02:00. Online 30% korting bij levering.',
+    omschrijving: 'Pizza bestellen op het Zuid: rond het KMSKA, de Waalse en Vlaamse Kaai en Nieuw Zuid. New York style, 100% halal, tot 02:00. Online 10% korting bij levering.',
     h1: 'Pizza bezorgen op het Zuid',
     lead: 'Het Zuid ligt op een paar minuten van onze oven. Bestel online en geniet van een New York style pizza op je appartement, je kantoor of na een avond uit.',
     tekst: [
       'Van de Leopold De Waelplaats en het KMSKA tot de Vlaamse en Waalse Kaai en de nieuwe torens van Nieuw Zuid: het hele Zuid valt binnen onze bezorgzone.',
-      'We zijn elke dag open tot 02:00, dus ook laat op de avond kan je nog bestellen. Online voor levering krijg je 30% korting op je hele bestelling.'
+      'We zijn open tot 02:00, op zondag tot 01:30, dus ook laat op de avond kan je nog bestellen. Online voor levering krijg je 10% korting op je hele bestelling.'
     ],
     extra: ['Musea, kaaien en Nieuw Zuid', [
       'Het Zuid is de buurt van musea en terrassen: het KMSKA, het FOMU aan de Waalse Kaai en het M HKA liggen er op wandelafstand van elkaar. Vanuit onze zaak is het zo\'n 2,5 km in vogelvlucht.',
@@ -178,7 +178,7 @@ var BUURTEN = [
     afhalen: 'Afhalen kan aan de Abdijstraat 226a, een paar minuten rijden of fietsen naar het zuiden.',
     vragen: [
       ['Leveren jullie ook op kantoor?', 'Ja, op elk adres binnen 8 km van de zaak. Zet de bedrijfsnaam of verdieping in de opmerking bij je bestelling.'],
-      ['Kan ik na middernacht nog bestellen op het Zuid?', 'Ja. We zijn elke dag open tot 02:00, en zolang we open zijn kan je online bestellen voor levering of afhalen.']
+      ['Kan ik na middernacht nog bestellen op het Zuid?', 'Ja. We zijn open tot 02:00, op zondag tot 01:30, en zolang we open zijn kan je online bestellen voor levering of afhalen.']
     ]
   }
 ];
@@ -339,7 +339,7 @@ function hero(p, eyebrow, crumb) {
     '      <a href="order.html" class="btn btn-yellow">🛵 Bestel online</a>\n' +
     '      <a href="tel:' + FEIT.tel + '" class="btn btn-ghost">📞 ' + FEIT.telTekst + '</a>\n' +
     '    </div>\n' +
-    '    <ul class="chips"><li>' + FEIT.korting + ' korting bij online levering</li><li>Afhalen of bezorgen</li><li>100% halal</li><li>Elke dag tot 02:00</li></ul>\n' +
+    '    <ul class="chips"><li>' + FEIT.korting + ' korting bij online levering</li><li>Afhalen of bezorgen</li><li>100% halal</li><li>Open tot 02:00 (zo. 01:30)</li></ul>\n' +
     '  </div>\n</section>\n';
 }
 
@@ -350,7 +350,7 @@ function feitenKaart(afstand, naam) {
     rij('🛵', '<b>' + FEIT.korting + ' korting</b> op je hele online bestelling voor levering') +
     rij('💶', 'Minimum <b>' + FEIT.minimum + '</b> na korting; pizza en pasta hebben bij levering een leverprijs') +
     rij('🗺️', 'We bezorgen tot <b>' + FEIT.straal + ' km</b> rond de Abdijstraat') +
-    rij('🕑', 'Elke dag open <b>tot 02:00</b>') +
+    rij('🕑', 'Open <b>tot 02:00</b> (zondag 01:30)') +
     rij('💳', 'Online betalen met Bancontact of kaart') +
     '    </ul>\n  </div>';
 }
@@ -401,7 +401,7 @@ function gedeeldeVragen() {
   return [
     ['Wat kost bezorgen?', 'Er zijn geen aparte bezorgkosten. Pizza\'s en pasta\'s hebben bij levering wel een leverprijs (' + FEIT.leverprijs + ' meer dan bij afhalen); daarna krijg je ' + FEIT.korting + ' korting op je hele online bestelling. Het minimum voor levering is ' + FEIT.minimum + ' na korting. De webshop toont altijd de juiste prijs voor afhalen of levering.'],
     ['Is alles halal?', 'Ja, al ons vlees is 100% halal. Ook onze pepperoni, salami, ham en spek zijn halal varianten.'],
-    ['Tot hoe laat kan ik bestellen?', 'Elke dag tot 02:00. Van maandag tot vrijdag zijn we open vanaf 11:30, in het weekend vanaf 14:00.']
+    ['Tot hoe laat kan ik bestellen?', 'Maandag tot donderdag van 15:00 tot 02:00, vrijdag van 14:30 tot 02:00, zaterdag van 14:00 tot 02:00 en zondag van 14:00 tot 01:30.']
   ];
 }
 
@@ -488,7 +488,7 @@ function halalPagina() {
     '    <h2>Halal, ook de pepperoni</h2>\n' +
     '    <p>Een New York style pizza draait om pepperoni, salami en spek. Bij veel pizzeria\'s is dat net het vlees dat niet halal is. Bij ons wel: we werken enkel met halal vlees, voor elke pizza, pasta, burger en snack op de kaart.</p>\n' +
     '    <p>Zo kies je gewoon wat je lekker vindt, zonder eerst te moeten vragen wat er precies op ligt. Op onze drankkaart staat bovendien geen alcohol.</p>\n' +
-    '    <p>We bakken in de Abdijstraat in Antwerpen en bezorgen tot 8 km rond de zaak. Afhalen kan elke dag tot 02:00.</p>\n' +
+    '    <p>We bakken in de Abdijstraat in Antwerpen en bezorgen tot 8 km rond de zaak. Afhalen kan tot 02:00 (zondag tot 01:30).</p>\n' +
     '  </div>\n  ' + feitenKaart(null, 'Antwerpen') + '\n  </div>\n</section>\n' +
     '<section class="blok alt">\n  <div class="wrap">\n' +
     '    <span class="kicker">Van ons menu</span>\n' +

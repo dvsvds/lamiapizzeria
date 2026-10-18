@@ -220,9 +220,9 @@ function vatRateFor(kind, type, oudeDrankRegel) {
 // enkel een geldige hex-kleur toelaten (voorkomt HTML-injectie via het kleurveld)
 function hexColor(c) { return (typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c)) ? c : '#e6b24c'; }
 
-/* ---- openingsuren (Europe/Brussels), sluit om 02:00 (na middernacht) ---- */
-var OPEN_MIN = { 0: 14 * 60, 1: 11 * 60 + 30, 2: 11 * 60 + 30, 3: 11 * 60 + 30, 4: 11 * 60 + 30, 5: 11 * 60 + 30, 6: 14 * 60 }; // per weekdag (0=zo)
-var CLOSE_MIN = 2 * 60; // 02:00 de volgende ochtend
+/* ---- openingsuren (Europe/Brussels), sluit om 02:00 na middernacht (zondagnacht 01:30) ---- */
+var OPEN_MIN = { 0: 14 * 60, 1: 15 * 60, 2: 15 * 60, 3: 15 * 60, 4: 15 * 60, 5: 14 * 60 + 30, 6: 14 * 60 }; // per weekdag (0=zo), zelfde als het Bedrijfsprofiel
+var CLOSE_MIN = { 0: 1 * 60 + 30, 1: 2 * 60, 2: 2 * 60, 3: 2 * 60, 4: 2 * 60, 5: 2 * 60, 6: 2 * 60 }; // sluitingsuur in de nacht ná die dag (zondagnacht 01:30)
 function belgiumNow(d) {
   var f = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Brussels', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
   var p = {};
@@ -234,7 +234,7 @@ function isOpenNow(d) {
   try {
     var b = belgiumNow(d);
     if (typeof b.dow !== 'number') return true;   // tijdzonedata onbetrouwbaar → niet blokkeren
-    if (b.min < CLOSE_MIN) return true;      // nog open van de vorige dag (sluit pas om 02:00)
+    if (b.min < CLOSE_MIN[(b.dow + 6) % 7]) return true; // nog open van de vorige dag
     return b.min >= OPEN_MIN[b.dow];         // vanaf de openingstijd van vandaag tot middernacht
   } catch (e) {
     // faalt de tijdzone/Intl (bv. ontbrekende locale-data), dan liever open dan de
@@ -716,7 +716,7 @@ function llmsTxt() {
     '- Adres: Abdijstraat 226a, 2020 Antwerpen, België',
     '- Telefoon: +32 3 644 23 31',
     '- E-mail: info.lamiapizzeria@mail.com',
-    '- Openingsuren: maandag–vrijdag 11:30–02:00, zaterdag–zondag 14:00–02:00 (feestdagen kunnen afwijken)',
+    '- Openingsuren: maandag–donderdag 15:00–02:00, vrijdag 14:30–02:00, zaterdag 14:00–02:00, zondag 14:00–01:30 (feestdagen kunnen afwijken)',
     '- Halal: al het vlees is 100% halal. Er wordt geen alcohol geschonken.',
     '- Keuken: New York style pizza (small, medium, large), pasta, burgers, broodjes, kapsalon, snacks, desserts, ijs',
     '- Vegetarisch: o.a. Margherita, Veggie, Funghi, Italiano, Quattro Formaggi. Veganistisch en glutenvrij op aanvraag.',
@@ -908,7 +908,7 @@ async function handleApi(req, res, urlPath) {
     var source = ((isAuthed(req) || isPos(req)) && ob.source === 'pos') ? 'pos' : 'web';
     // buiten de openingsuren mag de webshop niet bestellen; de kassa (ingelogd personeel) wel
     if (source === 'web' && !isOpenNow()) {
-      return sendJson(res, 403, { error: 'We zijn momenteel gesloten. Online bestellen kan tijdens de openingsuren: ma–vr vanaf 11:30, za–zo vanaf 14:00, elke dag tot 02:00.', closed: true });
+      return sendJson(res, 403, { error: 'We zijn momenteel gesloten. Online bestellen kan tijdens de openingsuren: ma–do vanaf 15:00, vr vanaf 14:30, za–zo vanaf 14:00, tot 02:00 (zondag 01:30).', closed: true });
     }
     // Leveringszone: de webshop mag enkel leveren binnen DELIVERY_RADIUS_KM van de zaak.
     if (source === 'web' && type === 'leveren') {

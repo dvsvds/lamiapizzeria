@@ -143,7 +143,7 @@ Voor een pizzeria is dit de belangrijkste van de drie: hier komen de meeste
    Zo krijgt je profiel een "Online bestellen"-knop die naar je eigen webshop
    gaat in plaats van naar een bezorgplatform.
 3. Controleer dat de **openingsuren** exact overeenkomen met de site
-   (ma–vr 11:30–02:00, za–zo 14:00–02:00) en zet feestdaguren als die afwijken.
+   (ma–do 15:00–02:00, vr 14:30–02:00, za 14:00–02:00, zo 14:00–01:30; de website volgt het profiel sinds 18/10/2026) en zet feestdaguren als die afwijken.
 4. Vul **kenmerken** in: afhalen, levering, halal, betaalmiddelen.
 5. Upload regelmatig foto's en beantwoord reviews — dat weegt zwaar in de
    lokale ranking.
@@ -222,7 +222,7 @@ Eén pagina per buurt plus één over halal, zodat Google de zaak toont bij
 - **FAQ op de homepage** (`#faq`) met FAQPage-structured data: halal, soort
   pizza, bezorggebied, kosten, uren, online betalen, vegetarisch.
 - **Leverprijs eerlijk vermeld**: pizza en pasta kosten bij levering € 6 meer
-  (`PIZZA_SURCHARGE` in `order.html`), daarna 30% korting. Wijzigt dat, pas
+  (`PIZZA_SURCHARGE` in `order.html`), daarna 10% korting. Wijzigt dat, pas
   dan ook `FEIT.leverprijs` (tools/buurtpaginas.js), `llmsTxt()` en de
   homepage-FAQ aan.
 - Alle AI-crawlers (GPTBot, OAI-SearchBot, PerplexityBot, ClaudeBot, …) mogen
