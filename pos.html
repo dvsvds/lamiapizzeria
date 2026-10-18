@@ -1916,9 +1916,32 @@
         renderOnline(); return true;
       });
     }
+    // Terugval-synchronisatie: haalt de actieve bestellingen opnieuw op en voegt
+    // gemiste online bestellingen alsnog toe (met alarm). Draait periodiek én na
+    // elke SSE-herverbinding, zodat een bestelling die tijdens een verbindings-
+    // gaatje binnenkwam (bv. bij een server-herstart) toch op de kassa verschijnt.
+    function syncOrders(){
+      return fetch('api/admin/orders?active=1',{credentials:'same-origin'}).then(function(r){
+        if(r.status===401) return null; return r.json();
+      }).then(function(j){
+        if(!j) return false;
+        var seen={};
+        (j.orders||[]).forEach(function(o){
+          if(o.source!=='web'||o.status!=='nieuw') return;
+          seen[o.id]=true;
+          addWebOrder(o,true);                 // alarmeert enkel als het écht nieuw is
+        });
+        // bestellingen die de server niet meer als nieuw ziet (elders geladen/afgevinkt) weghalen
+        Object.keys(webOrders).forEach(function(id){ if(!seen[id]) removeWebOrder(id); });
+        return true;
+      }).catch(function(){ return false; });
+    }
+    var orderPollTimer=null;
+    function startOrderPoll(){ if(orderPollTimer) return; orderPollTimer=setInterval(syncOrders, 20000); }
     function connectSSE(){
       if(esPos) esPos.close();
       esPos=new EventSource('api/events');
+      esPos.onopen=function(){ syncOrders(); };   // meteen hersynchroniseren na (her)verbinden
       esPos.addEventListener('order',function(ev){ try{ addWebOrder(JSON.parse(ev.data),true); }catch(e){} });
       esPos.addEventListener('status',function(ev){ try{ var d=JSON.parse(ev.data); if(d.status!=='nieuw') removeWebOrder(d.id); }catch(e){} });
     }
@@ -1933,7 +1956,7 @@
        mag zien en kassabonnen mag aanmaken. Vroeger kreeg iedereen die rol. */
     var activating=false;
     function verbind(){                      // rol is rond: alles aanzetten
-      onlineAuthed=true; serverSession=true; connectSSE(); flushOutbox(); bijwerkenKoppelKnop();
+      onlineAuthed=true; serverSession=true; connectSSE(); startOrderPoll(); flushOutbox(); bijwerkenKoppelKnop();
     }
     // stille poging: enkel met de koppeling die dit toestel al heeft
     function activate(){

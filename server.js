@@ -1451,6 +1451,46 @@ var server = http.createServer(function (req, res) {
   serveStatic(req, res, urlPath);
 });
 
+/* ---------- vangnet: gemiste Mollie-webhooks inhalen ----------
+   Een online bestelling blijft op pay_status='open' staan tot de Mollie-webhook
+   'betaald' meldt. Komt die webhook niet aan (server net aan het herstarten,
+   netwerkhapering bij Mollie, ...), dan zou een BETAALDE bestelling nooit op de
+   kassa/keuken verschijnen. Daarom vragen we periodiek zelf bij Mollie de status
+   op van recente 'open' bestellingen en geven ze alsnog vrij — net als de webhook. */
+var reconciling = false;
+async function reconcileMollie() {
+  if (!MOLLIE_API_KEY || reconciling) return;
+  reconciling = true;
+  try {
+    // enkel recente openstaande webbestellingen met een Mollie-id (oudere zijn verlaten)
+    var since = Date.now() - 6 * 3600e3; // laatste 6 uur
+    var rows = db.prepare(
+      "SELECT id, mollie_id FROM orders WHERE source='web' AND pay_status='open' AND mollie_id IS NOT NULL AND mollie_id != '' AND created_at >= ? ORDER BY id ASC LIMIT 50"
+    ).all(since);
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      try {
+        var pm = await mollie('GET', '/payments/' + encodeURIComponent(r.mollie_id));
+        // enkel bijwerken als de bestelling intussen niet al betaald is
+        var cur = db.prepare('SELECT pay_status FROM orders WHERE id=?').get(r.id);
+        if (!cur || cur.pay_status === 'paid') continue;
+        if (pm.status === 'paid') {
+          db.prepare("UPDATE orders SET pay_status='paid', pay=? WHERE id=?").run(JSON.stringify({ method: 'online', provider: 'mollie', id: r.mollie_id }), r.id);
+          broadcast('order', orderRow(r.id)); // nu alsnog zichtbaar in keuken/kassa
+          console.log('Mollie-vangnet: bestelling ' + r.id + ' alsnog vrijgegeven (betaald)');
+        } else if (pm.status === 'expired' || pm.status === 'canceled' || pm.status === 'failed') {
+          db.prepare('UPDATE orders SET pay_status=? WHERE id=?').run(pm.status, r.id);
+        }
+      } catch (e) { /* 1 betaling faalt: door naar de volgende */ }
+    }
+  } catch (e) { /* db/Mollie even niet beschikbaar: volgende ronde opnieuw */ }
+  finally { reconciling = false; }
+}
+if (MOLLIE_API_KEY) {
+  setInterval(function () { reconcileMollie(); }, 90000); // elke 90s
+  setTimeout(function () { reconcileMollie(); }, 15000);  // en kort na het opstarten
+}
+
 server.listen(PORT, function () {
   console.log('La Mia Pizzeria — systeem draait');
   // De beheer-PIN stond hier vroeger voluit in. Op Railway staan die logs in het
