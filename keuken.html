@@ -209,21 +209,29 @@
   /* ---------- live verbinding ---------- */
   function setConn(on){ var c=$('#conn'); c.className='conn '+(on?'on':'off'); $('#connTxt').textContent=on?'live':'offline'; }
   function checkSession(){ fetch('api/session',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){ if(!j||!j.authed) showLogin(); }).catch(function(){}); }
-  // haal de actuele bestellingen op (ook na een herverbinding, zodat niets gemist wordt)
-  function resync(){
+  // haal de actuele bestellingen op (ook na een herverbinding of periodiek, zodat niets
+  // gemist wordt). Met alert=true piept/knippert een bestelling die hier nog niet gekend
+  // was — zo valt een bestelling die tijdens een verbindingsgaatje binnenkwam toch op.
+  function resync(alert){
     return fetch('api/admin/orders?active=1',{credentials:'same-origin'}).then(function(r){
       if(r.status===401){ showLogin(); return null; }
       return r.json();
     }).then(function(j){
       if(!j) return;
-      orders={}; (j.orders||[]).forEach(function(o){ orders[o.id]=o; });
+      var next={};
+      (j.orders||[]).forEach(function(o){
+        if(o.status==='afgehaald') return;
+        if(alert && !orders[o.id]){ flash[o.id]=true; beep(); } // gemiste nieuwe bestelling → alarm
+        next[o.id]=o;
+      });
+      orders=next;
       render();
     }).catch(function(){});
   }
   function connect(){
     if(es) es.close();
     es=new EventSource('api/events');
-    es.onopen=function(){ setConn(true); resync(); };  // her-synchroniseren bij (her)verbinden
+    es.onopen=function(){ setConn(true); resync(true); };  // her-synchroniseren bij (her)verbinden
     es.onerror=function(){ setConn(false); checkSession(); }; // sessie verlopen? → login
     es.addEventListener('order',function(ev){
       var o=JSON.parse(ev.data); if(o.status==='afgehaald') return;
@@ -262,6 +270,9 @@
   function tick(){ var d=new Date(); $('#clock').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0'); }
   setInterval(tick,1000); tick();
   setInterval(function(){ if(Object.keys(orders).length) render(); }, 20000); // timers verversen
+  // terugval-poll: ook als de SSE-verbinding stil zou wegvallen, halen we elke 20s de
+  // actieve bestellingen op zodat niets op het keukenscherm ontbreekt
+  setInterval(function(){ resync(true); }, 20000);
 
   /* ---------- start ---------- */
   fetch('api/session',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
