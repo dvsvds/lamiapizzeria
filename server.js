@@ -69,11 +69,11 @@ if (GOOGLE_SITE_VERIFICATION && !/^[A-Za-z0-9_-]+$/.test(GOOGLE_SITE_VERIFICATIO
 }
 // Enkel deze pagina's zijn publiek en krijgen de Google-tags; beheer/kassa/keuken nooit.
 var PUBLIC_PAGES = { 'index.html': 1, 'order.html': 1 };
-// Buurtpagina's (pizza-hoboken.html, …, halal-pizza-antwerpen.html), gemaakt door
+// Buurtpagina's (pizza-hoboken.html, …, halal-pizza-antwerpen.html, take-away-antwerpen.html), gemaakt door
 // tools/buurtpaginas.js. Ze worden hier opgezocht, zodat een nieuwe buurt
 // vanzelf publiek is en in de sitemap komt.
 var AREA_PAGES = fs.readdirSync(__dirname).filter(function (f) {
-  return /^(halal-)?pizza-[a-z0-9-]+\.html$/.test(f);
+  return /^(halal-pizza|pizza|take-away)-[a-z0-9-]+\.html$/.test(f);
 }).sort();
 AREA_PAGES.forEach(function (f) { PUBLIC_PAGES[f] = 1; });
 
@@ -729,7 +729,8 @@ function llmsTxt() {
     pagina('', 'Homepage met menu, openingsuren en ligging'),
     pagina('order', 'Online bestellen (webshop)'),
     pagina('halal-pizza-antwerpen', 'Halal pizza in Antwerpen'),
-  ].concat(AREA_PAGES.filter(function (f) { return f.indexOf('halal') !== 0; }).map(function (f) {
+    pagina('take-away-antwerpen', 'Take away: afhalen aan de Abdijstraat, afhaaldeals'),
+  ].concat(AREA_PAGES.filter(function (f) { return f.indexOf('pizza-') === 0; }).map(function (f) {
     var slug = f.replace(/\.html$/, '');
     var naam = slug.replace(/^pizza-/, '').split('-').map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join('-');
     return pagina(slug, 'Pizza bezorgen in ' + naam);
