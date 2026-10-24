@@ -851,6 +851,12 @@ function belgiumDate(iso) {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso));
   } catch (e) { return String(iso || '').slice(0, 10); }
 }
+// Zakendag (YYYY-MM-DD): de dag sluit om 03:00, dus de uren 00:00–03:00 tellen nog bij de
+// vorige dag. We schuiven de tijd 3 uur terug en nemen dan de Belgische kalenderdag.
+function belgiumBizDate(iso) {
+  try { var d = new Date(iso); d.setUTCHours(d.getUTCHours() - 3); return belgiumDate(d.toISOString()); }
+  catch (e) { return belgiumDate(iso); }
+}
 // Maandag (YYYY-MM-DD) van de week waarin een kalenderdag valt, voor het per-week overzicht.
 function weekMonday(ymd) {
   try {
@@ -1357,8 +1363,8 @@ async function handleApi(req, res, urlPath) {
         // aantal bons per betaalwijze (één bon telt onder zijn hoofdmethode)
         var pm = (!pay) ? 'onbetaald' : (pay.method === 'card' || pay.method === 'split') ? 'card' : (pay.method === 'online') ? 'online' : 'cash';
         rep.byPayCount[pm] = (rep.byPayCount[pm] || 0) + 1;
-        // per dag
-        var day = belgiumDate(o.created_at);
+        // per dag (zakendag: sluit om 03:00)
+        var day = belgiumBizDate(o.created_at);
         var bd = rep.byDay[day] || (rep.byDay[day] = { revenue: 0, count: 0, cash: 0, card: 0, online: 0, onbetaald: 0 });
         bd.revenue += o.total || 0; bd.count++; bd.cash += cAmt; bd.card += kAmt; bd.online += oAmt; bd.onbetaald += uAmt;
         // per week (op de maandag van die week)
