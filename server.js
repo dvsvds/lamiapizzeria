@@ -938,6 +938,16 @@ async function handleApi(req, res, urlPath) {
         var minPrice = prod.sizes ? Math.min.apply(null, JSON.parse(prod.sizes)) : prod.price;
         if (unit < minPrice - 0.01) priceError = name;
       }
+      // 'Eigen pizza' uit de pizzabouwer staat niet op de kaart: basis = Margherita per maat
+      // + per '+topping' hetzelfde tarief als de kassa (Small 0,50 · Medium 1 · Large 1,50).
+      if (source === 'web' && !prod && name === 'Eigen pizza') {
+        var opts = Array.isArray(it.opts) ? it.opts.map(String) : [];
+        var si = Math.max(0, ['Small', 'Medium', 'Large'].indexOf(opts[0]));
+        var marg = db.prepare('SELECT sizes FROM products WHERE name=?').get('Margherita');
+        var base = (marg && marg.sizes) ? JSON.parse(marg.sizes) : [8, 9, 10];
+        var tops = opts.filter(function (o) { return o.charAt(0) === '+'; }).length;
+        if (unit < (Number(base[si]) || 0) + tops * [0.5, 1, 1.5][si] - 0.01) priceError = name;
+      }
       subtotal += unit * qty;
       return {
         name: name,
