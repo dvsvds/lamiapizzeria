@@ -171,7 +171,10 @@
   var range={from:null,to:null,label:''};
   var lastRep=null; // laatst geladen rapportdata (voor het ticket-afdrukken)
 
-  function dayStart(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
+  // Zakendag sluit om 03:00 's nachts: de uren 00:00–03:00 tellen nog bij de vorige dag.
+  var BIZ_HOUR=3;
+  function bizDate(d){ var b=new Date(d); b.setHours(b.getHours()-BIZ_HOUR); return b; }
+  function dayStart(d){ var b=bizDate(d); return new Date(b.getFullYear(),b.getMonth(),b.getDate(),BIZ_HOUR,0,0,0); }
   function addDays(d,n){ var x=new Date(d); x.setDate(x.getDate()+n); return x; }
   function fmtDay(d){ return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
   // taalkeuze (gedeeld met i18n-admin.js) → periodenamen meteen in de juiste taal tonen
@@ -182,15 +185,15 @@
     var now=new Date(), s, e, label;
     if(key==='today'){ s=dayStart(now); e=addDays(s,1); label=L('Vandaag · ','Today · ')+fmtDay(s); }
     else if(key==='yesterday'){ e=dayStart(now); s=addDays(e,-1); label=L('Gisteren · ','Yesterday · ')+fmtDay(s); }
-    else if(key==='week'){ var wd=(now.getDay()+6)%7; s=addDays(dayStart(now),-wd); e=addDays(dayStart(now),1); label=L('Deze week · vanaf ','This week · from ')+fmtDay(s); }
-    else if(key==='month'){ s=new Date(now.getFullYear(),now.getMonth(),1); e=addDays(dayStart(now),1); label=L('Deze maand · ','This month · ')+fmtDay(s)+' → '+fmtDay(now); }
+    else if(key==='week'){ var wd=(bizDate(now).getDay()+6)%7; s=addDays(dayStart(now),-wd); e=addDays(dayStart(now),1); label=L('Deze week · vanaf ','This week · from ')+fmtDay(s); }
+    else if(key==='month'){ var bn=bizDate(now); s=new Date(bn.getFullYear(),bn.getMonth(),1,BIZ_HOUR,0,0,0); e=addDays(dayStart(now),1); label=L('Deze maand · ','This month · ')+fmtDay(s)+' → '+fmtDay(bn); }
     range={from:s.toISOString(), to:e.toISOString(), label:label};
     load();
   }
   function setCustom(){
     var f=$('#cFrom').value, t=$('#cTo').value;
     if(!f||!t){ return; }
-    var s=new Date(f+'T00:00:00'), e=addDays(new Date(t+'T00:00:00'),1);
+    var s=new Date(f+'T03:00:00'), e=addDays(new Date(t+'T03:00:00'),1);
     range={from:s.toISOString(), to:e.toISOString(), label:L('Aangepast · ','Custom · ')+fmtDay(s)+' → '+fmtDay(new Date(t+'T00:00:00'))};
     [].forEach.call(document.querySelectorAll('#periods .p'),function(x){x.classList.remove('on');});
     load();
