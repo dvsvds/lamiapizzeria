@@ -400,7 +400,12 @@
 
 <!-- Online bestellingen (van de website) -->
 <div class="ov" id="ovOnline"><div class="modal wide"><div class="mhead"><h3>🌐 Online bestellingen</h3><button class="x" data-close>✕</button></div>
-  <div class="mbody"><div class="plist" id="onlineList"></div></div>
+  <div class="mbody"><div class="plist" id="onlineList"></div>
+    <!-- Afgevinkte of al geladen webbestellingen van de laatste uren: zo raakt
+         een per ongeluk weggedrukte bestelling nooit kwijt. -->
+    <h4 style="margin:1.1rem 0 .4rem">Eerder vandaag</h4>
+    <div class="plist" id="onlineRecent"><p class="hint">Laden…</p></div>
+  </div>
 </div></div>
 
 <!-- Report modal -->
@@ -426,7 +431,7 @@
   <div class="mhead"><h3>🌐 Nieuwe online bestelling</h3></div>
   <div class="mbody" id="nieuwBody"></div>
   <div class="mfoot" style="gap:.6rem">
-    <button class="abtn" id="nieuwLater" style="flex:1">Later</button>
+    <button class="abtn" id="nieuwLater" style="flex:1">Later (herinner over 3 min)</button>
     <button class="bigadd" id="nieuwLaden" style="flex:1.4">In de kassa laden</button>
   </div>
 </div></div>
@@ -1836,7 +1841,7 @@
         '<div style="margin:.8rem 0;line-height:1.5;font-weight:600">'+items+'</div>'+
         '<div style="font-family:\'Anton\',sans-serif;font-size:1.6rem">'+euro(o.total)+'</div>';
       $('#nieuwLaden').onclick=function(){ closeOv('#ovNieuw'); stopAlarm(); loadIntoTicket(o.id); };
-      $('#nieuwLater').onclick=function(){ closeOv('#ovNieuw'); stopAlarm(); };
+      $('#nieuwLater').onclick=function(){ closeOv('#ovNieuw'); stopAlarm(); herinnerLater(o.id); };
       openOv('#ovNieuw');
     }
     // probeer de wachtende melding te tonen zodra er niets anders openstaat
@@ -1846,6 +1851,15 @@
       var o=wachtendeMelding; wachtendeMelding=null;
       if(meldingTimer){ clearInterval(meldingTimer); meldingTimer=null; }
       toonNieuweBestelling(o);
+    }
+    // 'Later' laat een bestelling niet vergeten: zolang ze nog niet geladen of
+    // afgevinkt is, komt de melding (met alarm) na HERINNER_MS opnieuw.
+    var HERINNER_MS=3*60*1000;
+    function herinnerLater(id){
+      setTimeout(function(){
+        var o=webOrders[id]; if(!o) return;      // ondertussen afgehandeld
+        startAlarm(); meldNieuweBestelling(o);
+      },HERINNER_MS);
     }
     function meldNieuweBestelling(o){
       wachtendeMelding=o;
@@ -1997,15 +2011,53 @@
 
     $('#btnOnline').onclick=function(){
       stopAlarm(); // personeel heeft gereageerd → alarm stopt
-      if(onlineAuthed){ openOv('#ovOnline'); return; }
+      if(onlineAuthed){ openOv('#ovOnline'); loadRecent(); return; }
       activate().then(function(ok){
-        if(ok){ openOv('#ovOnline'); return; }
+        if(ok){ openOv('#ovOnline'); loadRecent(); return; }
         // nog niet gekoppeld → nu pas de PIN vragen
-        koppelMetPin().then(function(ok2){ if(ok2) openOv('#ovOnline'); });
+        koppelMetPin().then(function(ok2){ if(ok2){ openOv('#ovOnline'); loadRecent(); } });
       });
     };
 
-    function ackOrder(id){ fetch('api/admin/orders/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status:'bereiden'})}).catch(function(){}); removeWebOrder(id); }
+    function ackOrder(id){
+      fetch('api/admin/orders/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status:'bereiden'})})
+        .then(loadRecent).catch(function(){});
+      removeWebOrder(id);
+    }
+    /* "Eerder vandaag": webbestellingen van de laatste 18 uur die niet meer
+       nieuw zijn (afgevinkt, geladen, klaar, meegegeven). Met "Terugzetten"
+       komt een bestelling weer bovenaan als nieuw, met alle knoppen. */
+    var recentEl=$('#onlineRecent');
+    var STATUS_NL={bereiden:'in bereiding',klaar:'klaar',afgehaald:'meegegeven'};
+    function loadRecent(){
+      return fetch('api/admin/orders',{credentials:'same-origin'}).then(function(r){ return r.ok?r.json():null; }).then(function(j){
+        if(!j) return;
+        var grens=Date.now()-18*3600*1000;
+        var lijst=(j.orders||[]).filter(function(o){
+          return o.source==='web' && o.status!=='nieuw' && o.status!=='geannuleerd' && !o.voided_at && Date.parse(o.created_at)>=grens;
+        });
+        if(!lijst.length){ recentEl.innerHTML='<p class="hint">Nog geen afgehandelde online bestellingen.</p>'; return; }
+        recentEl.innerHTML=lijst.map(function(o){
+          var items=(o.items||[]).map(function(l){return l.qty+'× '+esc(l.name)+(l.opts&&l.opts.length?(' ('+esc(l.opts.join(', '))+')'):'')+(l.note?(' — '+esc(l.note)):'');}).join('<br>');
+          var typ={terplaatse:'Ter plaatse',afhalen:'Afhalen',leveren:'Leveren'}[o.type]||o.type;
+          var uur=new Date(o.created_at).toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Brussels'});
+          return '<div class="pitem" style="align-items:flex-start;opacity:.85">'+
+            '<div class="meta"><b>'+esc(o.no||('#'+o.id))+'</b> · '+typ+' · '+uur+' · <i>'+(STATUS_NL[o.status]||o.status)+'</i>'+
+              '<div>'+esc(o.cust_name||'')+(o.cust_phone?(' · '+esc(o.cust_phone)):'')+(o.type==='leveren'&&o.cust_address?(' · '+esc(o.cust_address)):'')+(o.time_wanted?(' · gewenst '+esc(o.time_wanted)):'')+'</div>'+
+              '<div style="margin-top:.3rem;color:var(--cream);font-weight:600">'+items+'</div>'+
+              '<div style="margin-top:.2rem;color:var(--gold);font-weight:800">'+euro(o.total)+'</div></div>'+
+            '<div class="acts"><button class="load" data-terug="'+o.id+'">Terugzetten</button></div></div>';
+        }).join('');
+      }).catch(function(){});
+    }
+    recentEl.addEventListener('click',function(e){
+      var b=e.target.closest('[data-terug]'); if(!b) return;
+      var id=+b.getAttribute('data-terug'); b.disabled=true;
+      fetch('api/admin/orders/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status:'nieuw'})})
+        .then(function(r){ if(!r.ok) throw 0; return syncOrders(); })
+        .then(function(){ loadRecent(); toast('Bestelling staat weer bij de nieuwe'); })
+        .catch(function(){ b.disabled=false; toast('Terugzetten mislukt'); });
+    });
     function loadIntoTicket(id){
       var o=webOrders[id]; if(!o) return;
       if(state.lines.length){
@@ -2034,7 +2086,7 @@
       var lo=e.target.closest('[data-load]'), ak=e.target.closest('[data-ack]');
       if(lo||ak) stopAlarm(); // reactie op de bestelling → alarm stopt
       if(lo) loadIntoTicket(+lo.getAttribute('data-load'));
-      else if(ak) ackOrder(+ak.getAttribute('data-ack'));
+      else if(ak){ ackOrder(+ak.getAttribute('data-ack')); toast('Afgevinkt — staat nog onder "Eerder vandaag"'); }
     });
 
     activate(); // stille poging bij opstart (als er al een sessie is)
