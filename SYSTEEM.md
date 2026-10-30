@@ -48,6 +48,10 @@ het beheerscherm).
   verwijderen, maten voor pizza's, een product tijdelijk op **onbeschikbaar**
   zetten ("uitverkocht"), labels (Populair/Aanrader), afbeelding kiezen, en
   categorieën beheren.
+- **Online bestellen aan/uit**: de knop **🌐 Online bestellen** bovenaan in
+  `beheer.html` zet de webshop dicht of open. Staat hij op UIT, dan toont
+  `order.html` een melding om te bellen en weigert de server webbestellingen;
+  de kassa werkt gewoon door.
 
 ### Fase 2 — webshop gekoppeld ✅
 
