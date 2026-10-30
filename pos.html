@@ -1747,7 +1747,8 @@
 
   function tick(){
     var d=new Date();
-    var days=['zo','ma','di','wo','do','vr','za'];
+    var en=false; try{ en=localStorage.getItem('lamia_admin_lang')==='en'; }catch(e){}
+    var days=en?['Sun','Mon','Tue','Wed','Thu','Fri','Sat']:['zo','ma','di','wo','do','vr','za'];
     $('#clock').textContent=days[d.getDay()]+' '+String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+' '+
       String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
   }

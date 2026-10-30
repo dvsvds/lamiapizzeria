@@ -52,6 +52,22 @@
     'vis': 'Fish', 'vlees': 'Meat', 'kaas': 'Cheese', 'zee': 'Sea',
     'bv. margherita': 'e.g. Margherita', 'toppings / ingrediënten': 'Toppings / ingredients',
     'bv. populair': 'e.g. Popular', 'bv. salades': 'e.g. Salads',
+    // --- online bestellen aan/uit (beheer) ---
+    '🌐 online bestellen: aan': '🌐 Online ordering: ON', '🌐 online bestellen: uit': '🌐 Online ordering: OFF',
+    '🌐 online bestellen: …': '🌐 Online ordering: …',
+    'online bestellen via de website aan- of uitzetten': 'Turn online ordering via the website on or off',
+    'online bestellen staat aan': 'Online ordering is ON', 'online bestellen staat uit': 'Online ordering is OFF',
+    // --- kassa: rapporten/beheer-knoppen en online bestellingen ---
+    '📈 rapporten': '📈 Reports', '⚙️ beheer': '⚙️ Management', '🧾 bonnen': '🧾 Receipts',
+    'rapporten (omzet per dag, week, maand) — opent in een nieuw tabblad': 'Reports (revenue per day, week, month) — opens in a new tab',
+    'beheer (menu, prijzen, online bestellen aan/uit) — opent in een nieuw tabblad': 'Management (menu, prices, online ordering on/off) — opens in a new tab',
+    '🌐 nieuwe online bestelling': '🌐 New online order', 'in de kassa laden': 'Load into register',
+    'later (herinner over 3 min)': 'Later (remind in 3 min)',
+    'eerder vandaag': 'Earlier today', 'laden…': 'Loading…',
+    'nog geen afgehandelde online bestellingen.': 'No handled online orders yet.',
+    'terugzetten': 'Restore', 'bestelling staat weer bij de nieuwe': 'Order is back with the new ones',
+    'terugzetten mislukt': 'Restore failed',
+    'afgevinkt — staat nog onder "eerder vandaag"': 'Checked off — still listed under "Earlier today"',
     // --- kassa ---
     'bestelling': 'Order', 'nog geen artikels.': 'No items yet.',
     'tik links op een product om te starten.': 'Tap a product on the left to start.',
@@ -250,7 +266,8 @@
     ['producten', 'products'], ['categorieën', 'categories'], ['artikels', 'items'], ['artikel', 'item'],
     ['Subtotaal', 'Subtotal'], ['Leveringskosten', 'Delivery fee'], ['waarvan', 'of which'], ['stuk', 'each'],
     ['Tafel', 'Table'], ['afgerekende', 'settled'], ['afgerekend', 'settled'],
-    ['geparkeerd', 'parked'], ['geopend', 'opened'], ['toegevoegd', 'added'],
+    ['Leveren', 'Delivery'], ['Afhalen', 'Takeaway'], ['Ter plaatse', 'Dine-in'],
+    ['gewenst', 'requested'], ['geparkeerd', 'parked'], ['geopend', 'opened'], ['toegevoegd', 'added'],
     ['Sessie sinds openen', 'Session since opening'], ['Wisselgeld', 'Change'], ['Ontvangen', 'Received'],
     // pizza-toppings (kassa)
     ['Extra kaas', 'Extra cheese'], ['Rode ui', 'Red onion'], ['Champignons', 'Mushrooms'], ['Olijven', 'Olives'],

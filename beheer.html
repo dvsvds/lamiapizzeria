@@ -241,6 +241,8 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   function toast(m){ var t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove('show');},1600); }
 
+  // taal van de personeelsschermen (i18n-admin.js); nodig voor confirm(), dat de vertaling niet ziet
+  var EN=(function(){ try{ return localStorage.getItem('lamia_admin_lang')==='en'; }catch(e){ return false; } })();
   function api(method,url,body){
     return fetch(url,{method:method,headers:body?{'Content-Type':'application/json'}:undefined,
       body:body?JSON.stringify(body):undefined,credentials:'same-origin'})
@@ -381,7 +383,7 @@
     });
   };
   $('#prodDel').onclick=function(){
-    if(!editingProd||!confirm('"'+editingProd.name+'" verwijderen?')) return;
+    if(!editingProd||!confirm(EN?('Delete "'+editingProd.name+'"?'):('"'+editingProd.name+'" verwijderen?'))) return;
     api('DELETE','/api/admin/products/'+editingProd.id).then(function(r){
       if(r.ok){ close('#ovProd'); toast('Verwijderd'); loadAll(); } else toast(r.data.error||'Fout');
     });
@@ -409,7 +411,7 @@
     req.then(function(r){ if(!r.ok) return catError(r.data.error||'Fout'); close('#ovCat'); toast('Categorie opgeslagen'); loadAll(); });
   };
   $('#catDel').onclick=function(){
-    if(!editingCat||!confirm('Categorie "'+editingCat.label+'" verwijderen?')) return;
+    if(!editingCat||!confirm(EN?('Delete category "'+editingCat.label+'"?'):('Categorie "'+editingCat.label+'" verwijderen?'))) return;
     api('DELETE','/api/admin/categories/'+editingCat.id).then(function(r){
       if(r.ok){ close('#ovCat'); toast('Categorie verwijderd'); loadAll(); } else catError(r.data.error||'Fout');
     });
@@ -427,7 +429,10 @@
   $('#btnOnline').onclick=function(){
     if(onlineOn===null) return;
     var naar=!onlineOn;
-    if(!confirm(naar?'Online bestellen via de website weer AANZETTEN?':'Online bestellen via de website UITZETTEN?\n\nKlanten kunnen dan niet meer online bestellen en zien dat ze moeten bellen. De kassa blijft gewoon werken.')) return;
+    var vraag=EN
+      ? (naar?'Turn online ordering via the website back ON?':'Turn online ordering via the website OFF?\n\nCustomers can no longer order online and will be asked to call. The register keeps working as usual.')
+      : (naar?'Online bestellen via de website weer AANZETTEN?':'Online bestellen via de website UITZETTEN?\n\nKlanten kunnen dan niet meer online bestellen en zien dat ze moeten bellen. De kassa blijft gewoon werken.');
+    if(!confirm(vraag)) return;
     api('POST','/api/admin/online-orders',{on:naar}).then(function(r){
       if(!r.ok){ toast(r.data.error||'Fout'); return; }
       showOnline(!!r.data.on); toast(r.data.on?'Online bestellen staat AAN':'Online bestellen staat UIT');
