@@ -253,6 +253,11 @@
   /* ---------- Receipt (print) ---------- */
   #receipt{display:none}
   @media print{
+    /* Enkel de bon mag ruimte innemen. Met alleen visibility:hidden bleef het
+       verborgen scherm (bv. het dagrapport met alle bons van de dag) even hoog,
+       en drukte de bonprinter die lege ruimte af als extra lege tickets. */
+    html,body{height:auto!important;overflow:visible!important}
+    body>*:not(#receipt){display:none!important}
     body *{visibility:hidden}
     #receipt,#receipt *{visibility:visible}
     /* Vult de volledige breedte van de bonrol; de printer bepaalt zelf de papierbreedte
