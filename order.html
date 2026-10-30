@@ -642,6 +642,8 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   /* De productenlijst scrollt binnenin; titel, totaal en afreken-knop blijven altijd in beeld */
   #cartLines{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;margin-right:-.5rem;padding-right:.5rem}
   .cart>h3,.cart-mode,.cart-tot,.min-note,.cart-checkout{flex:0 0 auto}
+  .orders-off{background:var(--red);color:#fff;border-radius:var(--radius);padding:.9rem 1.1rem;margin:0 0 1.2rem;font-size:.95rem}
+  .orders-off a{color:#fff;font-weight:800;text-decoration:underline}
   .cart-empty{color:var(--muted-2);font-size:.9rem;padding:.5rem 0 1rem}
   .cl{display:flex;gap:.7rem;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid var(--line)}
   .cl-name{font-weight:700;color:var(--cream);font-size:.9rem}
@@ -1054,6 +1056,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
       <p>Kies uit het menu, personaliseer en reken af. Je betaalt meteen online met Bancontact of kaart.</p>
     </div>
 
+    <p class="orders-off" id="ordersOff" style="display:none">⚠️ <b>Online bestellen is even niet mogelijk.</b> Bel ons op <a href="tel:+3236442331">03 644 23 31</a> om te bestellen.</p>
     <p class="halal-note">🥩 <b>Al ons vlees is 100% halal.</b> Onze pepperoni, salami, ham en spek zijn halal varianten.</p>
 
     <!-- Pizza builder (voorlopig verborgen op verzoek – markup staat in git-historie om te herstellen) -->
@@ -1294,7 +1297,10 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
     else { seen(); }
   });
   var lt=document.getElementById('langToggle'); if(lt) lt.addEventListener('click',function(){ setTimeout(function(){ show(idx); },0); });
-  setTimeout(function(){ pop.classList.add('show'); show(0); seen(); }, 900);
+  setTimeout(function(){
+    if(window.__ordersOff) return;   // online bestellen staat uit: geen 'bestel online'-reclame
+    pop.classList.add('show'); show(0); seen();
+  }, 900);
 })();
 </script>
 <button type="button" class="fab" id="cartFab" aria-label="Bekijk mandje">🍕 Bestel nu</button>
@@ -1626,6 +1632,8 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
               // Geen online betaling mogelijk → bestellen heeft geen zin; verwijs naar de telefoon
               if(por) por.style.display='none';
               if(uit) uit.style.display='';
+              var off=$('#ordersOff'); if(off) off.style.display='';
+              window.__ordersOff=true; var pp=document.getElementById('promoPop'); if(pp) pp.classList.remove('show');
               var verzend=document.querySelector('.co-submit');
               if(verzend){ verzend.disabled=true; verzend.textContent='Online bestellen even niet mogelijk'; }
             } }
@@ -2395,6 +2403,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
     "4 small pizza's + 4 looksaus + 4 frisdrank":"4 small pizzas + 4 garlic sauces + 4 sodas",
     "2 pasta's (kip of scampi) + 1 looksaus":"2 pastas (chicken or scampi) + 1 garlic sauce",
     "korting levering (10%)":"Delivery discount (10%)",
+    "online bestellen is even niet mogelijk.":"Online ordering is temporarily unavailable.","bel ons op":"Call us on","om te bestellen.":"to order.",
     "je bestelling staat klaar in whatsapp — verstuur het bericht om te bevestigen. 🍕":"Your order is ready in WhatsApp — send the message to confirm it. 🍕","📲 verstuur via whatsapp":"📲 Send via WhatsApp"
   };
   var PLACE = {

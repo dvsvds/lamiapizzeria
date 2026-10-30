@@ -302,6 +302,11 @@ function reportPin() {
   var row = db.prepare('SELECT value FROM settings WHERE key = ?').get('report_pin');
   return row ? String(row.value) : String(process.env.REPORT_PIN || '5678');
 }
+// Online bestellen via de webshop aan/uit (schakelaar in beheer). Standaard aan.
+function onlineOrdersOn() {
+  var row = db.prepare('SELECT value FROM settings WHERE key = ?').get('online_orders');
+  return !row || row.value !== 'uit';
+}
 
 /* ---- rij → net JSON object ---- */
 function rowToProduct(r) {
@@ -894,7 +899,7 @@ async function handleApi(req, res, urlPath) {
   if (seg[0] === 'menu' && method === 'GET') {
     var cats = allCategories();
     var prods = allProducts().filter(function (p) { return p.available; });
-    return sendJson(res, 200, { categories: cats, products: prods, config: { deliveryFee: DELIVERY_FEE, minOrder: MIN_ORDER, open: isOpenNow(), online: !!MOLLIE_API_KEY, deliveryRadiusKm: DELIVERY_RADIUS_KM } });
+    return sendJson(res, 200, { categories: cats, products: prods, config: { deliveryFee: DELIVERY_FEE, minOrder: MIN_ORDER, open: isOpenNow(), online: !!MOLLIE_API_KEY && onlineOrdersOn(), deliveryRadiusKm: DELIVERY_RADIUS_KM } });
   }
 
   /* ---------- publiek: leveradres binnen de zone? ---------- */
@@ -913,6 +918,10 @@ async function handleApi(req, res, urlPath) {
     // Alleen een ingelogde kassa mag een POS-bon (met betaalinfo/eigen nummer) plaatsen.
     // De publieke webshop kan enkel gewone webbestellingen aanmaken.
     var source = ((isAuthed(req) || isPos(req)) && ob.source === 'pos') ? 'pos' : 'web';
+    // online bestellen staat uit in beheer: de webshop mag niets plaatsen; de kassa wel
+    if (source === 'web' && !onlineOrdersOn()) {
+      return sendJson(res, 403, { error: 'Online bestellen is even niet mogelijk. Bel ons op 03 644 23 31 om te bestellen.', ordersOff: true });
+    }
     // buiten de openingsuren mag de webshop niet bestellen; de kassa (ingelogd personeel) wel
     if (source === 'web' && !isOpenNow()) {
       return sendJson(res, 403, { error: 'We zijn momenteel gesloten. Online bestellen kan tijdens de openingsuren: ma–do vanaf 15:00, vr vanaf 14:30, za–zo vanaf 14:00, tot 02:00 (zondag 01:30).', closed: true });
@@ -1204,7 +1213,7 @@ async function handleApi(req, res, urlPath) {
 
   /* ---------- beheer (auth vereist) ---------- */
   if (seg[0] === 'admin') {
-    var kind = seg[1];        // 'products' | 'categories' | 'pin' | 'report' | 'export'
+    var kind = seg[1];        // 'products' | 'categories' | 'pin' | 'online-orders' | 'report' | 'export'
     var id = seg[2];
     // rapporten & export: aparte manager-PIN (los van de kassa-PIN);
     // de rest van het beheer blijft achter de gewone kassa-sessie.
@@ -1425,6 +1434,15 @@ async function handleApi(req, res, urlPath) {
       var csv = '﻿' + out.join('\r\n');
       res.writeHead(200, { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="lamia-rapport.csv"', 'Cache-Control': 'no-store' });
       return res.end(csv);
+    }
+
+    // schakelaar 'online bestellen' (webshop) aan/uit
+    if (kind === 'online-orders') {
+      if (method === 'POST') {
+        var oo = await readBody(req);
+        db.prepare('INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)').run('online_orders', oo.on === false ? 'uit' : 'aan');
+      }
+      return sendJson(res, 200, { on: onlineOrdersOn() });
     }
 
     if (kind === 'pin' && method === 'POST') {
