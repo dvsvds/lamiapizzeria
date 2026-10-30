@@ -500,7 +500,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   .ob-heading:first-of-type{margin-top:.5rem}
 
   /* ---- Pizza builder ---- */
-  .pb{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  .pb{background:linear-gradient(180deg,var(--panel),#191410);border:1px solid var(--line);border-radius:var(--radius);
     padding:1.6rem;margin-bottom:2.4rem;display:grid;grid-template-columns:minmax(240px,360px) 1fr;gap:2rem;align-items:start;box-shadow:var(--sh-sm)}
   .pb-stage{text-align:center;position:sticky;top:96px}
   .pizza{position:relative;width:100%;max-width:340px;aspect-ratio:1;margin:0 auto}
@@ -590,10 +590,6 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   .pb-total{display:flex;justify-content:space-between;align-items:baseline;font-family:'Anton',sans-serif;text-transform:uppercase;font-size:1.35rem;color:var(--cream);margin-bottom:.8rem}
   .pb-total span{color:var(--gold)}
   .pb-add{width:100%;justify-content:center}
-  .pb-intro{color:var(--muted);font-size:.88rem;margin-bottom:1rem}
-  .pb-summary .ov-notelbl{margin-bottom:.8rem}
-  .pb-reset{display:block;margin:.6rem auto 0;background:none;border:0;color:var(--muted);font-size:.82rem;text-decoration:underline;cursor:pointer}
-  .pb-reset:hover{color:var(--coral)}
 
   /* ---- Productkaarten ---- */
   .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:1rem;align-content:start}
@@ -694,11 +690,11 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
   .opt-chip b{color:var(--gold);font-weight:700}
   .opt-chip input{accent-color:var(--red)}
   .ov-notelbl{display:block;font-size:.8rem;color:var(--muted);margin:.4rem 0}
-  #optNote,#pbNote,.co-f input,.co-f textarea{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:.6rem .7rem;color:var(--cream);font-family:inherit;font-size:.92rem;margin-top:.3rem}
+  #optNote,.co-f input,.co-f textarea{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:.6rem .7rem;color:var(--cream);font-family:inherit;font-size:.92rem;margin-top:.3rem}
   .opt-sel{width:100%;background:var(--ink);border:1px solid var(--line);color:var(--cream);border-radius:9px;padding:.55rem .6rem;font-family:inherit;font-size:.9rem;margin-bottom:.5rem;cursor:pointer}
   .opt-sel:focus{outline:none;border-color:var(--gold)}
   .opt-side{font-size:.82rem;color:var(--muted);margin-top:.2rem}
-  #optNote:focus,#pbNote:focus,.co-f input:focus{outline:none;border-color:var(--gold)}
+  #optNote:focus,.co-f input:focus{outline:none;border-color:var(--gold)}
   .ov-foot{display:flex;align-items:center;gap:.8rem;margin-top:1.1rem}
   .ov-qty{display:inline-flex;align-items:center;gap:.6rem;border:1px solid var(--line);border-radius:10px;padding:.3rem}
   .ov-qty button{width:30px;height:30px;border:0;background:var(--panel);color:var(--cream);border-radius:7px;font-size:1.1rem;cursor:pointer}
@@ -880,7 +876,7 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
 
   /* ---- Invoervelden moeten op wit wél als veld lezen ---- */
   .oi-size,.stepper button,.qstep button,.order-form input,.order-form textarea,
-  #optNote,#pbNote,.co-f input,.co-f textarea,.acct-form input{background:#faf6f3;border-color:var(--line)}
+  #optNote,.co-f input,.co-f textarea,.acct-form input{background:#faf6f3;border-color:var(--line)}
   .oi-size:focus,.order-form input:focus,.order-form textarea:focus,
   .co-f input:focus,.co-f textarea:focus,.acct-form input:focus{border-color:var(--red)}
   .stepper button:hover,.qstep button:hover{border-color:var(--red);color:var(--red)}
@@ -1060,37 +1056,14 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
 
     <p class="halal-note">🥩 <b>Al ons vlees is 100% halal.</b> Onze pepperoni, salami, ham en spek zijn halal varianten.</p>
 
+    <!-- Pizza builder (voorlopig verborgen op verzoek – markup staat in git-historie om te herstellen) -->
+
     <!-- Deals uitgelicht bovenaan -->
     <h3 class="ob-heading" id="dealsHead">🔥 Deals</h3>
     <div class="deals-band" id="dealsBand"></div>
 
     <h3 class="ob-heading">⭐ Meest gekozen</h3>
     <div class="pop-grid" id="popGrid"></div>
-
-    <!-- Pizza builder: ingrediënten verschijnen live op de pizza (logica: PIZZA BUILDER in het script) -->
-    <h3 class="ob-heading" id="samenstellen">🍕 Stel je eigen pizza samen</h3>
-    <div class="pb" id="pizzaBuilder">
-      <div class="pb-stage">
-        <div class="pizza" id="pzPizza" aria-hidden="true">
-          <div class="pz-base"></div>
-          <div class="pz-layer pz-sauce"></div>
-          <div class="pz-layer pz-cheese"></div>
-          <div class="pz-layer pz-oil"></div>
-          <div class="pz-toppings" id="pzToppings"></div>
-        </div>
-        <p class="pb-hint">Kies ingrediënten — ze verschijnen live op je pizza.</p>
-      </div>
-      <div class="pb-panel" id="pbPanel">
-        <p class="pb-intro">Je start met een Margherita-basis (tomatensaus en mozzarella). Elke topping kost hetzelfde: Small € 0,50 · Medium € 1 · Large € 1,50.</p>
-        <div class="pb-summary">
-          <div class="pb-chosen" id="pbChosen"></div>
-          <label class="ov-notelbl">Opmerking voor de keuken<textarea id="pbNote" rows="2" maxlength="200" placeholder="bv. goed gebakken, geen ui, extra pikant..."></textarea></label>
-          <div class="pb-total">Jouw pizza <span id="pbPrice">€ 0</span></div>
-          <button type="button" class="btn btn-primary pb-add" id="pbAdd">➕ Voeg toe aan mandje</button>
-          <button type="button" class="pb-reset" id="pbReset">Opnieuw beginnen</button>
-        </div>
-      </div>
-    </div>
 
     <!-- Plakkende categorie-navigatie (springt naar de sectie) -->
     <div class="cat-filter" id="catFilter2">
@@ -1665,7 +1638,6 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
           cards();
           fillPop();
           fillDeals();
-          if(window.__pbUpd) window.__pbUpd();   // basisprijs bouwer volgt de live Margherita
         })
         .catch(function(){ /* offline: ingebakken kaart blijft staan */ });
     })();
@@ -2055,84 +2027,86 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
 
     /* ===================================================================
        PIZZA BUILDER — stel je eigen pizza samen (ingrediënten live op pizza)
-       Prijs = basis per formaat (zoals de Margherita: tomatensaus + mozzarella)
-       + per topping hetzelfde tarief als in de kassa (EXTRA_BY_SIZE).
-       Voegt een 'Eigen pizza' toe aan hetzelfde mandje; de server controleert de prijs.
+       Pas ingrediënten/prijzen hieronder aan. Voegt een pizza toe aan hetzelfde mandje.
        =================================================================== */
     (function(){
-      if(!document.getElementById('pizzaBuilder')) return;
-      // render: 'sauce'|'cheese' = volledige laag ; 'scatter' = losse stukjes (bit=CSS-klasse, count=aantal)
-      // base:true = zit in de basisprijs (staat standaard aan, weglaten maakt de pizza niet goedkoper)
-      // Zelfde toppinglijst als de kaart op de homepage (index.html, blok 'Stel je eigen pizza samen').
+      if(!document.getElementById('pizzaBuilder')) return;   // pizzabouwer voorlopig verborgen
+      // render: 'sauce'|'cheese'|'oil' = volledige laag ; 'scatter' = losse stukjes (bit=CSS-klasse, count=aantal)
       var INGR=[
-        {id:'sauce',name:'Tomatensaus',cat:'Basis',base:true,render:'sauce'},
-        {id:'mozzarella',name:'Mozzarella',cat:'Basis',base:true,render:'cheese'},
+        // Basis (volledige lagen)
+        {id:'sauce',name:'Tomatensaus',cat:'Basis',price:1.0,render:'sauce'},
+        {id:'mozzarella',name:'Mozzarella',cat:'Basis',price:1.0,render:'cheese'},
+        {id:'extrakaas',name:'Extra kaas',cat:'Basis',price:1.5,render:'cheese'},
+        {id:'pikolie',name:'Pikante olie',cat:'Basis',price:1.0,render:'oil'},
+        // Sauzen (dabs)
+        {id:'bbq',name:'BBQ-saus',cat:'Sauzen',price:1.0,render:'scatter',bit:'dab-brown',count:11},
+        {id:'curry',name:'Kerriesaus',cat:'Sauzen',price:1.0,render:'scatter',bit:'dab-cream',count:11},
+        {id:'looksaus',name:'Knoflook-roomsaus',cat:'Sauzen',price:1.0,render:'scatter',bit:'dab-cream',count:11},
+        {id:'pesto',name:'Basilicumpesto',cat:'Sauzen',price:1.0,render:'scatter',bit:'dab-green',count:11},
+        {id:'pittig',name:'Pittige saus',cat:'Sauzen',price:1.0,render:'scatter',bit:'dab-red',count:11},
+        {id:'honing',name:'Hete honing',cat:'Sauzen',price:1.0,render:'scatter',bit:'honey',count:13},
         // Vlees & vis
-        {id:'pepperoni',name:'Halal pepperoni',cat:'Vlees & vis',render:'scatter',bit:'pepperoni',count:7},
-        {id:'salami',name:'Halal salami',cat:'Vlees & vis',render:'scatter',bit:'salami',count:7},
-        {id:'ham',name:'Halal ham',cat:'Vlees & vis',render:'scatter',bit:'ham',count:8},
-        {id:'spek',name:'Halal spek',cat:'Vlees & vis',render:'scatter',bit:'spek',count:10},
-        {id:'kip',name:'Kip',cat:'Vlees & vis',render:'scatter',bit:'kip',count:8},
-        {id:'shoarma',name:'Shoarma',cat:'Vlees & vis',render:'scatter',bit:'salami',count:11},
-        {id:'kofta',name:'Kofta (gehakt)',cat:'Vlees & vis',render:'scatter',bit:'ball',count:9},
-        {id:'merguez',name:'Merguez',cat:'Vlees & vis',render:'scatter',bit:'salami',count:8},
-        {id:'tonijn',name:'Tonijn',cat:'Vlees & vis',render:'scatter',bit:'fish',count:10},
-        {id:'ansjovis',name:'Ansjovis',cat:'Vlees & vis',render:'scatter',bit:'fish',count:8},
-        // Groenten & sauzen
-        {id:'ui',name:'Rode ui',cat:'Groenten',render:'scatter',bit:'ui',count:8},
-        {id:'tomaat',name:'Verse tomaat',cat:'Groenten',render:'scatter',bit:'tomaat',count:9},
-        {id:'champignon',name:'Champignons',cat:'Groenten',render:'scatter',bit:'champignon',count:8},
-        {id:'olijven',name:'Zwarte olijven',cat:'Groenten',render:'scatter',bit:'olijf',count:10},
-        {id:'ananas',name:'Ananas',cat:'Groenten',render:'scatter',bit:'ananas',count:8},
-        {id:'jalapeno',name:'Jalapeño',cat:'Groenten',render:'scatter',bit:'jalapeno',count:9},
-        {id:'spinazie',name:'Spinazie',cat:'Groenten',render:'scatter',bit:'spinazie',count:10},
-        {id:'mais',name:'Corn',cat:'Groenten',render:'scatter',bit:'mais',count:18},
-        {id:'rucola',name:'Rucola',cat:'Groenten',render:'scatter',bit:'rucola',count:9},
-        {id:'pesto',name:'Basilicumpesto',cat:'Groenten',render:'scatter',bit:'dab-green',count:11},
-        {id:'honing',name:'Hete honing',cat:'Groenten',render:'scatter',bit:'honey',count:13},
-        // Kazen (crumbles; extra mozzarella legt een tweede kaaslaag)
-        {id:'extrakaas',name:'Extra mozzarella',cat:'Kazen',render:'cheese'},
-        {id:'parmezaan',name:'Parmezaan',cat:'Kazen',render:'scatter',bit:'crumb-yellow',count:16},
-        {id:'ricotta',name:'Ricotta',cat:'Kazen',render:'scatter',bit:'crumb-white',count:8},
-        {id:'feta',name:'Feta',cat:'Kazen',render:'scatter',bit:'crumb-white',count:10},
-        {id:'geitenkaas',name:'Geitenkaas',cat:'Kazen',render:'scatter',bit:'crumb-white',count:8},
-        {id:'gouda',name:'Goudse kaas',cat:'Kazen',render:'scatter',bit:'crumb-yellow',count:9},
-        {id:'gorgonzola',name:'Gorgonzola',cat:'Kazen',render:'scatter',bit:'crumb-blue',count:8},
-        {id:'cheddar',name:'Cheddar',cat:'Kazen',render:'scatter',bit:'crumb-yellow',count:9}
+        {id:'salami',name:'Halal salami',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'salami',count:7},
+        {id:'pepperoni',name:'Halal pepperoni',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'pepperoni',count:7},
+        {id:'ham',name:'Halal ham',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'ham',count:8},
+        {id:'spek',name:'Halal spek',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'spek',count:10},
+        {id:'kip',name:'Kip',cat:'Vlees & vis',price:1.5,render:'scatter',bit:'kip',count:8},
+        {id:'bbqkip',name:'BBQ-kip',cat:'Vlees & vis',price:1.5,render:'scatter',bit:'kip',count:8},
+        {id:'merguez',name:'Merguez',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'salami',count:8},
+        {id:'shoarma',name:'Shoarma',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'salami',count:11},
+        {id:'kofta',name:'Kofta (gehakt)',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'ball',count:9},
+        {id:'balletjes',name:'Gehaktballetjes',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'ball',count:7},
+        {id:'tonijn',name:'Tonijn',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'fish',count:10},
+        {id:'ansjovis',name:'Ansjovis',cat:'Vlees & vis',price:1.0,render:'scatter',bit:'fish',count:8},
+        {id:'scampi',name:'Scampi',cat:'Vlees & vis',price:1.5,render:'scatter',bit:'scampi',count:8},
+        // Groenten
+        {id:'ui',name:'Rode ui',cat:'Groenten',price:1.0,render:'scatter',bit:'ui',count:8},
+        {id:'champignon',name:'Champignons',cat:'Groenten',price:1.0,render:'scatter',bit:'champignon',count:8},
+        {id:'paprika',name:'Paprika',cat:'Groenten',price:1.0,render:'scatter',bit:'paprika',count:9},
+        {id:'olijven',name:'Zwarte olijven',cat:'Groenten',price:1.0,render:'scatter',bit:'olijf',count:10},
+        {id:'ananas',name:'Ananas',cat:'Groenten',price:1.0,render:'scatter',bit:'ananas',count:8},
+        {id:'jalapeno',name:'Jalapeño',cat:'Groenten',price:1.0,render:'scatter',bit:'jalapeno',count:9},
+        {id:'spinazie',name:'Spinazie',cat:'Groenten',price:1.0,render:'scatter',bit:'spinazie',count:10},
+        {id:'mais',name:'Maïs',cat:'Groenten',price:1.0,render:'scatter',bit:'mais',count:18},
+        {id:'kerstomaat',name:'Kerstomaten',cat:'Groenten',price:1.0,render:'scatter',bit:'tomaat',count:9},
+        {id:'rucola',name:'Rucola',cat:'Groenten',price:1.0,render:'scatter',bit:'rucola',count:9},
+        // Kazen (crumbles)
+        {id:'parmezaan',name:'Parmezaan',cat:'Kazen',price:1.0,render:'scatter',bit:'crumb-yellow',count:16},
+        {id:'ricotta',name:'Ricotta',cat:'Kazen',price:1.0,render:'scatter',bit:'crumb-white',count:8},
+        {id:'gorgonzola',name:'Gorgonzola',cat:'Kazen',price:1.5,render:'scatter',bit:'crumb-blue',count:8},
+        {id:'geitenkaas',name:'Geitenkaas',cat:'Kazen',price:1.5,render:'scatter',bit:'crumb-white',count:8},
+        {id:'feta',name:'Feta',cat:'Kazen',price:1.0,render:'scatter',bit:'crumb-white',count:10},
+        {id:'gouda',name:'Goudse kaas',cat:'Kazen',price:1.0,render:'scatter',bit:'crumb-yellow',count:9},
+        {id:'cheddar',name:'Cheddar',cat:'Kazen',price:1.0,render:'scatter',bit:'crumb-yellow',count:9},
+        // Extra's
+        {id:'knoflook',name:'Knoflook',cat:"Extra's",price:1.0,render:'scatter',bit:'knoflook',count:8},
+        {id:'basilicum',name:'Basilicum',cat:"Extra's",price:1.0,render:'scatter',bit:'rucola',count:8},
+        {id:'oregano',name:'Oregano',cat:"Extra's",price:1.0,render:'scatter',bit:'oregano',count:22}
       ];
-      var CATS=['Basis','Vlees & vis','Groenten','Kazen'];
+      var CATS=['Basis','Sauzen','Vlees & vis','Groenten','Kazen',"Extra's"];
       var pizza=$('#pzPizza'), toppings=$('#pzToppings'), panel=$('#pbPanel'), summary=panel.querySelector('.pb-summary');
-      var sel={}, si=1;   // si = gekozen formaat (0 Small · 1 Medium · 2 Large)
-      // basisprijs per formaat = die van de Margherita (volgt het live menu uit beheer)
-      function baseSizes(){
-        var m=PRODUCTS.filter(function(p){return p.name==='Margherita' && p.sz && p.sz.length===3;})[0];
-        return m?m.sz:[8,9,10];
-      }
-      function topPrice(i){ return i.base?0:EXTRA_BY_SIZE[si]; }
-      function pf(n){ return fmt(n).replace('€ ','€'); }
-      function refreshPrices(){
-        var b=baseSizes();
-        [].forEach.call(panel.querySelectorAll('[data-role="pbsize"] button'),function(btn,i){
-          btn.textContent=SIZE_LABELS[i]+' · '+fmt(mode==='leveren'?b[i]+PIZZA_SURCHARGE:b[i]);
-        });
-        [].forEach.call(panel.querySelectorAll('.pb-chip'),function(chip){
+      if(!pizza) return;
+      var sel={};
+      function pf(n){return '€ '+n.toFixed(2).replace('.',',');}
+      // Formaat-keuze — basisprijs per maat (pas hier aan)
+      var SIZES=[{k:'Small',p:8},{k:'Medium',p:9},{k:'Large',p:10}];
+      var curSize=SIZES[1];
+      // Toppingprijs: vlees & kazen kosten € 1 (Small) / € 1,5 (Medium-Large); overige toppings € 1
+      function topPrice(i){ return (i.cat==='Vlees & vis'||i.cat==='Kazen') ? (curSize.k==='Small'?1:1.5) : 1; }
+      function refreshChipPrices(){
+        [].forEach.call(document.querySelectorAll('#pbPanel .pb-chip'),function(chip){
           var ing=INGR.filter(function(x){return x.id===chip.getAttribute('data-id');})[0]; if(!ing) return;
-          var pr=chip.querySelector('.pb-pr'); if(pr) pr.textContent=ing.base?'inbegrepen':'+'+pf(topPrice(ing));
+          var pr=chip.querySelector('.pb-pr'); if(pr) pr.textContent='+'+pf(topPrice(ing)).replace('€ ','€');
         });
       }
-      // formaat-keuze
       (function(){
         var g=document.createElement('div'); g.className='pb-group';
         g.innerHTML='<h4>Formaat</h4>';
-        var w=document.createElement('div'); w.className='opt-seg'; w.setAttribute('data-role','pbsize');
-        SIZE_LABELS.forEach(function(k,i){
-          var b=document.createElement('button'); b.type='button'; if(i===si) b.className='on';
-          b.addEventListener('click',function(){[].forEach.call(w.children,function(c){c.classList.remove('on');});b.classList.add('on');si=i;upd();});
-          w.appendChild(b);
-        });
+        var w=document.createElement('div'); w.className='opt-seg';
+        SIZES.forEach(function(s,i){var b=document.createElement('button');b.type='button';b.textContent=s.k+' · '+pf(s.p);if(i===1)b.className='on';b.addEventListener('click',function(){[].forEach.call(w.children,function(c){c.classList.remove('on');});b.classList.add('on');curSize=s;refreshChipPrices();upd();});w.appendChild(b);});
         g.appendChild(w); panel.insertBefore(g,summary);
       })();
-      // chips per categorie
+      // bouw chips per categorie
       CATS.forEach(function(cat){
         var g=document.createElement('div'); g.className='pb-group';
         g.innerHTML='<h4>'+cat+'</h4>';
@@ -2140,29 +2114,27 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
         INGR.filter(function(i){return i.cat===cat;}).forEach(function(ing){
           var chip=document.createElement('button');
           chip.type='button'; chip.className='pb-chip'; chip.setAttribute('data-id',ing.id);
-          chip.setAttribute('aria-pressed','false');
-          chip.innerHTML='<span class="pb-plus">+</span> '+ing.name+' <span class="pb-pr"></span>';
+          chip.innerHTML='<span class="pb-plus">+</span> '+ing.name+' <span class="pb-pr">+'+pf(topPrice(ing)).replace('€ ','€')+'</span>';
           chip.addEventListener('click',function(){toggle(ing,chip);});
           wrap.appendChild(chip);
         });
         g.appendChild(wrap); panel.insertBefore(g,summary);
       });
-      function chipOf(ing){ return panel.querySelector('.pb-chip[data-id="'+ing.id+'"]'); }
-      function setSel(ing,on){
-        var chip=chipOf(ing);
-        sel[ing.id]=on;
-        if(chip){ chip.classList.toggle('on',on); chip.setAttribute('aria-pressed',on?'true':'false'); }
-        if(on) addVis(ing); else removeVis(ing);
+      function toggle(ing,chip){
+        if(sel[ing.id]){sel[ing.id]=false;chip.classList.remove('on');removeVis(ing);}
+        else{sel[ing.id]=true;chip.classList.add('on');addVis(ing);}
+        upd();
       }
-      function toggle(ing){ setSel(ing,!sel[ing.id]); upd(); }
       function addVis(ing){
         if(ing.render==='sauce')pizza.classList.add('has-sauce');
         else if(ing.render==='cheese')pizza.classList.add('has-cheese');
+        else if(ing.render==='oil')pizza.classList.add('has-oil');
         else scatter(ing);
       }
       function removeVis(ing){
         if(ing.render==='sauce')pizza.classList.remove('has-sauce');
         else if(ing.render==='cheese'){if(!sel.mozzarella&&!sel.extrakaas)pizza.classList.remove('has-cheese');}
+        else if(ing.render==='oil')pizza.classList.remove('has-oil');
         else{[].forEach.call(toppings.querySelectorAll('[data-ing="'+ing.id+'"]'),function(el){var b=el.firstChild;if(b)b.classList.add('out');setTimeout(function(){el.remove();},200);});}
       }
       function scatter(ing){
@@ -2175,33 +2147,21 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
           w.appendChild(b); toppings.appendChild(w);
         }
       }
-      function extras(){ return INGR.filter(function(i){return !i.base && sel[i.id];}); }
-      // opties in hetzelfde formaat als het menu: formaat, '+topping', 'Zonder …'
-      function opts(){
-        var o=[SIZE_LABELS[si]];
-        INGR.filter(function(i){return i.base && !sel[i.id];}).forEach(function(i){o.push('Zonder '+i.name.toLowerCase());});
-        extras().forEach(function(i){o.push('+'+i.name);});
-        return o;
-      }
-      function unit(){ return baseSizes()[si] + extras().length*EXTRA_BY_SIZE[si]; }
+      function chosen(){return INGR.filter(function(i){return sel[i.id];});}
       function upd(){
-        refreshPrices();
-        var ex=extras(), total=unit();
-        $('#pbPrice').textContent=fmt(mode==='leveren'?total+PIZZA_SURCHARGE:total);
-        $('#pbChosen').textContent=SIZE_LABELS[si]+' · '+(ex.length?ex.map(function(i){return i.name;}).join(', '):'Margherita-basis (nog geen toppings)');
-        re();
-      }
-      function reset(){
-        toppings.innerHTML=''; pizza.classList.remove('has-sauce','has-cheese');
-        INGR.forEach(function(i){ setSel(i,!!i.base); });
+        var ch=chosen(), total=curSize.p+ch.reduce(function(s,i){return s+topPrice(i);},0);
+        $('#pbPrice').textContent=pf(mode==='leveren'?total+PIZZA_SURCHARGE:total);
+        $('#pbChosen').textContent=(curSize.k+' pizza')+(ch.length?' · '+ch.map(function(i){return i.name;}).join(', '):' (nog geen toppings)');
       }
       $('#pbAdd').addEventListener('click',function(){
-        addToCart('Eigen pizza', opts(), $('#pbNote').value.trim(), unit(), 1, 'pizza');
-        $('#pbNote').value=''; reset(); upd(); toast();
+        var ch=chosen(), total=curSize.p+ch.reduce(function(s,i){return s+topPrice(i);},0);
+        addToCart('Eigen pizza', [curSize.k].concat(ch.map(function(i){return i.name;})), '', total, 1, 'pizza');
+        // reset builder
+        Object.keys(sel).forEach(function(k){sel[k]=false;});
+        panel.querySelectorAll('.pb-chip.on').forEach(function(c){c.classList.remove('on');});
+        pizza.classList.remove('has-sauce','has-cheese','has-oil'); toppings.innerHTML=''; upd(); toast();
       });
-      $('#pbReset').addEventListener('click',function(){ reset(); upd(); });
       window.__pbUpd=upd;
-      reset();
       upd();
     })();
   })();
@@ -2338,7 +2298,6 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
     "lees alle reviews op google →":"Read all reviews on Google →","google-review":"Google review",
     "online bestellen":"Order online","🔥 meest gekozen":"🔥 Most popular","⭐ meest gekozen":"⭐ Most popular","🔥 deals":"🔥 Deals","vanaf":"From","📋 menu":"📋 Menu","🥤 drankjes":"🥤 Drinks","🔥 promoties":"🔥 Deals",
     "kies uit het menu, personaliseer en reken af. je betaalt meteen online met bancontact of kaart.":"Pick from the menu, customise and check out. You pay online right away with Bancontact or card.",
-    "eigen pizza":"Custom pizza","inbegrepen":"included","opnieuw beginnen":"Start over","verse tomaat":"Fresh tomato","je start met een margherita-basis (tomatensaus en mozzarella). elke topping kost hetzelfde: small € 0,50 · medium € 1 · large € 1,50.":"You start from a Margherita base (tomato sauce and mozzarella). Every topping costs the same: Small € 0.50 · Medium € 1 · Large € 1.50.",
     "kies ingrediënten — ze verschijnen live op je pizza.":"Pick ingredients — they appear live on your pizza.","jouw pizza":"Your pizza","nog geen ingrediënten gekozen.":"No ingredients selected yet.","➕ voeg toe aan mandje":"➕ Add to cart",
     "toevoegen":"Add","toevoegen ·":"Add ·","🛒 winkelmandje":"🛒 Cart","je mandje is leeg. voeg iets toe uit het menu.":"Your cart is empty. Add something from the menu.",
     "🛵 leveren":"🛵 Delivery","leveren":"Delivery","subtotaal":"Subtotal","leveringskosten":"Delivery fee","totaal":"Total","bestelling afronden →":"Checkout →",
