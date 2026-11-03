@@ -1819,7 +1819,11 @@
             '<div>'+esc(o.cust_name||'')+(o.cust_phone?(' · '+esc(o.cust_phone)):'')+(o.type==='leveren'&&o.cust_address?(' · '+esc(o.cust_address)):'')+'</div>'+
             '<div style="margin-top:.3rem;color:var(--cream);font-weight:600">'+items+'</div>'+
             '<div style="margin-top:.2rem;color:var(--gold);font-weight:800">'+euro(o.total)+'</div></div>'+
-          '<div class="acts"><button class="load" data-load="'+o.id+'">Laad in kassa</button><button class="del" data-ack="'+o.id+'">Afvinken</button></div></div>';
+          '<div class="acts">'+
+            (o.pay_status==='paid'
+              ? '<button class="load" data-print="'+o.id+'">🖨 Print bon</button><button class="del" data-ack="'+o.id+'">✔ Klaar</button>'
+              : '<button class="load" data-load="'+o.id+'">Laad in kassa</button><button class="del" data-ack="'+o.id+'">Afvinken</button>')+
+          '</div></div>';
       }).join('');
       updBadge();
     }
@@ -1907,20 +1911,18 @@
       markAutoDone(o.id);
       rolloverIfNewDay();                        // nieuwe zakendag? eerst de vorige lokaal afsluiten
       var sale=saleFromWeb(o);
-      sales.push(sale); save(LS.sales,sales);    // enkel lokaal tonen; staat al in de DB
-      buildReceipt(sale);
-      startAlarm(); setTimeout(stopAlarm, 6000); // personeel hoort het, maar hoeft niets te doen
-      toast('🌐 Online bestelling '+bonLabel(sale.no)+' automatisch afgerekend — bon wordt afgedrukt');
-      setTimeout(function(){ window.print(); }, 250);
-      ackOrder(o.id);                            // server: uit de 'nieuwe'-lijst halen
+      sales.push(sale); save(LS.sales,sales);    // lokaal registreren (omzet); staat al in de DB
+      startAlarm(); setTimeout(stopAlarm, 6000); // personeel hoort het
+      toast('🌐 Online bestelling '+bonLabel(sale.no)+' automatisch afgerekend — druk de bon af in het Online-venster');
+      // Geen automatische print en geen afvinken: de bestelling blijft in het Online-venster
+      // staan met een print-knop, zodat het personeel zelf kiest wanneer de bon eruit rolt.
     }
     function addWebOrder(o,isNew){
       if(!o||o.source!=='web'||o.status!=='nieuw') return;
       var fresh=!webOrders[o.id]; webOrders[o.id]=o;
-      if(isNew&&fresh){
-        if(autoDone[o.id]){ ackOrder(o.id); return; }                 // al verwerkt → enkel nog op de server afvinken
-        if(AUTO_ONLINE && o.pay_status==='paid'){ autoAfrekenOnline(o); return; }
-        startAlarm(); meldNieuweBestelling(o);                        // (terugval) nog niet betaald → manueel
+      if(isNew&&fresh&&!autoDone[o.id]){
+        if(AUTO_ONLINE && o.pay_status==='paid') autoAfrekenOnline(o);  // auto-registreren + alarm (geen print)
+        else { startAlarm(); meldNieuweBestelling(o); }                // (terugval) nog niet betaald → manueel
       }
       renderOnline();
     }
@@ -2079,6 +2081,7 @@
        nieuw zijn (afgevinkt, geladen, klaar, meegegeven). Met "Terugzetten"
        komt een bestelling weer bovenaan als nieuw, met alle knoppen. */
     var recentEl=$('#onlineRecent');
+    var recentById={};   // volledige bestelgegevens per id, zodat we een bon opnieuw kunnen afdrukken
     var STATUS_NL={bereiden:'in bereiding',klaar:'klaar',afgehaald:'meegegeven'};
     function loadRecent(){
       return fetch('api/admin/orders',{credentials:'same-origin'}).then(function(r){ return r.ok?r.json():null; }).then(function(j){
@@ -2087,6 +2090,7 @@
         var lijst=(j.orders||[]).filter(function(o){
           return o.source==='web' && o.status!=='nieuw' && o.status!=='geannuleerd' && !o.voided_at && Date.parse(o.created_at)>=grens;
         });
+        recentById={}; lijst.forEach(function(o){ recentById[o.id]=o; });
         if(!lijst.length){ recentEl.innerHTML='<p class="hint">Nog geen afgehandelde online bestellingen.</p>'; return; }
         recentEl.innerHTML=lijst.map(function(o){
           var items=(o.items||[]).map(function(l){return l.qty+'× '+esc(l.name)+(l.opts&&l.opts.length?(' ('+esc(l.opts.join(', '))+')'):'')+(l.note?(' — '+esc(l.note)):'');}).join('<br>');
@@ -2097,11 +2101,13 @@
               '<div>'+esc(o.cust_name||'')+(o.cust_phone?(' · '+esc(o.cust_phone)):'')+(o.type==='leveren'&&o.cust_address?(' · '+esc(o.cust_address)):'')+(o.time_wanted?(' · gewenst '+esc(o.time_wanted)):'')+'</div>'+
               '<div style="margin-top:.3rem;color:var(--cream);font-weight:600">'+items+'</div>'+
               '<div style="margin-top:.2rem;color:var(--gold);font-weight:800">'+euro(o.total)+'</div></div>'+
-            '<div class="acts"><button class="load" data-terug="'+o.id+'">Terugzetten</button></div></div>';
+            '<div class="acts"><button class="load" data-printr="'+o.id+'">🖨 Print bon</button><button class="del" data-terug="'+o.id+'">Terugzetten</button></div></div>';
         }).join('');
       }).catch(function(){});
     }
     recentEl.addEventListener('click',function(e){
+      var pr=e.target.closest('[data-printr]');
+      if(pr){ var po=recentById[+pr.getAttribute('data-printr')]; if(po){ buildReceipt(saleFromWeb(po)); setTimeout(function(){ window.print(); }, 60); toast('Bon '+bonLabel(po.no||('#'+po.id))+' afgedrukt'); } return; }
       var b=e.target.closest('[data-terug]'); if(!b) return;
       var id=+b.getAttribute('data-terug'); b.disabled=true;
       fetch('api/admin/orders/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status:'nieuw'})})
@@ -2133,11 +2139,18 @@
       renderTicket(); saveCart();
       ackOrder(o.id); closeOv('#ovOnline'); toast('Online bestelling geladen — reken af');
     }
+    function printWebOrder(id){
+      var o=webOrders[id]; if(!o) return;
+      buildReceipt(saleFromWeb(o));
+      setTimeout(function(){ window.print(); }, 60);
+      toast('Bon '+bonLabel(o.no||('#'+o.id))+' afgedrukt');
+    }
     $('#onlineList').addEventListener('click',function(e){
-      var lo=e.target.closest('[data-load]'), ak=e.target.closest('[data-ack]');
-      if(lo||ak) stopAlarm(); // reactie op de bestelling → alarm stopt
-      if(lo) loadIntoTicket(+lo.getAttribute('data-load'));
-      else if(ak){ ackOrder(+ak.getAttribute('data-ack')); toast('Afgevinkt — staat nog onder "Eerder vandaag"'); }
+      var lo=e.target.closest('[data-load]'), ak=e.target.closest('[data-ack]'), pr=e.target.closest('[data-print]');
+      if(lo||ak||pr) stopAlarm(); // reactie op de bestelling → alarm stopt
+      if(pr) printWebOrder(+pr.getAttribute('data-print'));
+      else if(lo) loadIntoTicket(+lo.getAttribute('data-load'));
+      else if(ak){ ackOrder(+ak.getAttribute('data-ack')); toast('Klaar — staat nog onder "Eerder vandaag"'); }
     });
 
     activate(); // stille poging bij opstart (als er al een sessie is)
