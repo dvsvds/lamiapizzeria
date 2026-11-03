@@ -2106,7 +2106,7 @@
     function showKChan(sel,label,on){
       var b=$(sel); if(!b) return;
       b.textContent=label+': '+(on?'AAN':'UIT');
-      b.style.background=on?'':'var(--red)'; b.style.color=on?'':'#fff'; b.style.borderColor=on?'':'var(--red)';
+      b.style.background=on?'var(--green)':'var(--red)'; b.style.color='#fff'; b.style.borderColor=on?'var(--green)':'var(--red)';
     }
     function loadChannels(){
       fetch('api/admin/online-delivery',{credentials:'same-origin'}).then(function(r){return r.ok?r.json():null;})
