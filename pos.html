@@ -634,7 +634,7 @@
      ============================================================= */
   var LS={cart:'lamia_pos_cart',parked:'lamia_pos_parked',sales:'lamia_pos_sales',
           seq:'lamia_pos_seq',theme:'lamia_pos_theme',closed:'lamia_pos_closed',
-          outbox:'lamia_pos_outbox',salesDay:'lamia_pos_salesday'};
+          outbox:'lamia_pos_outbox',salesDay:'lamia_pos_salesday',autoDone:'lamia_pos_autodone'};
   var state={ lines:[], type:'afhalen', table:'', discount:{pct:0,eur:0}, cust:{name:'',phone:'',address:''}, prepriced:false, onlinePaid:false };
   var parked=[], sales=[], seq={date:'',n:0};
 
@@ -1512,7 +1512,7 @@
             '<div style="color:var(--gold);font-weight:800;font-size:.95rem">'+euro(s.total)+'</div></div>'+
           '<div class="acts">'+
             '<button class="load" data-bonprint="'+i+'">🖨 Afdrukken</button>'+
-            (s.geannuleerd?'':'<button class="del" data-bonannul="'+i+'">✕ Annuleren</button>')+
+            (s.geannuleerd||s.online?'':'<button class="del" data-bonannul="'+i+'">✕ Annuleren</button>')+
           '</div></div>';
       }).join('');
     }
@@ -1876,10 +1876,52 @@
       verwerkMelding();
     }
 
+    /* Online bestellingen worden altijd vooraf online betaald (de website laat niets
+       anders toe). Zodra er één binnenkomt, rekenen we ze automatisch af: ze wordt
+       lokaal als verkoop geregistreerd (voor "Laatste bonnen" en de dagomzet), de bon
+       rolt er meteen uit, en ze verdwijnt uit de 'nieuwe'-lijst. Zo hoeft niemand nog
+       iets aan te klikken en gaat er nooit een bestelling verloren — ook al gebruiken
+       we het keukenscherm niet. Ze wordt NIET opnieuw naar de server gestuurd: ze staat
+       al in de database en telt daar al mee voor de omzet (anders dubbel geteld). */
+    var AUTO_ONLINE=true;
+    var autoDone=load(LS.autoDone,{});
+    function markAutoDone(id){
+      autoDone[id]=Date.now();
+      var ids=Object.keys(autoDone);
+      if(ids.length>400){ ids.map(Number).sort(function(a,b){return a-b;}).slice(0,ids.length-400).forEach(function(x){ delete autoDone[x]; }); }
+      save(LS.autoDone,autoDone);
+    }
+    function saleFromWeb(o){
+      var raw=o.vat?(typeof o.vat==='string'?JSON.parse(o.vat):o.vat):{};
+      var vat={}; Object.keys(raw).forEach(function(k){ vat[(+k/100)]=raw[k]; }); // '6' → 0.06 (bonformaat)
+      return {
+        no:o.no||('#'+o.id), ts:o.created_at||new Date().toISOString(), type:o.type||'afhalen', table:o.tbl||'',
+        cust:{name:o.cust_name||'',phone:o.cust_phone||'',address:o.cust_address||''},
+        lines:(o.items||[]).map(function(l){ return {name:l.name,cat:l.cat||'',opts:(l.opts||[]).slice(),note:l.note||'',unit:l.unit,qty:l.qty,total:(l.unit||0)*l.qty}; }),
+        sub:o.subtotal||0, disc:o.discount||0, delivDisc:(o.type==='leveren'?(o.discount||0):0), manualDisc:0,
+        discount:{pct:0,eur:0}, delivery:o.delivery||0, total:o.total||0, vat:vat,
+        pay:{method:'online',provider:'mollie'}, online:true, webId:o.id
+      };
+    }
+    function autoAfrekenOnline(o){
+      markAutoDone(o.id);
+      rolloverIfNewDay();                        // nieuwe zakendag? eerst de vorige lokaal afsluiten
+      var sale=saleFromWeb(o);
+      sales.push(sale); save(LS.sales,sales);    // enkel lokaal tonen; staat al in de DB
+      buildReceipt(sale);
+      startAlarm(); setTimeout(stopAlarm, 6000); // personeel hoort het, maar hoeft niets te doen
+      toast('🌐 Online bestelling '+bonLabel(sale.no)+' automatisch afgerekend — bon wordt afgedrukt');
+      setTimeout(function(){ window.print(); }, 250);
+      ackOrder(o.id);                            // server: uit de 'nieuwe'-lijst halen
+    }
     function addWebOrder(o,isNew){
       if(!o||o.source!=='web'||o.status!=='nieuw') return;
       var fresh=!webOrders[o.id]; webOrders[o.id]=o;
-      if(isNew&&fresh){ startAlarm(); meldNieuweBestelling(o); }
+      if(isNew&&fresh){
+        if(autoDone[o.id]){ ackOrder(o.id); return; }                 // al verwerkt → enkel nog op de server afvinken
+        if(AUTO_ONLINE && o.pay_status==='paid'){ autoAfrekenOnline(o); return; }
+        startAlarm(); meldNieuweBestelling(o);                        // (terugval) nog niet betaald → manueel
+      }
       renderOnline();
     }
     function removeWebOrder(id){ if(webOrders[id]){ delete webOrders[id]; renderOnline(); if(!Object.keys(webOrders).length) stopAlarm(); } }
