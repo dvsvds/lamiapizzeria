@@ -182,7 +182,11 @@ prijzen gelijk houden met order.html)
 - De server vindt de pagina's vanzelf: ze krijgen Analytics en komen in
   `/sitemap.xml`. Een nieuwe buurt toevoegen = een blok in `BUURTEN` erbij.
 - De homepage linkt naar alle buurten (sectie Bezorgen) en naar de
-  halal-pagina (onder het menu).
+  halal-pagina (onder het menu). Sinds 03/11/2026 staat "Take away" in het
+  bovenmenu van elke pagina en staan alle buurt-, halal- en take-away-links in
+  de voettekst van elke pagina (homepage, webshop en generator), zodat Google
+  ze overal vindt. Homepage-titel toen ook "afhalen" → "take away" (191
+  vertoningen/maand op dat woord zonder klik).
 - **Na de livegang:** in Search Console bij elke nieuwe URL *Indexering
   aanvragen*, en de sitemap opnieuw indienen.
 - Wordt de korting van 10% ooit gewijzigd, pas `FEIT.korting` aan én de
