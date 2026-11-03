@@ -98,7 +98,7 @@
     #reportTicket{display:none}
     /* Ticketmodus (bonprinter): enkel een compacte bon tonen */
     body.tp header,body.tp .periods,body.tp .pagehead,body.tp .print-head,body.tp #content{display:none!important}
-    body.tp #reportTicket{display:block;width:72mm;margin:0;padding:2mm 3mm;color:#000;background:#fff;font-family:'Courier New',monospace;font-size:16px;line-height:1.5;font-weight:700}
+    body.tp #reportTicket{display:block;width:72mm;box-sizing:border-box;margin:0;padding:2mm 3mm;color:#000;background:#fff;font-family:'Courier New',monospace;font-size:16px;line-height:1.5;font-weight:700}
     body.tp #reportTicket .rt-c{text-align:center}
     body.tp #reportTicket .rt-title{font-size:22px;letter-spacing:1px}
     body.tp #reportTicket .rt-sub{font-size:14px}
@@ -257,13 +257,21 @@
     h+='<hr><div class="rt-c">'+L('Afgedrukt','Printed')+' '+new Date().toLocaleString(EN?'en-GB':'nl-BE')+'</div>';
     document.getElementById('reportTicket').innerHTML=h;
   }
+  // Bonrol-formaat: 72mm breed, hoogte automatisch — zonder deze @page-regel gebruikt de
+  // browser A4-paginahoogte en rolt er een hele lap blanco papier na de bon uit.
+  var ticketPageStyle=null;
   $('#btnTicket').onclick=function(){
     if(!lastRep||!lastRep.count){ alert('Geen cijfers om af te drukken voor deze periode.'); return; }
     buildTicket();
     document.body.classList.add('tp');
+    if(!ticketPageStyle){ ticketPageStyle=document.createElement('style'); ticketPageStyle.textContent='@page{size:72mm auto;margin:0}'; }
+    document.head.appendChild(ticketPageStyle);
     setTimeout(function(){ window.print(); }, 60);
   };
-  window.addEventListener('afterprint', function(){ document.body.classList.remove('tp'); });
+  window.addEventListener('afterprint', function(){
+    document.body.classList.remove('tp');
+    if(ticketPageStyle&&ticketPageStyle.parentNode){ ticketPageStyle.parentNode.removeChild(ticketPageStyle); }
+  });
 
   function row(label,val){ return '<tr><td>'+label+'</td><td>'+euro(val)+'</td></tr>'; }
 
