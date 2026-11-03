@@ -348,6 +348,7 @@ function header() {
     '    <nav class="nav-links">\n' +
     '      <a href="/#menu" class="hide-m">Menu</a>\n' +
     '      <a href="/#bezorgen" class="hide-m">Bezorggebied</a>\n' +
+    '      <a href="take-away-antwerpen" class="hide-m">Take away</a>\n' +
     '      <a href="tel:' + FEIT.tel + '" class="hide-m">' + FEIT.telTekst + '</a>\n' +
     '      <a href="order.html" class="btn btn-yellow">Bestellen</a>\n' +
     '    </nav>\n  </div>\n</header>\n';
@@ -415,7 +416,8 @@ function staart() {
     '<footer>\n  <div class="wrap">\n' +
     '    <a href="/"><img src="images/logo.webp" alt="La Mia Pizzeria" width="559" height="447" loading="lazy"></a>\n' +
     '    <p>Abdijstraat 226a, 2020 Antwerpen · <a href="tel:' + FEIT.tel + '">+32 3 644 23 31</a> · info.lamiapizzeria@mail.com</p>\n' +
-    '    <p><a href="/">Home</a> · <a href="/#menu">Menu</a> · <a href="order.html">Online bestellen</a> · <a href="/#bezorgen">Bezorggebied</a></p>\n' +
+    '    <p><a href="/">Home</a> · <a href="/#menu">Menu</a> · <a href="order.html">Online bestellen</a> · <a href="/#bezorgen">Bezorggebied</a> · <a href="take-away-antwerpen">Take away</a></p>\n' +
+    '    <p class="fine">' + BUURTEN.map(function (b) { return '<a href="' + b.slug + '">Pizza ' + esc(b.naam) + '</a>'; }).join(' · ') + ' · <a href="' + HALAL.slug + '">Halal pizza</a></p>\n' +
     '    <p class="fine">© ' + new Date().getFullYear() + ' La Mia Pizzeria · New York style pizza in Antwerpen.</p>\n' +
     '  </div>\n</footer>\n</body>\n</html>\n';
 }

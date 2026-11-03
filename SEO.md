@@ -182,7 +182,11 @@ prijzen gelijk houden met order.html)
 - De server vindt de pagina's vanzelf: ze krijgen Analytics en komen in
   `/sitemap.xml`. Een nieuwe buurt toevoegen = een blok in `BUURTEN` erbij.
 - De homepage linkt naar alle buurten (sectie Bezorgen) en naar de
-  halal-pagina (onder het menu).
+  halal-pagina (onder het menu). Sinds 03/11/2026 staat "Take away" in het
+  bovenmenu van elke pagina en staan alle buurt-, halal- en take-away-links in
+  de voettekst van elke pagina (homepage, webshop en generator), zodat Google
+  ze overal vindt. Homepage-titel toen ook "afhalen" → "take away" (191
+  vertoningen/maand op dat woord zonder klik).
 - **Na de livegang:** in Search Console bij elke nieuwe URL *Indexering
   aanvragen*, en de sitemap opnieuw indienen.
 - Wordt de korting van 10% ooit gewijzigd, pas `FEIT.korting` aan én de
@@ -268,6 +272,7 @@ manager; vergelijk telkens met de vorige rij.
 |---|---|---|---|---|---|---|
 | 01/10/2026 | 23–28 sep (7 d) | 10 | 7.350 | 2,4 | 24 | Nulmeting. 6.720 vertoningen op het losse woord "pizza" zonder klik (groot blok, niet bruikbaar). Klikken enkel op de eigen naam. "pizza antwerpen" 30 vertoningen / 0 klikken, "pasta" 102 / 0, "takeaway" 19 / 0, "pizza in hoboken" 1 / 1. Favicon zichtbaar in Google. Bedrijfsprofiel ingevuld. Google Ads nog niet gestart. Actie: bezorggebied-sectie met buurten (PR #79). |
 | 17/10/2026 | 18 sep – 15 okt (28 d), via Windsor.ai | 105 | 15.676 | 2,6 | 86 (28 d: 169 sessies) | Per week: 10 → 41 → 38 → 40 klikken; CTR van 0,14% naar 1,2%. Klikken vooral op de eigen naam (la mia pizzeria 16, la mia 13). Eerste buurtklikken: pizza hoboken 2 (59 vertoningen, pos. 2,5), pizza kiel 2 (pos. 1,4). Zonder klik maar op pagina 1: pizza antwerpen 191 (pos. 5,5), pizzeria antwerpen 76, take away/takeaway 143 (pos. 4), pizza near me 54, pizza abdijstraat 53. Buurtpagina's (live sinds ~10 okt) al geïndexeerd: 10–21 vertoningen elk, pos. 6,5 (Berchem) tot 23. order.html geïndexeerd: 5 klikken / 366 vertoningen. Analytics: 77 sessies Google organisch, 74 direct, 7 via ChatGPT; 116× bestel_klik, 11× bestelling_betaald, 9× bellen. Google Ads niet gestart. Actie: titel en meta-omschrijving homepage gericht op de niet-merk zoektermen (PR). |
+| 01/11/2026 (aangevuld 03/11) | 4–31 okt (28 d), Analytics via Windsor.ai, Search Console via OpenSEO | 148 | 9.240 | 3,0 | 150 sessies (28 d) | Klikken +40% (105 → 148); per week 47 → 28 → 50 → 23. Merk blijft de motor (la mia pizzeria 22, la mia 12, la mia pizza 7, la mia abdijstraat 5). Niet-merk met klik: pizza antwerpen 4 (312 vert., pos. 3,4), pizza hoboken 4 (109, pos. 2,1), pizzeria antwerpen 2 (144, pos. 7,2), pizza kiel 1, pizza in de buurt 1. Zonder klik op pagina 1: take away 112 + takeaway 79 (pos. 4), pizza near me 79 (pos. 1,8), beste pizza antwerpen 24 (pos. 3,8), pasta 800 (blok, onbruikbaar). **Buurtpagina's**: 23–103 vertoningen elk, maar bijna allemaal als sitelink onder de merkzoekopdrachten (pos. ~2); voor "pizza berchem/wilrijk/edegem" zelf verschijnen ze nog niet (≥3 vert.). Enige buurtklik: pizza-berchem 1. Take-away-pagina (live 22 okt) nog 0 vertoningen. **Search Console-eigendom was verlopen** (account stond als niet-geverifieerd; op 03/11 opnieuw geverifieerd, nu siteOwner op www-, apex- en domein-property). **Analytics-gat**: geen enkele sessie 21–24 okt terwijl Search Console die dagen 6–11 klikken/dag telt → site of Analytics-tag was toen stuk; vanaf 25 okt weer normaal (laatste week wel minder klikken: 23). Actie: Railway-deploys van 20–25 okt nakijken. Analytics (vs 18 sep–15 okt): 74 sessies Google organisch (77), 62 direct (74), 10 via ChatGPT (7); 109× bestel_klik (116), 8× bestelling_betaald (11), 5× bellen (9). Windsor-koppeling Search Console is weg; OpenSEO leest Search Console gratis (zie routine). Google Ads niet gestart. |
 
 ### Maps-bereik en reviews (18/10/2026, via OpenSEO)
 
