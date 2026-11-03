@@ -634,7 +634,8 @@
      ============================================================= */
   var LS={cart:'lamia_pos_cart',parked:'lamia_pos_parked',sales:'lamia_pos_sales',
           seq:'lamia_pos_seq',theme:'lamia_pos_theme',closed:'lamia_pos_closed',
-          outbox:'lamia_pos_outbox',salesDay:'lamia_pos_salesday',autoDone:'lamia_pos_autodone'};
+          outbox:'lamia_pos_outbox',salesDay:'lamia_pos_salesday',autoDone:'lamia_pos_autodone',
+          printedWeb:'lamia_pos_printedweb'};
   var state={ lines:[], type:'afhalen', table:'', discount:{pct:0,eur:0}, cust:{name:'',phone:'',address:''}, prepriced:false, onlinePaid:false };
   var parked=[], sales=[], seq={date:'',n:0};
 
@@ -1809,7 +1810,7 @@
 
     function renderOnline(){
       var ids=Object.keys(webOrders).sort(function(a,b){return webOrders[a].id-webOrders[b].id;});
-      if(!ids.length){ listEl.innerHTML='<p class="hint" style="text-align:center;padding:1.5rem">Geen nieuwe online bestellingen.</p>'; updBadge(); return; }
+      if(!ids.length){ listEl.innerHTML='<p class="hint" style="text-align:center;padding:1.5rem">Geen nieuwe online bestellingen.</p>'; updBadge(); refreshAlarm(); return; }
       listEl.innerHTML=ids.map(function(id){
         var o=webOrders[id];
         var items=(o.items||[]).map(function(l){return l.qty+'× '+esc(l.name)+(l.opts&&l.opts.length?(' ('+esc(l.opts.join(', '))+')'):'')+(l.note?(' — '+esc(l.note)):'');}).join('<br>');
@@ -1826,6 +1827,7 @@
           '</div></div>';
       }).join('');
       updBadge();
+      refreshAlarm();
     }
 
     /* Melding bij een nieuwe online bestelling.
@@ -1895,6 +1897,19 @@
       if(ids.length>400){ ids.map(Number).sort(function(a,b){return a-b;}).slice(0,ids.length-400).forEach(function(x){ delete autoDone[x]; }); }
       save(LS.autoDone,autoDone);
     }
+    // Welke online bonnen zijn al geprint? Het alarm blijft gaan zolang er in de lijst
+    // nog een bestelling staat waarvan de bon NIET geprint is.
+    var printedWeb=load(LS.printedWeb,{});
+    function markPrinted(id){
+      printedWeb[id]=Date.now();
+      var ids=Object.keys(printedWeb);
+      if(ids.length>400){ ids.map(Number).sort(function(a,b){return a-b;}).slice(0,ids.length-400).forEach(function(x){ delete printedWeb[x]; }); }
+      save(LS.printedWeb,printedWeb);
+    }
+    function refreshAlarm(){
+      var need=Object.keys(webOrders).some(function(id){ return !printedWeb[id]; });
+      if(need){ if(!alarmTimer) startAlarm(); } else stopAlarm();
+    }
     function saleFromWeb(o){
       var raw=o.vat?(typeof o.vat==='string'?JSON.parse(o.vat):o.vat):{};
       var vat={}; Object.keys(raw).forEach(function(k){ vat[(+k/100)]=raw[k]; }); // '6' → 0.06 (bonformaat)
@@ -1912,10 +1927,10 @@
       rolloverIfNewDay();                        // nieuwe zakendag? eerst de vorige lokaal afsluiten
       var sale=saleFromWeb(o);
       sales.push(sale); save(LS.sales,sales);    // lokaal registreren (omzet); staat al in de DB
-      startAlarm(); setTimeout(stopAlarm, 6000); // personeel hoort het
-      toast('🌐 Online bestelling '+bonLabel(sale.no)+' automatisch afgerekend — druk de bon af in het Online-venster');
+      toast('🌐 Online bestelling '+bonLabel(sale.no)+' automatisch afgerekend — druk de bon af (dan stopt het alarm)');
       // Geen automatische print en geen afvinken: de bestelling blijft in het Online-venster
-      // staan met een print-knop, zodat het personeel zelf kiest wanneer de bon eruit rolt.
+      // staan met een print-knop. Het alarm (refreshAlarm, via renderOnline) blijft gaan
+      // tot de bon geprint is.
     }
     function addWebOrder(o,isNew){
       if(!o||o.source!=='web'||o.status!=='nieuw') return;
@@ -2063,7 +2078,7 @@
     var bkb=$('#btnKoppelBar'); if(bkb) bkb.onclick=function(){ koppelMetPin(); };
 
     $('#btnOnline').onclick=function(){
-      stopAlarm(); // personeel heeft gereageerd → alarm stopt
+      // Het alarm blijft gaan tot de bon geprint is (niet enkel bij het openen van dit venster).
       if(onlineAuthed){ openOv('#ovOnline'); loadRecent(); return; }
       activate().then(function(ok){
         if(ok){ openOv('#ovOnline'); loadRecent(); return; }
@@ -2143,11 +2158,13 @@
       var o=webOrders[id]; if(!o) return;
       buildReceipt(saleFromWeb(o));
       setTimeout(function(){ window.print(); }, 60);
+      markPrinted(id); refreshAlarm();   // bon geprint → alarm stopt (als er geen andere meer open staat)
       toast('Bon '+bonLabel(o.no||('#'+o.id))+' afgedrukt');
     }
     $('#onlineList').addEventListener('click',function(e){
+      // Het alarm stopt niet zomaar bij een klik: het blijft gaan tot de bon van elke
+      // bestelling geprint (of de bestelling afgewerkt) is — zie refreshAlarm.
       var lo=e.target.closest('[data-load]'), ak=e.target.closest('[data-ack]'), pr=e.target.closest('[data-print]');
-      if(lo||ak||pr) stopAlarm(); // reactie op de bestelling → alarm stopt
       if(pr) printWebOrder(+pr.getAttribute('data-print'));
       else if(lo) loadIntoTicket(+lo.getAttribute('data-load'));
       else if(ak){ ackOrder(+ak.getAttribute('data-ack')); toast('Klaar — staat nog onder "Eerder vandaag"'); }
