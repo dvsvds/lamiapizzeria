@@ -1949,18 +1949,25 @@
         pactx=pactx||new (window.AudioContext||window.webkitAudioContext)();
         if(pactx.state==='suspended') pactx.resume();
         var t0=pactx.currentTime;
+        // Master met een limiter (compressor): zo kunnen we hard gaan zonder lelijk te kraken.
+        var comp=pactx.createDynamicsCompressor();
+        comp.threshold.value=-8; comp.knee.value=0; comp.ratio.value=20; comp.attack.value=0.003; comp.release.value=0.25;
+        comp.connect(pactx.destination);
         // luide, opvallende reeks piepjes (± 1,8s) zodat een online bestelling niet gemist wordt
         var seq=[988,740,988,740,988,740,988];
         seq.forEach(function(freq,i){
           var t=t0+i*0.26;
-          var o=pactx.createOscillator(), g=pactx.createGain();
-          o.connect(g); g.connect(pactx.destination);
-          o.type='square';                 // scherper en luider dan een sinus
-          o.frequency.value=freq;
-          g.gain.setValueAtTime(0.0001,t);
-          g.gain.exponentialRampToValueAtTime(0.4,t+0.02);   // hoger volume
-          g.gain.exponentialRampToValueAtTime(0.0001,t+0.2);
-          o.start(t); o.stop(t+0.22);
+          // grondtoon + een octaaf eronder → voller en luider
+          [[freq,0.95],[freq/2,0.55]].forEach(function(p){
+            var o=pactx.createOscillator(), g=pactx.createGain();
+            o.connect(g); g.connect(comp);
+            o.type='square';                 // scherper en luider dan een sinus
+            o.frequency.value=p[0];
+            g.gain.setValueAtTime(0.0001,t);
+            g.gain.exponentialRampToValueAtTime(p[1],t+0.02);   // flink hoger volume
+            g.gain.exponentialRampToValueAtTime(0.0001,t+0.22);
+            o.start(t); o.stop(t+0.24);
+          });
         });
       }catch(e){}
     }
