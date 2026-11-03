@@ -129,6 +129,8 @@
   <a class="tbtn" href="keuken.html" target="_blank">🍳 Keuken</a>
   <a class="tbtn" href="rapporten.html" target="_blank">📊 Rapporten</a>
   <button class="tbtn" id="btnOnline" title="Online bestellen via de website aan- of uitzetten">🌐 Online bestellen: …</button>
+  <button class="tbtn" id="btnDelivery" title="Online leveren aan- of uitzetten">🛵 Online leveren: …</button>
+  <button class="tbtn" id="btnPickup" title="Online afhalen aan- of uitzetten">🥡 Online afhalen: …</button>
   <button class="tbtn" id="btnPin">🔑 PIN</button>
   <button class="tbtn" id="btnTheme">🌙</button>
   <button class="tbtn" id="btnLogout">Uitloggen</button>
@@ -257,7 +259,7 @@
         if(res[0].status===401||res[1].status===401){ showLogin(); return; }
         CATS=res[0].data.categories||[]; PRODS=res[1].data.products||[];
         buildCatFilter(); render();
-        loadOnline();
+        loadOnline(); loadDelivery(); loadPickup();
       });
   }
   function buildCatFilter(){
@@ -431,6 +433,39 @@
     api('POST','/api/admin/online-orders',{on:naar}).then(function(r){
       if(!r.ok){ toast(r.data.error||'Fout'); return; }
       showOnline(!!r.data.on); toast(r.data.on?'Online bestellen staat AAN':'Online bestellen staat UIT');
+    });
+  };
+
+  /* ---------- online leveren / afhalen apart aan/uit ---------- */
+  var deliveryOn=null, pickupOn=null;
+  function showDelivery(on){
+    deliveryOn=on; var b=$('#btnDelivery');
+    b.textContent='🛵 Online leveren: '+(on?'AAN':'UIT');
+    b.classList.toggle('ord-on',on); b.classList.toggle('ord-off',!on);
+  }
+  function showPickup(on){
+    pickupOn=on; var b=$('#btnPickup');
+    b.textContent='🥡 Online afhalen: '+(on?'AAN':'UIT');
+    b.classList.toggle('ord-on',on); b.classList.toggle('ord-off',!on);
+  }
+  function loadDelivery(){ api('GET','/api/admin/online-delivery').then(function(r){ if(r.ok) showDelivery(!!r.data.on); }); }
+  function loadPickup(){ api('GET','/api/admin/online-pickup').then(function(r){ if(r.ok) showPickup(!!r.data.on); }); }
+  $('#btnDelivery').onclick=function(){
+    if(deliveryOn===null) return;
+    var naar=!deliveryOn;
+    if(!confirm(naar?'Online leveren weer AANZETTEN?':'Online leveren UITZETTEN?\n\nKlanten kunnen dan online enkel nog afhalen. De kassa blijft gewoon werken.')) return;
+    api('POST','/api/admin/online-delivery',{on:naar}).then(function(r){
+      if(!r.ok){ toast(r.data.error||'Fout'); return; }
+      showDelivery(!!r.data.on); toast(r.data.on?'Online leveren staat AAN':'Online leveren staat UIT');
+    });
+  };
+  $('#btnPickup').onclick=function(){
+    if(pickupOn===null) return;
+    var naar=!pickupOn;
+    if(!confirm(naar?'Online afhalen weer AANZETTEN?':'Online afhalen UITZETTEN?\n\nKlanten kunnen dan online enkel nog laten leveren. De kassa blijft gewoon werken.')) return;
+    api('POST','/api/admin/online-pickup',{on:naar}).then(function(r){
+      if(!r.ok){ toast(r.data.error||'Fout'); return; }
+      showPickup(!!r.data.on); toast(r.data.on?'Online afhalen staat AAN':'Online afhalen staat UIT');
     });
   };
 
