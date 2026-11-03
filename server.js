@@ -1235,9 +1235,9 @@ async function handleApi(req, res, urlPath) {
     // de rest van het beheer blijft achter de gewone kassa-sessie.
     if (kind === 'report' || kind === 'export') {
       if (!isManager(req)) return sendJson(res, 401, { error: 'Manager-PIN vereist' });
-    } else if (kind === 'orders') {
-      // online bestellingen bekijken/afvinken: kassa-rol, beheer-sessie of manager
-      // (die laatste is nodig om een bon te annuleren)
+    } else if (kind === 'orders' || kind === 'online-delivery' || kind === 'online-pickup') {
+      // online bestellingen bekijken/afvinken en de leveren/afhalen-schakelaars:
+      // ook vanaf de kassa (kassa-rol), niet enkel vanuit het beheer.
       if (!isAuthed(req) && !isPos(req) && !isManager(req)) return sendJson(res, 401, { error: 'Niet toegestaan' });
     } else if (!isAuthed(req)) {
       return sendJson(res, 401, { error: 'Niet ingelogd' });

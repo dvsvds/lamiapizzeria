@@ -409,7 +409,13 @@
 
 <!-- Online bestellingen (van de website) -->
 <div class="ov" id="ovOnline"><div class="modal wide"><div class="mhead"><h3>🌐 Online bestellingen</h3><button class="x" data-close>✕</button></div>
-  <div class="mbody"><div class="plist" id="onlineList"></div>
+  <div class="mbody">
+    <!-- Snelle schakelaars: online leveren / afhalen aan of uit (werken samen met het beheer) -->
+    <div style="display:flex;gap:.5rem;margin-bottom:.8rem;flex-wrap:wrap">
+      <button class="abtn" id="kDelivery" style="flex:1;min-width:140px">🛵 Online leveren: …</button>
+      <button class="abtn" id="kPickup" style="flex:1;min-width:140px">🥡 Online afhalen: …</button>
+    </div>
+    <div class="plist" id="onlineList"></div>
     <!-- Afgevinkte of al geladen webbestellingen van de laatste uren: zo raakt
          een per ongeluk weggedrukte bestelling nooit kwijt. -->
     <h4 style="margin:1.1rem 0 .4rem">Eerder vandaag</h4>
@@ -2086,13 +2092,37 @@
 
     $('#btnOnline').onclick=function(){
       // Het alarm blijft gaan tot de bon geprint is (niet enkel bij het openen van dit venster).
-      if(onlineAuthed){ openOv('#ovOnline'); loadRecent(); return; }
+      if(onlineAuthed){ openOv('#ovOnline'); loadRecent(); loadChannels(); return; }
       activate().then(function(ok){
-        if(ok){ openOv('#ovOnline'); loadRecent(); return; }
+        if(ok){ openOv('#ovOnline'); loadRecent(); loadChannels(); return; }
         // nog niet gekoppeld → nu pas de PIN vragen
-        koppelMetPin().then(function(ok2){ if(ok2){ openOv('#ovOnline'); loadRecent(); } });
+        koppelMetPin().then(function(ok2){ if(ok2){ openOv('#ovOnline'); loadRecent(); loadChannels(); } });
       });
     };
+
+    /* Snelle schakelaars op de kassa: online leveren / afhalen aan of uit.
+       Dezelfde instelling als in het beheer (gedeelde server-settings). */
+    var kDelivOn=null, kPickOn=null;
+    function showKChan(sel,label,on){
+      var b=$(sel); if(!b) return;
+      b.textContent=label+': '+(on?'AAN':'UIT');
+      b.style.background=on?'':'var(--red)'; b.style.color=on?'':'#fff'; b.style.borderColor=on?'':'var(--red)';
+    }
+    function loadChannels(){
+      fetch('api/admin/online-delivery',{credentials:'same-origin'}).then(function(r){return r.ok?r.json():null;})
+        .then(function(j){ if(j){ kDelivOn=!!j.on; showKChan('#kDelivery','🛵 Online leveren',kDelivOn); } });
+      fetch('api/admin/online-pickup',{credentials:'same-origin'}).then(function(r){return r.ok?r.json():null;})
+        .then(function(j){ if(j){ kPickOn=!!j.on; showKChan('#kPickup','🥡 Online afhalen',kPickOn); } });
+    }
+    function toggleChannel(path,label,sel,getCur,setCur){
+      if(getCur()===null) return;
+      var naar=!getCur();
+      fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({on:naar})})
+        .then(function(r){return r.ok?r.json():null;})
+        .then(function(j){ if(!j){ toast('Niet toegestaan'); return; } setCur(!!j.on); showKChan(sel,label,!!j.on); toast(label+(j.on?' staat AAN':' staat UIT')); });
+    }
+    var bkD=$('#kDelivery'); if(bkD) bkD.onclick=function(){ toggleChannel('api/admin/online-delivery','🛵 Online leveren','#kDelivery',function(){return kDelivOn;},function(v){kDelivOn=v;}); };
+    var bkP=$('#kPickup'); if(bkP) bkP.onclick=function(){ toggleChannel('api/admin/online-pickup','🥡 Online afhalen','#kPickup',function(){return kPickOn;},function(v){kPickOn=v;}); };
 
     function ackOrder(id){
       fetch('api/admin/orders/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status:'bereiden'})})
