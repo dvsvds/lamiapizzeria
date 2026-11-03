@@ -307,6 +307,15 @@ function onlineOrdersOn() {
   var row = db.prepare('SELECT value FROM settings WHERE key = ?').get('online_orders');
   return !row || row.value !== 'uit';
 }
+// Online leveren / online afhalen apart aan/uit (schakelaars in beheer). Standaard aan.
+function deliveryOn() {
+  var row = db.prepare('SELECT value FROM settings WHERE key = ?').get('online_delivery');
+  return !row || row.value !== 'uit';
+}
+function pickupOn() {
+  var row = db.prepare('SELECT value FROM settings WHERE key = ?').get('online_pickup');
+  return !row || row.value !== 'uit';
+}
 
 /* ---- rij → net JSON object ---- */
 function rowToProduct(r) {
@@ -899,7 +908,7 @@ async function handleApi(req, res, urlPath) {
   if (seg[0] === 'menu' && method === 'GET') {
     var cats = allCategories();
     var prods = allProducts().filter(function (p) { return p.available; });
-    return sendJson(res, 200, { categories: cats, products: prods, config: { deliveryFee: DELIVERY_FEE, minOrder: MIN_ORDER, open: isOpenNow(), online: !!MOLLIE_API_KEY && onlineOrdersOn(), deliveryRadiusKm: DELIVERY_RADIUS_KM } });
+    return sendJson(res, 200, { categories: cats, products: prods, config: { deliveryFee: DELIVERY_FEE, minOrder: MIN_ORDER, open: isOpenNow(), online: !!MOLLIE_API_KEY && onlineOrdersOn(), delivery: deliveryOn(), pickup: pickupOn(), deliveryRadiusKm: DELIVERY_RADIUS_KM } });
   }
 
   /* ---------- publiek: leveradres binnen de zone? ---------- */
@@ -921,6 +930,13 @@ async function handleApi(req, res, urlPath) {
     // online bestellen staat uit in beheer: de webshop mag niets plaatsen; de kassa wel
     if (source === 'web' && !onlineOrdersOn()) {
       return sendJson(res, 403, { error: 'Online bestellen is even niet mogelijk. Bel ons op 03 644 23 31 om te bestellen.', ordersOff: true });
+    }
+    // online leveren / afhalen apart uitgezet in beheer
+    if (source === 'web' && type === 'leveren' && !deliveryOn()) {
+      return sendJson(res, 403, { error: 'Online leveren is momenteel niet mogelijk. Kies afhalen, of bel ons op 03 644 23 31.', deliveryOff: true });
+    }
+    if (source === 'web' && type !== 'leveren' && !pickupOn()) {
+      return sendJson(res, 403, { error: 'Online afhalen is momenteel niet mogelijk. Kies leveren, of bel ons op 03 644 23 31.', pickupOff: true });
     }
     // buiten de openingsuren mag de webshop niet bestellen; de kassa (ingelogd personeel) wel
     if (source === 'web' && !isOpenNow()) {
@@ -1443,6 +1459,22 @@ async function handleApi(req, res, urlPath) {
         db.prepare('INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)').run('online_orders', oo.on === false ? 'uit' : 'aan');
       }
       return sendJson(res, 200, { on: onlineOrdersOn() });
+    }
+    // schakelaar 'online leveren' aan/uit
+    if (kind === 'online-delivery') {
+      if (method === 'POST') {
+        var od = await readBody(req);
+        db.prepare('INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)').run('online_delivery', od.on === false ? 'uit' : 'aan');
+      }
+      return sendJson(res, 200, { on: deliveryOn() });
+    }
+    // schakelaar 'online afhalen' aan/uit
+    if (kind === 'online-pickup') {
+      if (method === 'POST') {
+        var op = await readBody(req);
+        db.prepare('INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)').run('online_pickup', op.on === false ? 'uit' : 'aan');
+      }
+      return sendJson(res, 200, { on: pickupOn() });
     }
 
     if (kind === 'pin' && method === 'POST') {

@@ -1638,7 +1638,9 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
               window.__ordersOff=true; var pp=document.getElementById('promoPop'); if(pp) pp.classList.remove('show');
               var verzend=document.querySelector('.co-submit');
               if(verzend){ verzend.disabled=true; verzend.textContent='Online bestellen even niet mogelijk'; }
-            } }
+            }
+            applyChannels(j.config.delivery!==false, j.config.pickup!==false);
+          }
           var mapped=j.products.map(function(p){
             return {id:p.id, c:p.cat, t:p.type||'simple', name:p.name, desc:p.descr||'',
                     sz:p.sizes||null, price:p.price, img:p.img||'pizza-card', tag:p.tag||'',
@@ -1816,6 +1818,26 @@ try{ if(localStorage.getItem('lamia_thema')==='dark') document.documentElement.s
     document.querySelectorAll('.ob-toggle button[data-mode]').forEach(function(b){
       b.addEventListener('click',function(){ setMode(b.getAttribute('data-mode')==='Bezorgen'?'leveren':'afhalen'); });
     });
+    // Online leveren / afhalen apart aan/uit (schakelaars in beheer). Is er maar één kanaal
+    // beschikbaar, dan verbergen we de knoppen van het andere en schakelen we erheen.
+    function applyChannels(delivOn, pickOn){
+      if(delivOn && pickOn) return;                 // allebei aan → niets te doen
+      if(!delivOn && !pickOn){                       // allebei uit → online bestellen uit
+        var off=$('#ordersOff'); if(off) off.style.display='';
+        window.__ordersOff=true;
+        var pp=document.getElementById('promoPop'); if(pp) pp.classList.remove('show');
+        var verzend=document.querySelector('.co-submit');
+        if(verzend){ verzend.disabled=true; verzend.textContent='Online bestellen even niet mogelijk'; }
+        return;
+      }
+      var hideDeliv=!delivOn;                         // precies één kanaal uit
+      document.querySelectorAll('[data-mode]').forEach(function(b){
+        var dm=b.getAttribute('data-mode');
+        var isDeliv=(dm==='leveren'||dm==='Bezorgen'), isPick=(dm==='afhalen'||dm==='Afhalen');
+        if((hideDeliv&&isDeliv)||(!hideDeliv&&isPick)) b.style.display='none';
+      });
+      setMode(delivOn?'leveren':'afhalen');
+    }
     // ---- Mandje-lade (mobiel) ----
     var isMobile=function(){ return window.matchMedia('(max-width:860px)').matches; };
     var cartBoxEl=$('#cartBox'), cartBackdrop=$('#cartBackdrop');
