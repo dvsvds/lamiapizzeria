@@ -418,7 +418,7 @@ function staart() {
     '    <p>Abdijstraat 226a, 2020 Antwerpen · <a href="tel:' + FEIT.tel + '">+32 3 644 23 31</a> · info.lamiapizzeria@mail.com</p>\n' +
     '    <p><a href="/">Home</a> · <a href="/#menu">Menu</a> · <a href="order.html">Online bestellen</a> · <a href="/#bezorgen">Bezorggebied</a> · <a href="take-away-antwerpen">Take away</a></p>\n' +
     '    <p class="fine">' + BUURTEN.map(function (b) { return '<a href="' + b.slug + '">Pizza ' + esc(b.naam) + '</a>'; }).join(' · ') + ' · <a href="' + HALAL.slug + '">Halal pizza</a></p>\n' +
-    '    <p class="fine">© ' + new Date().getFullYear() + ' La Mia Pizzeria · New York style pizza in Antwerpen.</p>\n' +
+    '    <p class="fine">© ' + new Date().getFullYear() + ' La Mia Pizzeria · New York style pizza in Antwerpen · Website door <a href="https://web-makers.be/" target="_blank" rel="noopener">WebMakers</a></p>\n' +
     '  </div>\n</footer>\n</body>\n</html>\n';
 }
 
