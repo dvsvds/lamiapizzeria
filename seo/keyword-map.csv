@@ -1,0 +1,20 @@
+query,intent,monthly volume,difficulty,target URL,status,current position,last checked
+pizza antwerpen,lokaal/bestellen,4400,onbekend,/,live,"3,4 (312 vert., 4 klikken)",2026-10-31
+take away antwerpen,lokaal/afhalen,1300,onbekend,/take-away-antwerpen,live,"niet zichtbaar (0 vertoningen; pagina live sinds 22/10)",2026-10-31
+take away,lokaal/afhalen,onbekend,onbekend,/take-away-antwerpen,live,"4,2 op de homepage (112 vert., 0 klikken)",2026-10-31
+takeaway,lokaal/afhalen,onbekend,onbekend,/take-away-antwerpen,live,"3,6 op de homepage (79 vert., 0 klikken)",2026-10-31
+pizzeria antwerpen,lokaal,1000,onbekend,/,live,"7,2 (144 vert., 2 klikken)",2026-10-31
+pizza berchem,lokaal/bezorgen,480,onbekend,/pizza-berchem,live,"niet zichtbaar voor deze term (pagina enkel als sitelink onder merknaam)",2026-10-31
+pizza wilrijk,lokaal/bezorgen,480,onbekend,/pizza-wilrijk,live,"32 (okt 8–20); niet zichtbaar 4–31 okt",2026-10-31
+pizza edegem,lokaal/bezorgen,260,onbekend,/pizza-edegem,live,"60 (okt 8–20); niet zichtbaar 4–31 okt",2026-10-31
+pizza hoboken,lokaal/bezorgen,260,onbekend,/pizza-hoboken,live,"2,1 (109 vert., 4 klikken; homepage)",2026-10-31
+pizza antwerpen zuid,lokaal/bezorgen,210,onbekend,/pizza-antwerpen-zuid,live,"14,5 (okt 8–20)",2026-10-31
+pizza bestellen antwerpen,bestellen,170,onbekend,/order.html,live,"8,1 (15 vert.)",2026-10-31
+pizzeria wilrijk,lokaal,110,onbekend,/pizza-wilrijk,live,"7,2 (okt 8–20)",2026-10-31
+pizza kiel,lokaal/bezorgen,90,onbekend,/pizza-kiel,live,"2,7 (15 vert., 1 klik)",2026-10-31
+halal pizza antwerpen,lokaal/halal,40,onbekend,/halal-pizza-antwerpen,live,"1 (1 vertoning)",2026-10-31
+beste pizza antwerpen,informatief/vergelijken,onbekend,onbekend,/,gap,"3,8 (24 vert., 0 klikken; geen pagina die de vraag beantwoordt)",2026-10-31
+pizza near me,lokaal,onbekend,onbekend,/,live,"1,8 (79 vert., 0 klikken; Maps-type zoekopdracht)",2026-10-31
+pizza abdijstraat,lokaal,onbekend,onbekend,/,live,"5,9 (75 vert., 1 klik)",2026-10-31
+restaurant abdijstraat,lokaal,onbekend,onbekend,/,live,"8,0 (44 vert., 1 klik)",2026-10-31
+la mia pizzeria,merk,onbekend,onbekend,/,live,"4,2 (82 vert., 22 klikken)",2026-10-31
