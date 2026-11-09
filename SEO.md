@@ -250,6 +250,23 @@ prijzen gelijk houden met order.html)
 Zoektest 10/10/2026: La Mia komt niet voor bij "beste pizza Antwerpen",
 "halal pizza Antwerpen" of "pizza bezorgen Hoboken". Herhaal maandelijks.
 
+## SEO-autopilot (skill, sinds 09/11/2026)
+
+De skill `seo-autopilot` (Illyism/seo-skills) staat in `.claude/skills/`. Ze
+houdt haar stand bij in de map `seo/`: `context.md` (feiten met bron),
+`keyword-map.csv`, `backlog.md`, `log.md`, `ai-prompts.md`, `competitors/`,
+`directories.md` en `reports/`. Starten in een sessie op deze repo:
+
+```
+/seo-autopilot
+Site: https://www.lamiapizzeria.be | Product: New York style pizza, 100% halal,
+afhalen of bezorgen rond Antwerpen-Zuid | Conversion: bestelling_betaald |
+Competitors: find them | Ship mode: PR for review
+```
+
+Ship mode blijft "PR for review": niets gaat live zonder "merge hem". De map
+`seo/` wordt niet door de server geserveerd (.md/.csv staan niet in SERVE_EXT).
+
 ## Volgende stappen (nog niet gedaan)
 
 - **Meer tekst per gerecht/categorie.** De foto's van de deals en secties zijn

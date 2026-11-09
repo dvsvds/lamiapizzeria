@@ -510,6 +510,14 @@ function serveStatic(req, res, urlPath) {
   var rel;
   try { rel = decodeURIComponent(urlPath.split('?')[0]); }
   catch (e) { res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Ongeldige URL'); }
+  // Dubbele adressen: elke publieke pagina heeft één URL (die van de canonical). De rest
+  // stuurt met een 301 door, anders telt Google /index.html en /pizza-kiel.html apart.
+  var qs = urlPath.indexOf('?') >= 0 ? urlPath.slice(urlPath.indexOf('?')) : '';
+  var redirectTo = function (to) { res.writeHead(301, { Location: to + qs, 'Cache-Control': 'public, max-age=86400' }); return res.end(); };
+  if (rel === '/index.html') return redirectTo('/');
+  if (rel === '/order' || rel === '/order/') return redirectTo('/order.html');
+  var areaHtml = /^\/((?:halal-pizza|pizza|take-away)-[a-z0-9-]+)\.html$/.exec(rel);
+  if (areaHtml && PUBLIC_PAGES[areaHtml[1] + '.html']) return redirectTo('/' + areaHtml[1]);
   if (rel === '/' || rel === '') rel = '/index.html';
   // nette URL's zonder .html:  /order → /order.html,  /pos → /pos.html, enz.
   if (rel !== '/index.html' && !path.extname(rel)) {
